@@ -10,13 +10,16 @@ class WeightField(models.DecimalField):
 class Organization(models.Model):
     name = models.CharField(max_length=31, unique=True)
 
+    def __str__(self):
+        return self.name
+
 class Division(models.Model):
-    DIVISION_LEVELS = (
+    SKILL_LEVELS = (
         ('A', 'A team'),
         ('B', 'B team'),
         ('C', 'C team'),
     )
-    SEX_CHOICES = (
+    SEXES = (
         ('M', "Men's"),
         ('W', "Women's"),
     )
@@ -24,13 +27,14 @@ class Division(models.Model):
     max_age = models.IntegerField(default=99)
     min_weight = WeightField(default=decimal.Decimal('0.0'))
     max_weight = WeightField(default=decimal.Decimal('999.9'))
-    division_level = models.CharField(max_length=1, choices = DIVISION_LEVELS)
-    sex = models.CharField(max_length=1, choices = SEX_CHOICES)
+    skill_level = models.CharField(max_length=1, choices = SKILL_LEVELS)
+    sex = models.CharField(max_length=1, choices = SEXES)
     class Meta:
-        unique_together = (("division_level", "sex", "min_age", "max_age"),)
+        unique_together = (("skill_level", "sex", "min_age", "max_age",
+                "min_weight", "max_weight"),)
 
 class Competitor(models.Model):
-    SEX_CHOICES = (
+    SEXES = (
         ('F', 'Female'),
         ('M', 'Male'),
     )
@@ -55,7 +59,7 @@ class Competitor(models.Model):
         ('9D', '9 Dan'),
     )
     name = models.CharField(max_length=63)
-    sex = models.CharField(max_length=1, choices=SEX_CHOICES)
+    sex = models.CharField(max_length=1, choices=SEXES)
     skill_level = models.CharField(max_length=2, choices=BELT_RANKS)
     age = models.IntegerField()
     organization = models.ForeignKey(Organization)
