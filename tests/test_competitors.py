@@ -11,6 +11,9 @@ class CompetitorTestCase(TestCase):
                 sex="F", skill_level="WH", age=6, organization=self.org1,
                 weight=Decimal(50.3))
 
+    def test_str(self):
+        self.assertEqual("competitor 1 (org1)", self.competitor1.__str__())
+
     def test_get(self):
         self.assertEqual("competitor 1",
                 Competitor.objects.get(name="competitor 1").name)

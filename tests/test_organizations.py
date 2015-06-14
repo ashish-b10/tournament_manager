@@ -8,6 +8,11 @@ class OrganizationTestCase(TestCase):
         self.org2 = Organization.objects.create(name="org2")
         self.org3 = Organization.objects.create(name="org3")
 
+    def test_str(self):
+        self.assertEqual("org1", self.org1.__str__())
+        self.assertEqual("org2", self.org2.__str__())
+        self.assertEqual("org3", self.org3.__str__())
+
     def test_get(self):
         self.assertEqual("org1", Organization.objects.get(name="org1").name)
         self.assertEqual("org2", Organization.objects.get(name="org2").name)

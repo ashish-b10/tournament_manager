@@ -33,6 +33,9 @@ class Division(models.Model):
         unique_together = (("skill_level", "sex", "min_age", "max_age",
                 "min_weight", "max_weight"),)
 
+    def __str__(self):
+        return " ".join([self.sex, self.division])
+
 class Competitor(models.Model):
     SEXES = (
         ('F', 'Female'),
@@ -66,6 +69,9 @@ class Competitor(models.Model):
     weight = WeightField()
     class Meta:
         unique_together = (("name", "organization"),)
+
+    def __str__(self):
+        return "%s (%s)" % (self.name, self.organization)
 
 class Team(models.Model):
     number = models.IntegerField()
