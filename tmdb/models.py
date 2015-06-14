@@ -61,6 +61,19 @@ class Competitor(models.Model):
         ('8D', '8 Dan'),
         ('9D', '9 Dan'),
     )
+    """ Cutoff weights for each weight class in pounds inclusive. """
+    WEIGHT_CUTOFFS = {
+        'F' : {
+            'light': (decimal.Decimal('0'), decimal.Decimal('117.0')),
+            'middle': (decimal.Decimal('117.1'), decimal.Decimal('137.0')),
+            'heavy': (decimal.Decimal('137.1'), decimal.Decimal('999.9')),
+        },
+        'M' : {
+            'light': (decimal.Decimal('0'), decimal.Decimal('145.0')),
+            'middle': (decimal.Decimal('145.1'), decimal.Decimal('172.0')),
+            'heavy': (decimal.Decimal('172.1'), decimal.Decimal('999.9')),
+        },
+    }
     name = models.CharField(max_length=63)
     sex = models.CharField(max_length=1, choices=SEXES)
     skill_level = models.CharField(max_length=2, choices=BELT_RANKS)
@@ -69,6 +82,20 @@ class Competitor(models.Model):
     weight = WeightField()
     class Meta:
         unique_together = (("name", "organization"),)
+
+    @staticmethod
+    def _is_between_cutoffs(weight, sex, weightclass):
+        cutoffs = Competitor.WEIGHT_CUTOFFS[sex][weightclass]
+        return weight >= cutoffs[0] and weight <= cutoffs[1]
+
+    def is_lightweight(self):
+        return self._is_between_cutoffs(self.weight, self.sex, 'light')
+
+    def is_middleweight(self):
+        return self._is_between_cutoffs(self.weight, self.sex, 'middle')
+
+    def is_heavyweight(self):
+        return self._is_between_cutoffs(self.weight, self.sex, 'heavy')
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.organization)
