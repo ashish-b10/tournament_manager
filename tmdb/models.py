@@ -23,10 +23,10 @@ class Division(models.Model):
         ('M', "Men's"),
         ('W', "Women's"),
     )
-    min_age = models.IntegerField(default=0)
-    max_age = models.IntegerField(default=99)
-    min_weight = WeightField(default=decimal.Decimal('0.0'))
-    max_weight = WeightField(default=decimal.Decimal('999.9'))
+    min_age = models.IntegerField(null=True)
+    max_age = models.IntegerField(null=True)
+    min_weight = WeightField(null=True)
+    max_weight = WeightField(null=True)
     skill_level = models.CharField(max_length=1, choices = SKILL_LEVELS)
     sex = models.CharField(max_length=1, choices = SEXES)
     class Meta:
@@ -104,15 +104,15 @@ class Team(models.Model):
     number = models.IntegerField()
     division = models.ForeignKey(Division)
     organization = models.ForeignKey(Organization)
-    lightweight = models.ForeignKey(Competitor, blank=True,
+    lightweight = models.ForeignKey(Competitor, null=True,
             related_name="lightweight")
-    middleweight = models.ForeignKey(Competitor, blank=True,
+    middleweight = models.ForeignKey(Competitor, null=True,
             related_name="middleweight")
-    heavyweight = models.ForeignKey(Competitor, blank=True,
+    heavyweight = models.ForeignKey(Competitor, null=True,
             related_name="heavyweight")
-    alternate1 = models.ForeignKey(Competitor, blank=True,
+    alternate1 = models.ForeignKey(Competitor, null=True,
             related_name="alternate1")
-    alternate2 = models.ForeignKey(Competitor, blank=True,
+    alternate2 = models.ForeignKey(Competitor, null=True,
             related_name="alternate2")
     score = models.IntegerField(default=0)
     class Meta:
