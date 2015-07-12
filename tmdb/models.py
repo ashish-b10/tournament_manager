@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 import decimal
 
 class WeightField(models.DecimalField):
@@ -117,3 +118,31 @@ class Team(models.Model):
     score = models.IntegerField(default=0)
     class Meta:
         unique_together = (("number", "division", "organization"),)
+
+    def _valid_member_organization(self, member):
+        if member is None: return True
+        return self.organization == member.organization
+
+    def _validate_member_organizations(self):
+        if not self._valid_member_organization(self.lightweight):
+            raise ValidationError(("Lightweight [%s] is not from same" +
+                    " organization as [%s]") %(self.lightweight, self))
+        if not self._valid_member_organization(self.middleweight):
+            raise ValidationError(("Middleweight [%s] is not from same" +
+                    " organization as [%s]") %(self.lightweight, self))
+        if not self._valid_member_organization(self.heavyweight):
+            raise ValidationError(("Heavyweight [%s] is not from same" +
+                    " organization as [%s]") %(self.lightweight, self))
+        if not self._valid_member_organization(self.alternate1):
+            raise ValidationError(("Alternate1 [%s] is not from same" +
+                    " organization as [%s]") %(self.lightweight, self))
+        if not self._valid_member_organization(self.alternate2):
+            raise ValidationError(("Alternate2 [%s] is not from same" +
+                    " organization as [%s]") %(self.lightweight, self))
+
+    def validate_team_members(self):
+        self._validate_member_organizations()
+
+    def save(self, *args, **kwargs):
+        self.validate_team_members()
+        super().save(*args, **kwargs)
