@@ -45,3 +45,14 @@ class TeamTestCase(TestCase):
         else:
             self.fail("Expected validation error setting middleweight as"
                     + " lightweight")
+
+    def test_set_heavyweight_as_lightweight(self):
+        try:
+            sample_team = Team.objects.create(number=1,
+                    division=self.division1, organization=self.org1,
+                    lightweight=self.heavyweight1)
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting heavyweight as"
+                    + " lightweight")
