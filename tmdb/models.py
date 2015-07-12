@@ -140,8 +140,14 @@ class Team(models.Model):
             raise ValidationError(("Alternate2 [%s] is not from same" +
                     " organization as [%s]") %(self.lightweight, self))
 
+    def _validate_lightweight_eligibility(self):
+        if not self.lightweight.is_lightweight():
+            raise ValidationError("Team %s has invalid lightweight %s"
+                    %(str(self), str(self.lightweight)))
+
     def validate_team_members(self):
         self._validate_member_organizations()
+        self._validate_lightweight_eligibility()
 
     def save(self, *args, **kwargs):
         self.validate_team_members()
