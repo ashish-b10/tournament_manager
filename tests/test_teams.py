@@ -19,7 +19,7 @@ class TeamTestCase(TestCase):
                 organization=self.org1, weight=Decimal("157.0"))
         self.division1 = Division.objects.create(skill_level="A", sex="F")
 
-    def test_valid_organization(self):
+    def test_valid_team(self):
         sample_team = Team.objects.create(number=1,
                 division=self.division1, organization=self.org1,
                 lightweight=self.lightweight1)
