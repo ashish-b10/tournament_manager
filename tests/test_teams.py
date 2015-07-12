@@ -19,11 +19,6 @@ class TeamTestCase(TestCase):
                 organization=self.org1, weight=Decimal("157.0"))
         self.division1 = Division.objects.create(skill_level="A", sex="F")
 
-    def test_valid_team(self):
-        sample_team = Team.objects.create(number=1,
-                division=self.division1, organization=self.org1,
-                lightweight=self.lightweight1)
-
     def test_invalid_organization(self):
         try:
             sample_team = Team.objects.create(number=1,
@@ -34,6 +29,11 @@ class TeamTestCase(TestCase):
         else:
             self.fail("Expected validation error adding Competitor to Team"
                     + " from different organizations")
+
+    def test_set_lightweight_as_lightweight(self):
+        sample_team = Team.objects.create(number=1,
+                division=self.division1, organization=self.org1,
+                lightweight=self.lightweight1)
 
     def test_set_middleweight_as_lightweight(self):
         try:
@@ -56,3 +56,45 @@ class TeamTestCase(TestCase):
         else:
             self.fail("Expected validation error setting heavyweight as"
                     + " lightweight")
+
+    def test_set_lightweight_as_middleweight(self):
+        sample_team = Team.objects.create(number=1,
+                division=self.division1, organization=self.org1,
+                middleweight=self.lightweight1)
+
+    def test_set_middleweight_as_middleweight(self):
+        sample_team = Team.objects.create(number=1,
+                division=self.division1, organization=self.org1,
+                middleweight=self.middleweight1)
+
+    def test_set_heavyweight_as_middleweight(self):
+        try:
+            sample_team = Team.objects.create(number=1,
+                    division=self.division1, organization=self.org1,
+                    middleweight=self.heavyweight1)
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting heavyweight as"
+                    + " middleweight")
+
+    def test_set_lightweight_as_heavyweight(self):
+        try:
+            sample_team = Team.objects.create(number=1,
+                    division=self.division1, organization=self.org1,
+                    heavyweight=self.lightweight1)
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting lightweight as"
+                    + " heavyweight")
+
+    def test_set_middleweight_as_heavyweight(self):
+        sample_team = Team.objects.create(number=1,
+                division=self.division1, organization=self.org1,
+                lightweight=self.lightweight1)
+
+    def test_set_heavyweight_as_heavyweight(self):
+        sample_team = Team.objects.create(number=1,
+                division=self.division1, organization=self.org1,
+                heavyweight=self.heavyweight1)

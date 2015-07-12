@@ -141,13 +141,31 @@ class Team(models.Model):
                     " organization as [%s]") %(self.lightweight, self))
 
     def _validate_lightweight_eligibility(self):
+        if self.lightweight is None: return
+
         if not self.lightweight.is_lightweight():
             raise ValidationError("Team %s has invalid lightweight %s"
                     %(str(self), str(self.lightweight)))
 
+    def _validate_middleweight_eligibility(self):
+        if self.middleweight is None: return
+
+        if self.middleweight.is_heavyweight():
+            raise ValidationError("Team %s has invalid middleweight %s"
+                    %(str(self), str(self.middleweight)))
+
+    def _validate_heavyweight_eligibility(self):
+        if self.heavyweight is None: return
+
+        if self.heavyweight.is_lightweight():
+            raise ValidationError("Team %s has invalid heavyweight %s"
+                    %(str(self), str(self.heavyweight)))
+
     def validate_team_members(self):
         self._validate_member_organizations()
         self._validate_lightweight_eligibility()
+        self._validate_middleweight_eligibility()
+        self._validate_heavyweight_eligibility()
 
     def save(self, *args, **kwargs):
         self.validate_team_members()
