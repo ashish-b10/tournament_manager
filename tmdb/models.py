@@ -144,22 +144,25 @@ class Team(models.Model):
         if self.lightweight is None: return
 
         if not self.lightweight.is_lightweight():
-            raise ValidationError("Team %s has invalid lightweight %s"
-                    %(str(self), str(self.lightweight)))
+            raise ValidationError(("Competitor %s has invalid weight for"
+                    + " lightweight spot [%d lbs]")
+                    %(self.lightweight, self.lightweight.weight))
 
     def _validate_middleweight_eligibility(self):
         if self.middleweight is None: return
 
         if self.middleweight.is_heavyweight():
-            raise ValidationError("Team %s has invalid middleweight %s"
-                    %(str(self), str(self.middleweight)))
+            raise ValidationError(("Competitor %s has invalid weight for"
+                    + " middleweight spot [%d lbs]")
+                    %(self.middleweight, self.middleweight.weight))
 
     def _validate_heavyweight_eligibility(self):
         if self.heavyweight is None: return
 
         if self.heavyweight.is_lightweight():
-            raise ValidationError("Team %s has invalid heavyweight %s"
-                    %(str(self), str(self.heavyweight)))
+            raise ValidationError(("Competitor %s has invalid weight for"
+                    + " heavyweight spot [%d lbs]")
+                    %(self.heavyweight, self.heavyweight.weight))
 
     def validate_team_members(self):
         self._validate_member_organizations()
