@@ -164,12 +164,36 @@ class Team(models.Model):
                     + " heavyweight spot [%d lbs]")
                     %(self.heavyweight, self.heavyweight.weight))
 
-    def validate_team_members(self):
+    def _get_competitor_teams(competitor, field_names=None):
+        """
+        Return all teams which have competitor in any of the field names. The
+        returned list could possibly contain duplicates.
+        """
+        teams = []
+        for field_name in field_names:
+            teams += Team.objects.filter(**{field_name: competitor})
+        return teams
+
+    def _validate_team_members_unique(self):
+        """ Ensure that no member has multiple spots on this team. """
+        # get all members that are not none
+        members = [m for m in [self.lightweight, self.middleweight,
+                self.heavyweight, self.alternate1, self.alternate2] if m]
+        if len(members) != len(set(members)):
+            raise ValidationError(("Duplicates found in members for team %s:"
+                    + " %s") %(str(self), str(members)))
+
+    def prevalidate_team_members(self):
+        """
+        Validates that members of a team obey all ECTC rules. It is expected
+        that this check is run BEFORE the team is committed to the database.
+        """
         self._validate_member_organizations()
         self._validate_lightweight_eligibility()
         self._validate_middleweight_eligibility()
         self._validate_heavyweight_eligibility()
+        self._validate_team_members_unique()
 
     def save(self, *args, **kwargs):
-        self.validate_team_members()
+        self.prevalidate_team_members()
         super().save(*args, **kwargs)

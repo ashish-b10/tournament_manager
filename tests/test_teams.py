@@ -98,3 +98,40 @@ class TeamTestCase(TestCase):
         sample_team = Team.objects.create(number=1,
                 division=self.division1, organization=self.org1,
                 heavyweight=self.heavyweight1)
+
+    def test_set_lightweight_as_lightweight_and_middleweight_same_team(self):
+        try:
+            sample_team = Team.objects.create(number=1,
+                    division=self.division1, organization=self.org1,
+                    lightweight=self.lightweight1,
+                    middleweight=self.lightweight1)
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting lightweight as both"
+                    + " lightweight and middleweight positions on same team")
+
+    def test_set_lightweight_as_lightweight_and_alternate1_same_team(self):
+        try:
+            sample_team = Team.objects.create(number=1,
+                    division=self.division1, organization=self.org1,
+                    lightweight=self.lightweight1,
+                    alternate1=self.lightweight1)
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting lightweight as both"
+                    + " lightweight and alternate1 positions on same team")
+
+    def test_set_lightweight_as_alternate1_and_alternate2_same_team(self):
+        try:
+            sample_team = Team.objects.create(number=1,
+                    division=self.division1, organization=self.org1,
+                    alternate1=self.lightweight1,
+                    alternate2=self.lightweight1)
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting lightweight as both"
+                    + " lightweight and alternate1 positions on same team")
+
