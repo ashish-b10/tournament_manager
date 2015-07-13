@@ -3,6 +3,7 @@ from tmdb.models import Organization, Competitor, Team, Division
 from django.db.utils import IntegrityError
 from decimal import Decimal
 from django.core.exceptions import ValidationError
+from unittest import skip
 
 class TeamTestCase(TestCase):
     def setUp(self):
@@ -135,3 +136,80 @@ class TeamTestCase(TestCase):
             self.fail("Expected validation error setting lightweight as both"
                     + " lightweight and alternate1 positions on same team")
 
+    def test_set_lightweight_as_lightweight_on_second_team(self):
+        Team.objects.create(number=1, division=self.division1,
+                organization=self.org1, heavyweight=self.heavyweight1,
+                lightweight=self.lightweight1)
+        team = Team.objects.create(number=2, division=self.division1,
+                organization=self.org1, middleweight=self.middleweight1)
+        team.lightweight=self.lightweight1
+        try:
+            team.save()
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting lightweight as"
+                    + " lightweight when already lightweight on another team")
+
+    def test_set_lightweight_as_middleweight_on_second_team(self):
+        Team.objects.create(number=1, division=self.division1,
+                organization=self.org1, heavyweight=self.heavyweight1,
+                lightweight=self.lightweight1)
+        team = Team.objects.create(number=2, division=self.division1,
+                organization=self.org1, heavyweight=self.middleweight1)
+        team.middleweight = self.lightweight1
+        try:
+            team.save()
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting lightweight as"
+                    + " middleweight when already lightweight on another team")
+
+    def test_set_lightweight_as_alternate1_on_second_team(self):
+        Team.objects.create(number=1, division=self.division1,
+                organization=self.org1, heavyweight=self.heavyweight1,
+                lightweight=self.lightweight1)
+        team = Team.objects.create(number=2, division=self.division1,
+                organization=self.org1, middleweight=self.middleweight1)
+        team.alternate1=self.lightweight1
+        try:
+            team.save()
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting lightweight as"
+                    + " alternate1 when already lightweight on another team")
+
+    def test_set_alternate1_as_lightweight_on_second_team(self):
+        Team.objects.create(number=2, division=self.division1,
+                organization=self.org1, middleweight=self.middleweight1,
+                alternate1=self.lightweight1)
+        team = Team.objects.create(number=1, division=self.division1,
+                organization=self.org1, heavyweight=self.heavyweight1)
+        team.lightweight=self.lightweight1
+        try:
+            team.save()
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error setting lightweight as"
+                    + " lightweight when already alternate1 on another team")
+
+    def test_set_alternate1_as_alternate1_on_second_team(self):
+        Team.objects.create(number=1, division=self.division1,
+                organization=self.org1, heavyweight=self.heavyweight1,
+                alternate1=self.lightweight1)
+        team = Team.objects.create(number=2, division=self.division1,
+                organization=self.org1, middleweight=self.middleweight1)
+        team.alternate1=self.lightweight1
+        team.save()
+
+    def test_set_alternate1_as_alternate2_on_second_team(self):
+        Team.objects.create(number=1, division=self.division1,
+                organization=self.org1, heavyweight=self.heavyweight1,
+                alternate1=self.lightweight1)
+        team = Team.objects.create(number=2, division=self.division1,
+                organization=self.org1, middleweight=self.middleweight1)
+        team.alternate2=self.lightweight1
+        team.save()

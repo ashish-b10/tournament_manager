@@ -183,6 +183,32 @@ class Team(models.Model):
             raise ValidationError(("Duplicates found in members for team %s:"
                     + " %s") %(str(self), str(members)))
 
+    def _validate_competitors_on_multiple_teams(self):
+        """
+        Validate that lightweight, middleweight and heavyweight are only on one
+        team. Validate that alternates are not in a lightweight, middleweight,
+        or heavyweight spot on any team.
+        """
+        for competitor in [self.lightweight, self.middleweight,
+                self.heavyweight]:
+            if competitor is None: continue
+            teams = set(Team._get_competitor_teams(competitor, ["lightweight",
+                    "middleweight", "heavyweight", "alternate1",
+                    "alternate2"]))
+            if self.pk: teams.discard(self)
+            if teams:
+                raise ValidationError(("Cannot add %s to team %s: already on"
+                        + " other team(s): [%s]") %(competitor, self, teams))
+        for competitor in [self.alternate1, self.alternate2]:
+            if competitor is None: continue
+            teams = set(Team._get_competitor_teams(competitor, ["lightweight",
+                    "middleweight", "heavyweight"]))
+            if self.pk: teams.discard(self)
+            if teams:
+                raise ValidationError(("Cannot add %s to team %s: already on"
+                        + " other team(s): [%s] as non-alternate")
+                        %(competitor, self, teams))
+
     def prevalidate_team_members(self):
         """
         Validates that members of a team obey all ECTC rules. It is expected
@@ -193,6 +219,7 @@ class Team(models.Model):
         self._validate_middleweight_eligibility()
         self._validate_heavyweight_eligibility()
         self._validate_team_members_unique()
+        self._validate_competitors_on_multiple_teams()
 
     def save(self, *args, **kwargs):
         self.prevalidate_team_members()
