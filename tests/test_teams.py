@@ -1,5 +1,5 @@
 from django.test import TestCase
-from tmdb.models import Organization, Competitor, Team, Division
+from tmdb.models import Organization, Competitor, Team, Division, Sex, BeltRank
 from django.db.utils import IntegrityError
 from decimal import Decimal
 from django.core.exceptions import ValidationError
@@ -7,18 +7,25 @@ from unittest import skip
 
 class TeamTestCase(TestCase):
     def setUp(self):
+        Sex.create_sexes()
+        BeltRank.create_tkd_belt_ranks()
         self.org1 = Organization.objects.create(name="org1")
         self.org2 = Organization.objects.create(name="org2")
         self.lightweight1 = Competitor.objects.create(
-                name="sample lightweight1", sex="F", skill_level="WH", age=20,
+                name="sample lightweight1", sex=Sex.FEMALE_SEX,
+                skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
                 organization=self.org1, weight=Decimal("117.0"))
         self.middleweight1 = Competitor.objects.create(
-                name="sample middleweight1", sex="F", skill_level="WH", age=20,
+                name="sample middleweight1", sex=Sex.FEMALE_SEX,
+                skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
                 organization=self.org1, weight=Decimal("137.0"))
         self.heavyweight1 = Competitor.objects.create(
-                name="sample heavyweight1", sex="F", skill_level="WH", age=20,
+                name="sample heavyweight1", sex=Sex.FEMALE_SEX,
+                skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
                 organization=self.org1, weight=Decimal("157.0"))
-        self.division1 = Division.objects.create(skill_level="A", sex="F")
+        self.division1 = Division.objects.create(name="test_division",
+                sex=Sex.FEMALE_SEX)
+        self.division1.belt_ranks.add(BeltRank.objects.get(belt_rank="WH"))
 
     def test_invalid_organization(self):
         try:
@@ -213,3 +220,18 @@ class TeamTestCase(TestCase):
                 organization=self.org1, middleweight=self.middleweight1)
         team.alternate2=self.lightweight1
         team.save()
+
+    def test_add_invalid_competitor(self):
+        sample_male_competitor = Competitor.objects.create(
+                name="sample male", sex=Sex.MALE_SEX,
+                skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
+                organization=self.org1, weight=Decimal("117.0"))
+        try:
+            Team.objects.create(number=1,
+                    division=self.division1, organization=self.org1,
+                    lightweight=sample_male_competitor)
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected validation error adding team member that does"
+                    + " not satisfy division constraints")
