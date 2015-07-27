@@ -23,9 +23,15 @@ class TeamTestCase(TestCase):
                 name="sample heavyweight1", sex=Sex.FEMALE_SEX,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
                 organization=self.org1, weight=Decimal("157.0"))
-        self.division1 = Division.objects.create(name="test_division",
+        self.division1 = Division.objects.create(name="Women's D",
                 sex=Sex.FEMALE_SEX)
         self.division1.belt_ranks.add(BeltRank.objects.get(belt_rank="WH"))
+
+    def test_str(self):
+        sample_team = Team.objects.create(number=1,
+                division=self.division1, organization=self.org1,
+                lightweight=self.lightweight1)
+        self.assertEqual("org1 Women's D1", str(sample_team))
 
     def test_invalid_organization(self):
         try:

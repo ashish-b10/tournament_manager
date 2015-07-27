@@ -13,6 +13,10 @@ class BeltRankTestCase(TestCase):
             if belt_rank is None:
                 fail("Invalid BeltRank found: %s" %(str(belt_rank)))
 
+    def test_str(self):
+        BeltRank.objects.create(belt_rank="WH")
+        self.assertEqual("White", str(BeltRank.objects.first()))
+
     def test_create_invalid_belt_rank(self):
         belt_rank_label = "AA"
         try:

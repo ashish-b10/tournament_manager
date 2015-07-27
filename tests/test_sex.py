@@ -12,6 +12,11 @@ class SexTestCase(TestCase):
         self.assertEqual(Sex.FEMALE_SEX.sex, "F", "Sex.FEMALE sex is 'F'")
         self.assertEqual(Sex.MALE_SEX.sex, "M", "Sex.MALE sex is 'M'")
 
+    def test_str(self):
+        Sex.create_sexes()
+        self.assertEqual("Female", str(Sex.FEMALE_SEX))
+        self.assertEqual("Male", str(Sex.MALE_SEX))
+
     def test_create_invalid_sex(self):
         invalid_sex_label = "A"
         try:

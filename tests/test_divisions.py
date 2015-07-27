@@ -20,6 +20,10 @@ class DivisionTestCase(TestCase):
         self.division_without_constraints.belt_ranks.add(
                 *BeltRank.objects.filter(belt_rank__in=["WH", "YL"]))
 
+    def test_str(self):
+        self.assertEqual("constraint_division",
+                str(self.division_with_constraints))
+
     def test_duplicate_division_name(self):
         Division.objects.create(name="test division", sex=Sex.FEMALE_SEX)
         try:

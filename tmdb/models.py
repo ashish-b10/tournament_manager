@@ -334,3 +334,6 @@ class Team(models.Model):
     def save(self, *args, **kwargs):
         self.validate_team_members()
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "%s %s%i" %(self.organization, self.division, self.number)
