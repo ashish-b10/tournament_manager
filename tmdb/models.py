@@ -337,3 +337,93 @@ class Team(models.Model):
 
     def __str__(self):
         return "%s %s%i" %(self.organization, self.division, self.number)
+
+class Bracket(models.Model):
+    """ Identifier for all TeamMatches in a Division.
+
+    Attributes:
+        division    The division for all matches in the bracket
+        root_match  The root match of the bracket
+    """
+    division = models.OneToOneField(Division)
+
+class TeamMatch(models.Model):
+    """ A match between two (or more?) Teams in a Bracket. A TeamMatch
+    can have multiple CompetitorMatches.
+
+    There is a uniqueness constraint on parent and parent_side. If the
+    match is the root match of the bracket, then parent must be null,
+    parent_side must be set to 0, and root_match must be set to true.
+    Otherwise, parent_side and parent should be non-null and root_match
+    must be set to false. There should only be one match for each
+    bracket or which root_match is True.
+
+    Attributes:
+        bracket     The bracket that the match belongs to
+        number      The match number (unique amongst all TeamMatches)
+        parent      The TeamMatch the winner will advance to
+        parent_side The side of the parent the winner will play on
+        root_match  Whether this is the root_match of the bracket
+        teams       ManyToMany relationship of teams in the match
+    """
+    bracket = models.ForeignKey(Bracket)
+    number = models.PositiveIntegerField(unique=True)
+    parent = models.ForeignKey('self', null=True)
+    parent_side = models.IntegerField()
+    root_match = models.BooleanField()
+    teams = models.ManyToManyField(Team, through="TeamMatchParticipant")
+    class Meta:
+        unique_together = (("parent", "parent_side"),)
+
+    def has_root_match(self):
+        """ Return the root match of this match's bracket. """
+        return TeamMatch.objects.filter(
+                bracket=self.bracket).filter(root_match=True).exists()
+
+    def validate_single_root_match(self):
+        """ Validate that only one match in a bracket is the root. """
+        if not self.root_match: return
+        if self.has_root_match():
+            raise ValidationError("Bracket %s already has a root match"
+                    %(self.bracket))
+        if self.parent is not None:
+            raise ValidationError("Root match must have null parent")
+        if self.parent_side != 0: # TODO change this in cleaned_data
+            raise ValidationError("parent_side must be 0 for root match")
+
+    def validate_as_root_match(self):
+        """ Validate this match as the root match. If it's not the root
+        match, perform no checks and return. """
+        if not self.root_match: return
+        self.validate_single_root_match()
+
+    def validate_as_nonroot_match(self):
+        """ Validate this match as a non-root match. If it's the root
+        match, perform no checks and return. """
+        if self.root_match: return
+        if self.parent is None:
+            raise ValidationError("Non-root match must have non-null parent")
+        if self.parent_side not in {0, 1}:
+            raise ValidationError("parent_side must be in {0, 1}")
+
+    def validate_team_match(self):
+        self.validate_as_root_match()
+        self.validate_as_nonroot_match()
+
+    def save(self, *args, **kwargs):
+        self.validate_team_match()
+        super().save(*args, **kwargs)
+
+class TeamMatchParticipant(models.Model):
+    """ Stores participants for TeamMatches.
+
+    Attributes:
+        team_match  The match of the participant
+        team        The participant in the match
+        slot_side   Stores the side of the match team is on
+    """
+    team_match = models.ForeignKey(TeamMatch)
+    team = models.ForeignKey(Team)
+    slot_side = models.IntegerField()
+    class Meta:
+        unique_together = (("team_match", "team"),)
