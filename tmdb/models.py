@@ -417,6 +417,11 @@ class TeamMatch(models.Model):
 class TeamMatchParticipant(models.Model):
     """ Stores participants for TeamMatches.
 
+    Initially, we start with a list of matches and the parent matches to
+    which they correspond. As results are generated,
+    TeamMatch.parent_side is used to determine
+    TeamMatchParticipant.slot_side for the subsequent round.
+
     Attributes:
         team_match  The match of the participant
         team        The participant in the match
@@ -426,4 +431,14 @@ class TeamMatchParticipant(models.Model):
     team = models.ForeignKey(Team)
     slot_side = models.IntegerField()
     class Meta:
-        unique_together = (("team_match", "team"),)
+        unique_together = (
+            ("team_match", "team"), ("team_match", "slot_side"),
+        )
+
+    def validate_slot_side(self):
+        if self.slot_side not in {0, 1}:
+            raise ValidationError("slot_side must be in {0, 1}")
+
+    def save(self, *args, **kwargs):
+        self.validate_slot_side()
+        super().save(*args, **kwargs)
