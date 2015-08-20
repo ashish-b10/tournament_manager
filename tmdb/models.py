@@ -359,12 +359,14 @@ class TeamMatch(models.Model):
     bracket or which root_match is True.
 
     Attributes:
-        bracket     The bracket that the match belongs to
-        number      The match number (unique amongst all TeamMatches)
-        parent      The TeamMatch the winner will advance to
-        parent_side The side of the parent the winner will play on
-        root_match  Whether this is the root_match of the bracket
-        teams       ManyToMany relationship of teams in the match
+        bracket         The bracket that the match belongs to
+        number          The match number (unique amongst all
+                        TeamMatches)
+        parent          The TeamMatch the winner will advance to
+        parent_side     The side of the parent the winner will play on
+        root_match      Whether this is the root_match of the bracket
+        teams           ManyToMany relationship of teams in the match
+        winning_team    The winner of the TeamMatch
     """
     bracket = models.ForeignKey(Bracket)
     number = models.PositiveIntegerField(unique=True)
@@ -372,6 +374,8 @@ class TeamMatch(models.Model):
     parent_side = models.IntegerField()
     root_match = models.BooleanField()
     teams = models.ManyToManyField(Team, through="TeamMatchParticipant")
+    winning_team = models.ForeignKey(Team, null=True,
+            related_name="winning_team")
     class Meta:
         unique_together = (("parent", "parent_side"),)
 
