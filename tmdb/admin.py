@@ -1,10 +1,13 @@
 from django.contrib import admin
 
-from .models import Sex, BeltRank, Organization, Division, Competitor, Team
-admin.site.register(Sex)
-admin.site.register(BeltRank)
-admin.site.register(Organization)
-admin.site.register(Division)
-admin.site.register(Competitor)
-admin.site.register(Team)
-
+import tmdb.models as mdls
+admin.site.register(mdls.Sex)
+admin.site.register(mdls.BeltRank)
+admin.site.register(mdls.Organization)
+admin.site.register(mdls.Division)
+admin.site.register(mdls.Competitor)
+admin.site.register(mdls.Team)
+admin.site.register(mdls.Bracket)
+admin.site.register(mdls.TeamMatch)
+admin.site.register(mdls.TeamMatchParticipant)
+admin.site.register(mdls.RingAssignment)
