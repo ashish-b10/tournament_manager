@@ -374,7 +374,7 @@ class TeamMatch(models.Model):
     parent_side = models.IntegerField()
     root_match = models.BooleanField()
     teams = models.ManyToManyField(Team, through="TeamMatchParticipant")
-    winning_team = models.ForeignKey(Team, null=True,
+    winning_team = models.ForeignKey(Team, blank=True, null=True,
             related_name="winning_team")
     class Meta:
         unique_together = (("parent", "parent_side"),)
