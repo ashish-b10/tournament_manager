@@ -446,3 +446,15 @@ class TeamMatchParticipant(models.Model):
     def save(self, *args, **kwargs):
         self.validate_slot_side()
         super().save(*args, **kwargs)
+
+class RingAssignment(models.Model):
+    """ A table to Store the ring number of a TeamMatch
+
+    Attributes:
+        number          The number of the match's ring
+        team_match      The ID of the TeamMatch being assigned
+        assignment_time The time at which the assignment was created
+    """
+    number = models.PositiveIntegerField()
+    team_match = models.OneToOneField(TeamMatch)
+    assignment_time = models.DateTimeField()
