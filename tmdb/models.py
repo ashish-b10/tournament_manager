@@ -370,7 +370,7 @@ class TeamMatch(models.Model):
     """
     bracket = models.ForeignKey(Bracket)
     number = models.PositiveIntegerField(unique=True)
-    parent = models.ForeignKey('self', null=True)
+    parent = models.ForeignKey('self', blank=True, null=True)
     parent_side = models.IntegerField()
     root_match = models.BooleanField()
     teams = models.ManyToManyField(Team, through="TeamMatchParticipant")
