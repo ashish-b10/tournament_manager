@@ -413,9 +413,8 @@ class TeamMatch(models.Model):
         self.validate_as_root_match()
         self.validate_as_nonroot_match()
 
-    def save(self, *args, **kwargs):
+    def clean(self, *args, **kwargs):
         self.validate_team_match()
-        super().save(*args, **kwargs)
 
 class TeamMatchParticipant(models.Model):
     """ Stores participants for TeamMatches.

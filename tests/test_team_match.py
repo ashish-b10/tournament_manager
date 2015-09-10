@@ -7,37 +7,51 @@ class TeamMatchTestCase(TestCase):
     def setUp(self):
         mdls.Sex.create_sexes()
         mdls.BeltRank.create_tkd_belt_ranks()
-        self.division = mdls.Division.objects.create(name="test_division",
+        self.division = mdls.Division(name="test_division",
                 sex=mdls.Sex.FEMALE_SEX)
-        self.bracket = mdls.Bracket.objects.create(division=self.division)
+        self.division.clean()
+        self.division.save()
+
+        self.bracket = mdls.Bracket(division=self.division)
+        self.bracket.clean()
+        self.bracket.save()
 
     def test_root_team_match_valid(self):
-        root_match = mdls.TeamMatch.objects.create(bracket=self.bracket,
-                number=1, parent_side=0, root_match=True)
+        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+                parent_side=0, root_match=True)
+        root_match.clean()
+        root_match.save()
         self.assertTrue(root_match.has_root_match(),
                 "has_root_match() returned False after creating root_match")
 
     def test_root_team_match_duplicate(self):
-        root_match = mdls.TeamMatch.objects.create(bracket=self.bracket,
-                number=1, parent_side=0, root_match=True)
+        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+                parent_side=0, root_match=True)
+        root_match.clean()
+        root_match.save()
         self.assertTrue(root_match.has_root_match(),
                 "has_root_match() returned False after creating root_match")
+        root_match2 = mdls.TeamMatch(bracket=self.bracket, number=2,
+                parent_side=0, root_match=True)
         try:
-            mdls.TeamMatch.objects.create(bracket=self.bracket, number=2,
-                    parent_side=0, root_match=True)
+            root_match2.clean()
         except ValidationError:
             pass
         else:
             self.fail("Expected ValidationError creating second root_match")
 
     def test_duplicate_match_number(self):
-        root_match = mdls.TeamMatch.objects.create(bracket=self.bracket,
-                number=1, parent_side=0, root_match=True)
+        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+                parent_side=0, root_match=True)
+        root_match.clean()
+        root_match.save()
         self.assertTrue(root_match.has_root_match(),
                 "has_root_match() returned False after creating root_match")
+        match2 = mdls.TeamMatch(bracket=self.bracket, number=1,
+                parent=root_match, parent_side=0, root_match=False)
+        match2.clean()
         try:
-            mdls.TeamMatch.objects.create(bracket=self.bracket, number=1,
-                    parent=root_match, parent_side=0, root_match=False)
+            match2.save()
         except IntegrityError:
             pass
         else:
@@ -45,9 +59,10 @@ class TeamMatchTestCase(TestCase):
                     + " IntegrityError")
 
     def test_root_team_match_invalid_parent_side(self):
+        team_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+                parent_side=1, root_match=True)
         try:
-            mdls.TeamMatch.objects.create(bracket=self.bracket, number=1,
-                    parent_side=1, root_match=True)
+            team_match.clean()
         except ValidationError:
             pass
         else:
@@ -55,19 +70,28 @@ class TeamMatchTestCase(TestCase):
                     + " produce ValidationError")
 
     def test_nonroot_team_match_valid(self):
-        root_match = mdls.TeamMatch.objects.create(bracket=self.bracket,
+        root_match = mdls.TeamMatch(bracket=self.bracket,
                 number=1, parent_side=0, root_match=True)
-        mdls.TeamMatch.objects.create(bracket=self.bracket, number=2,
+        root_match.clean()
+        root_match.save()
+        match2 = mdls.TeamMatch(bracket=self.bracket, number=2,
                 parent_side=0, parent=root_match, root_match=False)
-        mdls.TeamMatch.objects.create(bracket=self.bracket, number=3,
+        match2.clean()
+        match2.save()
+        match3 = mdls.TeamMatch(bracket=self.bracket, number=3,
                 parent_side=1, parent=root_match, root_match=False)
+        match3.clean()
+        match3.save()
 
     def test_nonroot_team_match_invalid_null_parent(self):
-        root_match = mdls.TeamMatch.objects.create(bracket=self.bracket,
-                number=1, parent_side=0, root_match=True)
+        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+                parent_side=0, root_match=True)
+        root_match.clean()
+        root_match.save()
+        match2 = mdls.TeamMatch(bracket=self.bracket, number=2, parent_side=0,
+                root_match=False)
         try:
-            mdls.TeamMatch.objects.create(bracket=self.bracket, number=2,
-                    parent_side=0, root_match=False)
+            match2.clean()
         except ValidationError:
             pass
         else:
@@ -75,11 +99,14 @@ class TeamMatchTestCase(TestCase):
                     + " null parent")
 
     def test_nonroot_team_match_invalid_parent_side(self):
-        root_match = mdls.TeamMatch.objects.create(bracket=self.bracket,
+        root_match = mdls.TeamMatch(bracket=self.bracket,
                 number=1, parent_side=0, root_match=True)
+        root_match.clean()
+        root_match.save()
+        match2 = mdls.TeamMatch(bracket=self.bracket, number=2, parent_side=2,
+                parent=root_match, root_match=False)
         try:
-            mdls.TeamMatch.objects.create(bracket=self.bracket, number=2,
-                    parent_side=2, parent=root_match, root_match=False)
+            match2.clean()
         except ValidationError:
             pass
         else:
@@ -87,13 +114,18 @@ class TeamMatchTestCase(TestCase):
                     + " parent_side not in {0, 1}")
 
     def test_duplicate_nonroot_team_match(self):
-        root_match = mdls.TeamMatch.objects.create(bracket=self.bracket,
+        root_match = mdls.TeamMatch(bracket=self.bracket,
                 number=1, parent_side=0, root_match=True)
-        mdls.TeamMatch.objects.create(bracket=self.bracket, number=2,
+        root_match.clean()
+        root_match.save()
+        match2 = mdls.TeamMatch(bracket=self.bracket, number=2,
                 parent_side=0, parent=root_match, root_match=False)
+        match2.clean()
+        match2.save()
+        match3 = mdls.TeamMatch(bracket=self.bracket, number=3, parent_side=0,
+                parent=root_match, root_match=False)
         try:
-            mdls.TeamMatch.objects.create(bracket=self.bracket, number=3,
-                    parent_side=0, parent=root_match, root_match=False)
+            match3.save()
         except IntegrityError:
             pass
         else:
