@@ -331,9 +331,8 @@ class Team(models.Model):
         self.division.validate_competitor(self.alternate1)
         self.division.validate_competitor(self.alternate2)
 
-    def save(self, *args, **kwargs):
+    def clean(self, *args, **kwargs):
         self.validate_team_members()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return "%s %s%i" %(self.organization, self.division, self.number)
