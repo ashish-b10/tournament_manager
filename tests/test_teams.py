@@ -1,5 +1,6 @@
 from django.test import TestCase
-from tmdb.models import Organization, Competitor, Team, Division, Sex, BeltRank
+from tmdb.models import Organization, Competitor, Team, Division, SexField,\
+    BeltRank
 from django.db.utils import IntegrityError
 from decimal import Decimal
 from django.core.exceptions import ValidationError
@@ -7,7 +8,6 @@ from unittest import skip
 
 class TeamTestCase(TestCase):
     def setUp(self):
-        Sex.create_sexes()
         BeltRank.create_tkd_belt_ranks()
 
         self.org1 = Organization(name="org1")
@@ -18,25 +18,25 @@ class TeamTestCase(TestCase):
         self.org2.save()
 
         self.lightweight1 = Competitor(name="sample lightweight1",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
                 organization=self.org1, weight=Decimal("117.0"))
         self.lightweight1.clean()
         self.lightweight1.save()
         self.middleweight1 = Competitor(name="sample middleweight1",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
                 organization=self.org1, weight=Decimal("137.0"))
         self.middleweight1.clean()
         self.middleweight1.save()
         self.heavyweight1 = Competitor(name="sample heavyweight1",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
                 organization=self.org1, weight=Decimal("157.0"))
         self.heavyweight1.clean()
         self.heavyweight1.save()
 
-        self.division1 = Division(name="Women's D", sex=Sex.FEMALE_SEX)
+        self.division1 = Division(name="Women's D", sex=SexField.FEMALE_DB_VAL)
         self.division1.clean()
         self.division1.save()
         self.division1.belt_ranks.add(BeltRank.objects.get(belt_rank="WH"))
@@ -254,7 +254,7 @@ class TeamTestCase(TestCase):
 
     def test_add_competitor_violating_division_constraints(self):
         sample_male_competitor = Competitor(name="sample male",
-                sex=Sex.MALE_SEX,
+                sex=SexField.MALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=20,
                 organization=self.org1, weight=Decimal("117.0"))
         sample_male_competitor.clean()

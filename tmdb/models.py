@@ -3,30 +3,26 @@ from django.core.exceptions import ValidationError
 import decimal
 from itertools import product
 
-class Sex(models.Model):
-    SEXES = (
-        ('F', 'Female'),
-        ('M', 'Male'),
+class SexField(models.CharField):
+    FEMALE_DB_VAL = 'F'
+    MALE_DB_VAL = 'M'
+    choices = (
+        (FEMALE_DB_VAL, 'Female'),
+        (MALE_DB_VAL, 'Male'),
     )
-    _sexes_names = dict(SEXES)
-    _sexes_set = {sex[0] for sex in SEXES}
+    _sexes_names = dict(choices)
 
-    sex = models.CharField(max_length=1, choices=SEXES, unique=True)
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 1
+        super(SexField, self).__init__(*args, **kwargs)
 
-    def save(self, *args, **kwargs):
-        if not self.sex in Sex._sexes_set:
-            raise ValidationError("Invalid Sex value: " + str(self.sex))
-        super().save(*args, **kwargs)
+    def to_python(self, value):
+        if not value in SexField._sexes_names.keys():
+            raise ValidationError("Invalid SexField value: " + value)
+        return value
 
     def __str__(self):
         return self._sexes_names[self.sex]
-
-    @classmethod
-    def create_sexes(cls):
-        for sex_label in cls._sexes_set:
-            Sex.objects.create(sex = sex_label)
-        cls.FEMALE_SEX = Sex.objects.get(sex="F")
-        cls.MALE_SEX = Sex.objects.get(sex="M")
 
 class BeltRank(models.Model):
     BELT_RANKS = (
@@ -87,7 +83,7 @@ class Division(models.Model):
     min_weight = WeightField(null=True, blank=True)
     max_weight = WeightField(null=True, blank=True)
     belt_ranks = models.ManyToManyField(BeltRank)
-    sex = models.ForeignKey(Sex)
+    sex = SexField()
     class Meta:
         unique_together = (("sex", "min_age", "max_age", "min_weight",
                 "max_weight"),)
@@ -157,10 +153,10 @@ class Division(models.Model):
 
     @classmethod
     def create_ectc_divisions(self):
-        for sex, skill_name in product(Sex.objects.all(),
+        for sex, skill_name in product(("F", "M"),
                 Division.ECTC_DIVISION_SKILLS):
             belt_ranks = Division.ECTC_DIVISION_SKILLS[skill_name]
-            name = "%s %s" %(Division.DIVISION_SEX_NAMES[sex.sex],
+            name = "%s %s" %(Division.DIVISION_SEX_NAMES[sex],
                     skill_name)
             division = Division.objects.create(name=name, sex=sex)
             division.belt_ranks.add(*BeltRank.objects.filter(
@@ -181,7 +177,7 @@ class Competitor(models.Model):
         },
     }
     name = models.CharField(max_length=63)
-    sex = models.ForeignKey(Sex)
+    sex = SexField()
     skill_level = models.ForeignKey(BeltRank)
     age = models.IntegerField()
     organization = models.ForeignKey(Organization)
@@ -195,13 +191,13 @@ class Competitor(models.Model):
         return weight >= cutoffs[0] and weight <= cutoffs[1]
 
     def is_lightweight(self):
-        return self._is_between_cutoffs(self.weight, self.sex.sex, 'light')
+        return self._is_between_cutoffs(self.weight, self.sex, 'light')
 
     def is_middleweight(self):
-        return self._is_between_cutoffs(self.weight, self.sex.sex, 'middle')
+        return self._is_between_cutoffs(self.weight, self.sex, 'middle')
 
     def is_heavyweight(self):
-        return self._is_between_cutoffs(self.weight, self.sex.sex, 'heavy')
+        return self._is_between_cutoffs(self.weight, self.sex, 'heavy')
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.organization)

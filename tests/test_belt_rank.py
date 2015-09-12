@@ -1,5 +1,5 @@
 from django.test import TestCase
-from tmdb.models import BeltRank, Competitor, Sex
+from tmdb.models import BeltRank, Competitor
 from django.core.exceptions import ValidationError
 
 class BeltRankTestCase(TestCase):

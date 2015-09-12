@@ -1,5 +1,5 @@
 from django.test import TestCase
-from tmdb.models import Organization, Competitor, Sex, BeltRank, Division
+from tmdb.models import Organization, Competitor, SexField, BeltRank, Division
 from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
 from decimal import Decimal
@@ -7,16 +7,15 @@ import itertools as it
 
 class DivisionTestCase(TestCase):
     def setUp(self):
-        Sex.create_sexes()
         BeltRank.create_tkd_belt_ranks()
         self.org1 = Organization.objects.create(name="org1")
         self.division_with_constraints = Division.objects.create(
                 name="constraint_division", min_age=20, max_age=30,
-                min_weight=110, max_weight=120, sex=Sex.FEMALE_SEX)
+                min_weight=110, max_weight=120, sex=SexField.FEMALE_DB_VAL)
         self.division_with_constraints.belt_ranks.add(
                 *BeltRank.objects.filter(belt_rank__in=["WH", "YL"]))
         self.division_without_constraints = Division.objects.create(
-                name="no_constraint_division", sex=Sex.FEMALE_SEX)
+                name="no_constraint_division", sex=SexField.FEMALE_DB_VAL)
         self.division_without_constraints.belt_ranks.add(
                 *BeltRank.objects.filter(belt_rank__in=["WH", "YL"]))
 
@@ -25,9 +24,11 @@ class DivisionTestCase(TestCase):
                 str(self.division_with_constraints))
 
     def test_duplicate_division_name(self):
-        Division.objects.create(name="test division", sex=Sex.FEMALE_SEX)
+        Division.objects.create(name="test division",
+                sex=SexField.FEMALE_DB_VAL)
         try:
-            Division.objects.create(name="test division", sex=Sex.FEMALE_SEX)
+            Division.objects.create(name="test division",
+                    sex=SexField.FEMALE_DB_VAL)
         except IntegrityError:
             pass
         else:
@@ -41,28 +42,34 @@ class DivisionTestCase(TestCase):
 
     def test_ectc_division_belt_ranks(self):
         Division.create_ectc_divisions()
-        division = Division.objects.get(name="Women's A", sex=Sex.FEMALE_SEX)
+        division = Division.objects.get(name="Women's A",
+                sex=SexField.FEMALE_DB_VAL)
         self.verify_division_belt_ranks(division.belt_ranks.all(),
                 Division.a_team_belt_ranks)
-        division = Division.objects.get(name="Women's B", sex=Sex.FEMALE_SEX)
+        division = Division.objects.get(name="Women's B",
+                sex=SexField.FEMALE_DB_VAL)
         self.verify_division_belt_ranks(division.belt_ranks.all(),
                 Division.b_team_belt_ranks)
-        division = Division.objects.get(name="Women's C", sex=Sex.FEMALE_SEX)
+        division = Division.objects.get(name="Women's C",
+                sex=SexField.FEMALE_DB_VAL)
         self.verify_division_belt_ranks(division.belt_ranks.all(),
                 Division.c_team_belt_ranks)
-        division = Division.objects.get(name="Men's A", sex=Sex.MALE_SEX)
+        division = Division.objects.get(name="Men's A",
+                sex=SexField.MALE_DB_VAL)
         self.verify_division_belt_ranks(division.belt_ranks.all(),
                 Division.a_team_belt_ranks)
-        division = Division.objects.get(name="Men's B", sex=Sex.MALE_SEX)
+        division = Division.objects.get(name="Men's B",
+                sex=SexField.MALE_DB_VAL)
         self.verify_division_belt_ranks(division.belt_ranks.all(),
                 Division.b_team_belt_ranks)
-        division = Division.objects.get(name="Men's C", sex=Sex.MALE_SEX)
+        division = Division.objects.get(name="Men's C",
+                sex=SexField.MALE_DB_VAL)
         self.verify_division_belt_ranks(division.belt_ranks.all(),
                 Division.c_team_belt_ranks)
 
     def test_competitor_too_young(self):
         competitor = Competitor.objects.create(name="competitor",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=19,
                 organization=self.org1, weight=Decimal("115"))
         try:
@@ -74,7 +81,7 @@ class DivisionTestCase(TestCase):
 
     def test_competitor_too_young_no_constraints_division(self):
         competitor = Competitor.objects.create(name="competitor",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=19,
                 organization=self.org1, weight=Decimal("115"))
         try:
@@ -85,7 +92,7 @@ class DivisionTestCase(TestCase):
 
     def test_competitor_too_old(self):
         competitor = Competitor.objects.create(name="competitor",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=31,
                 organization=self.org1, weight=Decimal("115"))
         try:
@@ -97,7 +104,7 @@ class DivisionTestCase(TestCase):
 
     def test_competitor_too_light(self):
         competitor = Competitor.objects.create(name="competitor",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=25,
                 organization=self.org1, weight=Decimal("105"))
         try:
@@ -109,7 +116,7 @@ class DivisionTestCase(TestCase):
 
     def test_competitor_too_heavy(self):
         competitor = Competitor.objects.create(name="competitor",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=25,
                 organization=self.org1, weight=Decimal("125"))
         try:
@@ -121,7 +128,7 @@ class DivisionTestCase(TestCase):
 
     def test_competitor_invalid_sex(self):
         competitor = Competitor.objects.create(name="competitor",
-                sex=Sex.MALE_SEX,
+                sex=SexField.MALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="WH"), age=25,
                 organization=self.org1, weight=Decimal("115"))
         try:
@@ -134,7 +141,7 @@ class DivisionTestCase(TestCase):
 
     def test_competitor_invalid_belt_rank(self):
         competitor = Competitor.objects.create(name="competitor",
-                sex=Sex.FEMALE_SEX,
+                sex=SexField.FEMALE_DB_VAL,
                 skill_level=BeltRank.objects.get(belt_rank="BK"), age=25,
                 organization=self.org1, weight=Decimal("115"))
         try:
