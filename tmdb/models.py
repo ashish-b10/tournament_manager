@@ -441,9 +441,8 @@ class TeamMatchParticipant(models.Model):
         if self.slot_side not in {0, 1}:
             raise ValidationError("slot_side must be in {0, 1}")
 
-    def save(self, *args, **kwargs):
+    def clean(self, *args, **kwargs):
         self.validate_slot_side()
-        super().save(*args, **kwargs)
 
 class RingAssignment(models.Model):
     """ A table to Store the ring number of a TeamMatch
