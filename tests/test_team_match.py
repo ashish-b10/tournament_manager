@@ -12,12 +12,8 @@ class TeamMatchTestCase(TestCase):
         self.division.clean()
         self.division.save()
 
-        self.bracket = mdls.Bracket(division=self.division)
-        self.bracket.clean()
-        self.bracket.save()
-
     def test_root_team_match_valid(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
@@ -25,13 +21,13 @@ class TeamMatchTestCase(TestCase):
                 "has_root_match() returned False after creating root_match")
 
     def test_root_team_match_duplicate(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
         self.assertTrue(root_match.has_root_match(),
                 "has_root_match() returned False after creating root_match")
-        root_match2 = mdls.TeamMatch(bracket=self.bracket, number=2,
+        root_match2 = mdls.TeamMatch(division=self.division, number=2,
                 parent_side=0, root_match=True)
         try:
             root_match2.clean()
@@ -41,13 +37,13 @@ class TeamMatchTestCase(TestCase):
             self.fail("Expected ValidationError creating second root_match")
 
     def test_duplicate_match_number(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
         self.assertTrue(root_match.has_root_match(),
                 "has_root_match() returned False after creating root_match")
-        match2 = mdls.TeamMatch(bracket=self.bracket, number=1,
+        match2 = mdls.TeamMatch(division=self.division, number=1,
                 parent=root_match, parent_side=0, root_match=False)
         match2.clean()
         try:
@@ -59,7 +55,7 @@ class TeamMatchTestCase(TestCase):
                     + " IntegrityError")
 
     def test_root_team_match_invalid_parent_side(self):
-        team_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        team_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=1, root_match=True)
         try:
             team_match.clean()
@@ -70,26 +66,26 @@ class TeamMatchTestCase(TestCase):
                     + " produce ValidationError")
 
     def test_nonroot_team_match_valid(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket,
+        root_match = mdls.TeamMatch(division=self.division,
                 number=1, parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
-        match2 = mdls.TeamMatch(bracket=self.bracket, number=2,
+        match2 = mdls.TeamMatch(division=self.division, number=2,
                 parent_side=0, parent=root_match, root_match=False)
         match2.clean()
         match2.save()
-        match3 = mdls.TeamMatch(bracket=self.bracket, number=3,
+        match3 = mdls.TeamMatch(division=self.division, number=3,
                 parent_side=1, parent=root_match, root_match=False)
         match3.clean()
         match3.save()
 
     def test_nonroot_team_match_invalid_null_parent(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
-        match2 = mdls.TeamMatch(bracket=self.bracket, number=2, parent_side=0,
-                root_match=False)
+        match2 = mdls.TeamMatch(division=self.division, number=2,
+                parent_side=0, root_match=False)
         try:
             match2.clean()
         except ValidationError:
@@ -99,12 +95,12 @@ class TeamMatchTestCase(TestCase):
                     + " null parent")
 
     def test_nonroot_team_match_invalid_parent_side(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket,
-                number=1, parent_side=0, root_match=True)
+        root_match = mdls.TeamMatch(division=self.division, number=1,
+                parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
-        match2 = mdls.TeamMatch(bracket=self.bracket, number=2, parent_side=2,
-                parent=root_match, root_match=False)
+        match2 = mdls.TeamMatch(division=self.division, number=2,
+                parent_side=2, parent=root_match, root_match=False)
         try:
             match2.clean()
         except ValidationError:
@@ -114,16 +110,16 @@ class TeamMatchTestCase(TestCase):
                     + " parent_side not in {0, 1}")
 
     def test_duplicate_nonroot_team_match(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket,
-                number=1, parent_side=0, root_match=True)
+        root_match = mdls.TeamMatch(division=self.division, number=1,
+                parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
-        match2 = mdls.TeamMatch(bracket=self.bracket, number=2,
+        match2 = mdls.TeamMatch(division=self.division, number=2,
                 parent_side=0, parent=root_match, root_match=False)
         match2.clean()
         match2.save()
-        match3 = mdls.TeamMatch(bracket=self.bracket, number=3, parent_side=0,
-                parent=root_match, root_match=False)
+        match3 = mdls.TeamMatch(division=self.division, number=3,
+                parent_side=0, parent=root_match, root_match=False)
         try:
             match3.save()
         except IntegrityError:

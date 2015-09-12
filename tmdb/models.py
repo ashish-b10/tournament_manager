@@ -337,37 +337,28 @@ class Team(models.Model):
     def __str__(self):
         return "%s %s%i" %(self.organization, self.division, self.number)
 
-class Bracket(models.Model):
-    """ Identifier for all TeamMatches in a Division.
-
-    Attributes:
-        division    The division for all matches in the bracket
-        root_match  The root match of the bracket
-    """
-    division = models.OneToOneField(Division)
-
 class TeamMatch(models.Model):
-    """ A match between two (or more?) Teams in a Bracket. A TeamMatch
+    """ A match between two (or more?) Teams in a Division. A TeamMatch
     can have multiple CompetitorMatches.
 
     There is a uniqueness constraint on parent and parent_side. If the
-    match is the root match of the bracket, then parent must be null,
+    match is the root match of the division, then parent must be null,
     parent_side must be set to 0, and root_match must be set to true.
     Otherwise, parent_side and parent should be non-null and root_match
     must be set to false. There should only be one match for each
-    bracket or which root_match is True.
+    division for which root_match is True.
 
     Attributes:
-        bracket         The bracket that the match belongs to
+        division        The division that the match belongs to
         number          The match number (unique amongst all
                         TeamMatches)
         parent          The TeamMatch the winner will advance to
         parent_side     The side of the parent the winner will play on
-        root_match      Whether this is the root_match of the bracket
+        root_match      Whether this is the root_match of the division
         teams           ManyToMany relationship of teams in the match
         winning_team    The winner of the TeamMatch
     """
-    bracket = models.ForeignKey(Bracket)
+    division = models.ForeignKey(Division)
     number = models.PositiveIntegerField(unique=True)
     parent = models.ForeignKey('self', blank=True, null=True)
     parent_side = models.IntegerField()
@@ -379,19 +370,19 @@ class TeamMatch(models.Model):
         unique_together = (("parent", "parent_side"),)
 
     def has_root_match(self):
-        """ Return the root match of this match's bracket. """
+        """ Return the root match of this match's division. """
         return TeamMatch.objects.filter(
-                bracket=self.bracket).filter(root_match=True).exists()
+                division=self.division).filter(root_match=True).exists()
 
     def validate_single_root_match(self):
-        """ Validate that only one match in a bracket is the root. """
+        """ Validate that only one match in a division is the root. """
         if not self.root_match: return
         if self.has_root_match():
-            raise ValidationError("Bracket %s already has a root match"
-                    %(self.bracket))
+            raise ValidationError("Division %s already has a root match"
+                    %(self.division))
         if self.parent is not None:
             raise ValidationError("Root match must have null parent")
-        if self.parent_side != 0: # TODO change this in cleaned_data
+        if self.parent_side != 0:
             raise ValidationError("parent_side must be 0 for root match")
 
     def validate_as_root_match(self):

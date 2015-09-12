@@ -11,9 +11,6 @@ class TeamMatchParticipantsTestCase(TestCase):
                 sex=mdls.Sex.FEMALE_SEX)
         self.division.clean()
         self.division.save()
-        self.bracket = mdls.Bracket(division=self.division)
-        self.bracket.clean()
-        self.bracket.save()
 
         self.org1 = mdls.Organization(name="org1")
         self.org1.clean()
@@ -36,14 +33,14 @@ class TeamMatchParticipantsTestCase(TestCase):
         self.org2_team2.save()
 
     def test_add_root_match_participant(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
         self.assertTrue(root_match.has_root_match(),
                 "has_root_match() returned False after creating root_match")
 
-        child_match = mdls.TeamMatch(bracket=self.bracket, number=2,
+        child_match = mdls.TeamMatch(division=self.division, number=2,
                 parent_side=0, parent=root_match, root_match=False)
         child_match.clean()
         child_match.save()
@@ -70,7 +67,7 @@ class TeamMatchParticipantsTestCase(TestCase):
                 "org1_team and org2_team are the teams in root_match")
 
     def test_add_participant_duplicate_slot_side(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
@@ -93,7 +90,7 @@ class TeamMatchParticipantsTestCase(TestCase):
                     + "  same match and slot_side")
 
     def test_add_participant_duplicate_team(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
@@ -116,7 +113,7 @@ class TeamMatchParticipantsTestCase(TestCase):
                     + " same TeamMatch and Team")
 
     def test_add_participant_invalid_slot_side(self):
-        root_match = mdls.TeamMatch(bracket=self.bracket, number=1,
+        root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
