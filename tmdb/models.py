@@ -352,6 +352,9 @@ class TeamMatch(models.Model):
         parent_side     The side of the parent the winner will play on
         root_match      Whether this is the root_match of the division
         teams           ManyToMany relationship of teams in the match
+        ring_number     The number of the assigned ring
+        ring_assignment_time
+                        The time at which the ring was assigned
         winning_team    The winner of the TeamMatch
     """
     division = models.ForeignKey(Division)
@@ -360,6 +363,8 @@ class TeamMatch(models.Model):
     parent_side = models.IntegerField()
     root_match = models.BooleanField()
     teams = models.ManyToManyField(Team, through="TeamMatchParticipant")
+    ring_number = models.PositiveIntegerField(blank=True, null=True)
+    ring_assignment_time = models.DateTimeField(blank=True, null=True)
     winning_team = models.ForeignKey(Team, blank=True, null=True,
             related_name="winning_team")
     class Meta:
@@ -430,15 +435,3 @@ class TeamMatchParticipant(models.Model):
 
     def clean(self, *args, **kwargs):
         self.validate_slot_side()
-
-class RingAssignment(models.Model):
-    """ A table to Store the ring number of a TeamMatch
-
-    Attributes:
-        number          The number of the match's ring
-        team_match      The ID of the TeamMatch being assigned
-        assignment_time The time at which the assignment was created
-    """
-    number = models.PositiveIntegerField()
-    team_match = models.OneToOneField(TeamMatch)
-    assignment_time = models.DateTimeField()
