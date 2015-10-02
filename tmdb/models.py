@@ -362,7 +362,10 @@ class TeamMatch(models.Model):
     parent = models.ForeignKey('self', blank=True, null=True)
     parent_side = models.IntegerField()
     root_match = models.BooleanField()
-    teams = models.ManyToManyField(Team, through="TeamMatchParticipant")
+    blue_team = models.ForeignKey(Team, related_name="blue_team", blank=True,
+            null=True)
+    red_team = models.ForeignKey(Team, related_name="red_team", blank=True,
+            null=True)
     ring_number = models.PositiveIntegerField(blank=True, null=True)
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
     winning_team = models.ForeignKey(Team, blank=True, null=True,
@@ -370,15 +373,19 @@ class TeamMatch(models.Model):
     class Meta:
         unique_together = (("parent", "parent_side"),)
 
-    def has_root_match(self):
+    def get_root_match(self):
         """ Return the root match of this match's division. """
-        return TeamMatch.objects.filter(
-                division=self.division).filter(root_match=True).exists()
+        root_matches = TeamMatch.objects.filter(
+                division=self.division).filter(root_match=True)
+        if not root_matches:
+            return None
+        return root_matches.get()
 
     def validate_single_root_match(self):
         """ Validate that only one match in a division is the root. """
         if not self.root_match: return
-        if self.has_root_match():
+        root_match = self.get_root_match()
+        if root_match is not None and root_match != self:
             raise ValidationError("Division %s already has a root match"
                     %(self.division))
         if self.parent is not None:
@@ -401,37 +408,17 @@ class TeamMatch(models.Model):
         if self.parent_side not in {0, 1}:
             raise ValidationError("parent_side must be in {0, 1}")
 
+    def validate_distinct_participants(self):
+        """ Validate the blue_team != red_team. """
+        if self.blue_team is None: return
+        if self.red_team is None: return
+        if self.blue_team == self.red_team:
+            raise ValidationError("blue_team == red_team is not permitted")
+
     def validate_team_match(self):
         self.validate_as_root_match()
         self.validate_as_nonroot_match()
+        self.validate_distinct_participants()
 
     def clean(self, *args, **kwargs):
         self.validate_team_match()
-
-class TeamMatchParticipant(models.Model):
-    """ Stores participants for TeamMatches.
-
-    Initially, we start with a list of matches and the parent matches to
-    which they correspond. As results are generated,
-    TeamMatch.parent_side is used to determine
-    TeamMatchParticipant.slot_side for the subsequent round.
-
-    Attributes:
-        team_match  The match of the participant
-        team        The participant in the match
-        slot_side   Stores the side of the match team is on
-    """
-    team_match = models.ForeignKey(TeamMatch)
-    team = models.ForeignKey(Team)
-    slot_side = models.IntegerField()
-    class Meta:
-        unique_together = (
-            ("team_match", "team"), ("team_match", "slot_side"),
-        )
-
-    def validate_slot_side(self):
-        if self.slot_side not in {0, 1}:
-            raise ValidationError("slot_side must be in {0, 1}")
-
-    def clean(self, *args, **kwargs):
-        self.validate_slot_side()

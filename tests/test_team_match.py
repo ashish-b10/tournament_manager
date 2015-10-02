@@ -11,21 +11,30 @@ class TeamMatchTestCase(TestCase):
         self.division.clean()
         self.division.save()
 
+        self.org1 = mdls.Organization(name="org1")
+        self.org1.clean()
+        self.org1.save()
+
+        self.org1_team = mdls.Team(number=1, division=self.division,
+                organization = self.org1)
+        self.org1_team.clean()
+        self.org1_team.save()
+
     def test_root_team_match_valid(self):
         root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
-        self.assertTrue(root_match.has_root_match(),
-                "has_root_match() returned False after creating root_match")
+        self.assertTrue(root_match == root_match.get_root_match(),
+                "root_match.get_root_match() should return root_match")
 
     def test_root_team_match_duplicate(self):
         root_match = mdls.TeamMatch(division=self.division, number=1,
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
-        self.assertTrue(root_match.has_root_match(),
-                "has_root_match() returned False after creating root_match")
+        self.assertTrue(root_match == root_match.get_root_match(),
+                "root_match.get_root_match() should return root_match")
         root_match2 = mdls.TeamMatch(division=self.division, number=2,
                 parent_side=0, root_match=True)
         try:
@@ -40,8 +49,8 @@ class TeamMatchTestCase(TestCase):
                 parent_side=0, root_match=True)
         root_match.clean()
         root_match.save()
-        self.assertTrue(root_match.has_root_match(),
-                "has_root_match() returned False after creating root_match")
+        self.assertTrue(root_match == root_match.get_root_match(),
+                "root_match.get_root_match() should return root_match")
         match2 = mdls.TeamMatch(division=self.division, number=1,
                 parent=root_match, parent_side=0, root_match=False)
         match2.clean()
@@ -126,3 +135,22 @@ class TeamMatchTestCase(TestCase):
         else:
             self.fail("Expected IntegrityError creating match with same"
                     + " (parent, parent_side)")
+
+    def test_same_blue_red_team(self):
+        root_match = mdls.TeamMatch(division=self.division, number=1,
+                parent_side=0, root_match=True)
+        root_match.clean()
+        root_match.save()
+
+        root_match.blue_team = self.org1_team
+        root_match.clean()
+        root_match.save()
+
+        root_match.red_team = self.org1_team
+        try:
+            root_match.clean()
+        except ValidationError:
+            pass
+        else:
+            self.fail("Calling clean() on match where blue_team == red_team"
+                    + " should raise ValidationError")
