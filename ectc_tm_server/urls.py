@@ -17,5 +17,6 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
+    url(r'^tmdb/', include('tmdb.urls', namespace="tmdb")),
     url(r'^admin/', include(admin.site.urls)),
 ]
