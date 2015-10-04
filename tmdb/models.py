@@ -384,6 +384,12 @@ class TeamMatch(models.Model):
             return None
         return root_matches.get()
 
+    def get_child_match(self, slot_side):
+        try:
+            return TeamMatch.objects.get(parent=self, parent_side=slot_side)
+        except TeamMatch.DoesNotExist:
+            return None
+
     def validate_single_root_match(self):
         """ Validate that only one match in a division is the root. """
         if not self.root_match: return
@@ -418,10 +424,47 @@ class TeamMatch(models.Model):
         if self.blue_team == self.red_team:
             raise ValidationError("blue_team == red_team is not permitted")
 
+    def validate_winning_team(self):
+        if self.winning_team is None: return
+        if self.winning_team != self.blue_team and \
+                self.winning_team != self.red_team:
+            raise ValidationError("winning_team is %s, must be either %s or %s"
+                    %(self.winning_team, self.blue_team, self.red_team))
+
+    def validate_parent_participant_available(self):
+        if not self.parent:
+            return
+        if self.parent_side == 0:
+            slot_team = self.parent.blue_team
+        elif self.parent_side == 1:
+            slot_team = self.parent.red_team
+        else:
+            raise ValueError("parent_side is %d, must be 0 or 1",
+                    self.parent_side)
+        if slot_team is None or slot_team == self.winning_team:
+            return
+        raise ValidationError(("Cannot create on this side of parent %s"
+                + " (already has %s as %s") %(self.parent, slot_team,
+                "blue_team" if self.parent_side == 0 else "red_team"))
+
     def validate_team_match(self):
         self.validate_as_root_match()
         self.validate_as_nonroot_match()
         self.validate_distinct_participants()
+        self.validate_winning_team()
+        self.validate_parent_participant_available()
+        self.update_parent_match()
+
+    def update_parent_match(self):
+        # set winning_team as blue_team or red_team in parent_match
+        if not self.parent:
+            return
+        if self.parent_side == 0:
+            self.parent.blue_team = self.winning_team
+        elif self.parent_side == 1:
+            self.parent.red_team = self.winning_team
+        #self.parent.clean() #cannot call clean because child is not saved yet
+        self.parent.save()
 
     def clean(self, *args, **kwargs):
         self.validate_team_match()

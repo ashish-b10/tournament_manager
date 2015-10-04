@@ -15,10 +15,28 @@ class TeamMatchTestCase(TestCase):
         self.org1.clean()
         self.org1.save()
 
+        self.org2 = mdls.Organization(name="org2")
+        self.org2.clean()
+        self.org2.save()
+
+        self.org3 = mdls.Organization(name="org3")
+        self.org3.clean()
+        self.org3.save()
+
         self.org1_team = mdls.Team(number=1, division=self.division,
                 organization = self.org1)
         self.org1_team.clean()
         self.org1_team.save()
+
+        self.org2_team = mdls.Team(number=1, division=self.division,
+                organization = self.org2)
+        self.org2_team.clean()
+        self.org2_team.save()
+
+        self.org3_team = mdls.Team(number=1, division=self.division,
+                organization = self.org3)
+        self.org3_team.clean()
+        self.org3_team.save()
 
     def test_root_team_match_valid(self):
         root_match = mdls.TeamMatch(division=self.division, number=1,
@@ -154,3 +172,67 @@ class TeamMatchTestCase(TestCase):
         else:
             self.fail("Calling clean() on match where blue_team == red_team"
                     + " should raise ValidationError")
+
+    def test_set_invalid_winning_team(self):
+        root_match = mdls.TeamMatch(division=self.division, number=1,
+                parent_side=0, root_match=True, blue_team=self.org1_team,
+                red_team=self.org2_team)
+        root_match.clean()
+        root_match.save()
+
+        root_match.winning_team=self.org3_team
+        try:
+            root_match.clean()
+        except ValidationError:
+            pass
+        else:
+            self.fail("ValidationError expected when winning_team is not"
+                    + " blue_team or red_team")
+
+    def test_set_winning_team_updates_parent(self):
+        root_match = mdls.TeamMatch(division=self.division, number=1,
+                parent_side=0, root_match=True, blue_team=self.org1_team)
+        root_match.clean()
+        root_match.save()
+
+        child_match = mdls.TeamMatch(division=self.division, number=2,
+                parent_side=1, parent=root_match, root_match=False,
+                blue_team=self.org2_team, red_team=self.org3_team)
+        child_match.clean()
+        child_match.save()
+
+        child_match.winning_team = self.org2_team
+        child_match.clean()
+        child_match.save()
+        self.assertEqual(self.org2_team, root_match.red_team, "Updating winner"
+                + " of child match should set blue_team/red_team of parent"
+                + " match")
+
+    def test_set_parent_match_with_blue_team_already_set(self):
+        root_match = mdls.TeamMatch(division=self.division, number=1,
+                parent_side=0, root_match=True, blue_team=self.org1_team)
+        root_match.clean()
+        root_match.save()
+
+        child_match = mdls.TeamMatch(division=self.division, number=2,
+                parent_side=0, parent=root_match, root_match=False,
+                blue_team=self.org2_team, red_team=self.org3_team)
+        try:
+            child_match.clean()
+        except ValidationError:
+            pass
+        else:
+            self.fail("Expected ValidationError creating match whose"
+                    + " parent.blue_team is already filled")
+
+    def test_set_parent_match_with_same_blue_team(self):
+        root_match = mdls.TeamMatch(division=self.division, number=1,
+                parent_side=0, root_match=True, blue_team=self.org1_team)
+        root_match.clean()
+        root_match.save()
+
+        child_match = mdls.TeamMatch(division=self.division, number=2,
+                parent_side=1, parent=root_match, root_match=False,
+                blue_team=self.org1_team, red_team=self.org3_team,
+                winning_team=self.org3_team)
+        child_match.clean()
