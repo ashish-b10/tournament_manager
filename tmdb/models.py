@@ -373,6 +373,9 @@ class TeamMatch(models.Model):
     class Meta:
         unique_together = (("parent", "parent_side"),)
 
+    def __str__(self):
+        return "Match #" + str(self.number)
+
     def get_root_match(self):
         """ Return the root match of this match's division. """
         root_matches = TeamMatch.objects.filter(
