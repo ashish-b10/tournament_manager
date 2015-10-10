@@ -1,41 +1,11 @@
-{% if team_matches %}
-  <table class="match_table">
-    <tr>
-      <th>Match No.</th>
-      <th>Blue Team</th>
-      <th>Red Team</th>
-      <th>Ring No.</th>
-      <th>Division</th>
-      <th>Winning Team</th>
-    </tr>
-    {% for team_match in team_matches %}
-    <tr>
-      <td>{{team_match.number}}</td>
-      {% if team_match.blue_team %}
-      <td>{{team_match.blue_team}}</td>
-      {% else %}
-      <td></td>
-      {% endif %}
-      {% if team_match.red_team %}
-      <td>{{team_match.red_team}}</td>
-      {% else %}
-      <td></td>
-      {% endif %}
-      {% if team_match.ring_number %}
-      <td>{{team_match.ring_number}}</td>
-      {% else %}
-      <td></td>
-      {% endif %}
-      <td>{{team_match.division}}</td>
-      {% if team_match.winning_team %}
-      <td>{{team_match.winning_team}}</td>
-      {% else %}
-      <td></td>
-      {% endif %}
-      <td><a href="{% url 'tmdb:match' team_match.number %}">Modify</a></td>
-    </tr>
-    {% endfor %}
-  </table>
-{% else %}
-  <p>No matches are available</p>
-{% endif %}
+<h1>Divisions</h1>
+{% for division in divisions %}
+  <h2>{{division}}</h2>
+  <p><a href="{% url 'tmdb:division' division.pk %}">Matches</a></p>
+{% endfor %}
+<h2>All</h2>
+<p><a href="{% url 'tmdb:division' %}">Matches</a></p>
+
+<h1>Ring Queues</h1>
+<p><a href="{% url 'tmdb:rings' %}">Ring match queues</a></p>
+<p><a href="{% url 'tmdb:rings' %}?all_matches=1">Ring match queues (all matches)</a></p>

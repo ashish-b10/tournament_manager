@@ -1,0 +1,39 @@
+{% if matches_by_ring %}
+<h1>Match Queues by Ring</h1>
+  {% for ring_num, team_matches in matches_by_ring %}
+  <h2>Ring #{{ring_num}}</h2>
+    <table class="ring_table">
+      <tr>
+        <th>Match No.</th>
+        <th>Blue Team</th>
+        <th>Red Team</th>
+        <th>Division</th>
+        <th>Winning Team</th>
+      </tr>
+      {% for team_match in team_matches %}
+      <tr>
+        <td>{{team_match.number}}</td>
+        {% if team_match.blue_team %}
+        <td>{{team_match.blue_team}}</td>
+        {% else %}
+        <td></td>
+        {% endif %}
+        {% if team_match.red_team %}
+        <td>{{team_match.red_team}}</td>
+        {% else %}
+        <td></td>
+        {% endif %}
+        <td>{{team_match.division}}</td>
+        {% if team_match.winning_team %}
+        <td>{{team_match.winning_team}}</td>
+        {% else %}
+        <td></td>
+        {% endif %}
+        </tr>
+      {% endfor %}
+    </table>
+  {% endfor %}
+
+{% else %}
+<h2>No rings available</h2>
+{% endif %}
