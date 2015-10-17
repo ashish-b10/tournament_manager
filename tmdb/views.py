@@ -11,7 +11,7 @@ def index(request):
     context = {'divisions' : divisions}
     return render(request, 'tmdb/index.html', context)
 
-def division(request, division_id=None):
+def match_list(request, division_id=None):
     if division_id is None:
         divisions = Division.objects.all()
     else:
@@ -23,7 +23,22 @@ def division(request, division_id=None):
                 division=division).order_by('number')
         matches.append((division, team_matches))
     context = {'team_matches' : matches}
-    return render(request, 'tmdb/division.html', context)
+    return render(request, 'tmdb/match_list.html', context)
+
+def team_list(request, division_id=None):
+    if division_id is None:
+        divisions = Division.objects.all()
+    else:
+        divisions=[Division.objects.get(pk=division_id)]
+
+    division_teams = []
+    for division in divisions:
+        teams = Team.objects.filter(
+                division=division).order_by('organization').order_by('number')
+        division_teams.append((division, teams))
+
+    context = { 'division_teams' : division_teams }
+    return render(request, 'tmdb/team_list.html', context)
 
 def match(request, match_num):
     match = TeamMatch.objects.get(number=match_num)
