@@ -1,0 +1,68 @@
+{% for division, teams in division_teams %}
+<h2>Division: {{division}}</h2>
+  {% if teams %}
+    <table class="team_table">
+      <tr>
+        <th>Organization</th>
+        <th>Division</th>
+        <th>Number</th>
+        <th>Lightweight</th>
+        <th>Middleweight</th>
+        <th>Heavyweight</th>
+        <th>Alternate 1</th>
+        <th>Alternate 2</th>
+      </tr>
+      {% for team in teams %}
+      <tr>
+        <td>
+          {{team.organization}}
+        </td>
+        <td>
+          {{team.division}}
+        </td>
+        <td>
+          {{team.number}}
+        </td>
+        <td>
+          {% if team.lightweight %}
+          {{ team.lightweight }}
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td>
+          {% if team.middleweight %}
+          {{ team.middleweight }}
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td>
+          {% if team.heavyweight %}
+          {{ team.heavyweight }}
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td>
+          {% if team.alternate1 %}
+          {{ team.alternate1 }}
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td>
+          {% if team.alternate2 %}
+          {{ team.alternate2 }}
+          {% else %}
+          -
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No teams in this division</p>
+  {% endif %}
+{% endfor %}
+
