@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
+from django.forms.models import modelformset_factory
 
 from .models import TeamMatch, Team, Division
-from .forms import MatchForm
+from .forms import MatchForm, SeedingForm
 
 from collections import defaultdict
+import re
 
 def index(request):
     divisions = Division.objects.all()
@@ -40,6 +42,39 @@ def team_list(request, division_id=None):
     context = { 'division_teams' : division_teams }
     return render(request, 'tmdb/team_list.html', context)
 
+seedings_form_re = re.compile('(?P<team_id>[0-9]+)-seed$')
+def seedings(request, division_id):
+    if request.method == 'POST':
+        seed_forms = []
+        for post_field in request.POST:
+            re_match = seedings_form_re.match(post_field)
+            if not re_match: continue
+            team_id = re_match.group('team_id')
+            seed_form = SeedingForm(request.POST, prefix=str(team_id),
+                    instance=Team.objects.get(pk=int(team_id)))
+            seed_forms.append(seed_form)
+
+        map(SeedingForm.is_valid, seed_forms)
+
+        SeedingForm.all_seeds_valid(seed_forms)
+
+        for form in seed_forms:
+            form.save()
+        return HttpResponseRedirect('/tmdb/seedings/' + division_id)
+
+    else:
+        division_name = str(Division.objects.get(pk=division_id))
+
+        team_forms = []
+        for team in Team.objects.filter(division=division_id):
+            team_form = SeedingForm(prefix=str(team.id), instance=team)
+            team_form.name = str(team)
+            team_forms.append(team_form)
+
+        context = {'division': division_id, 'team_forms': team_forms,
+                'division_name': division_name}
+        return render(request, 'tmdb/seedings.html', context)
+
 def match(request, match_num):
     match = TeamMatch.objects.get(number=match_num)
     if request.method == 'POST':
@@ -53,7 +88,7 @@ def match(request, match_num):
         form.fields['winning_team'].queryset = Team.objects.filter(
                 pk__in=[match.blue_team.pk, match.red_team.pk])
 
-    return render(request, 'tmdb/match_edit.html', {'form': form,
+    return render(request, 'tmdb/match_edit.html', {'form': form.as_p(),
             'match_num': match_num})
 
 def rings(request):

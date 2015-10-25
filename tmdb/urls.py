@@ -12,5 +12,7 @@ urlpatterns = [
     url(r'^matches/(?P<division_id>[0-9]+)/*$', views.match_list,
             name='match_list'),
     url(r'^matches/*$', views.match_list, name='match_list'),
+    url(r'^seedings/(?P<division_id>[0-9]+)/*$', views.seedings,
+            name='seedings'),
     url(r'^$', views.index, name='index'),
 ]

@@ -216,7 +216,7 @@ class Team(models.Model):
             related_name="alternate1")
     alternate2 = models.ForeignKey(Competitor, null=True, blank=True,
             related_name="alternate2")
-    score = models.IntegerField(default=0)
+    seed = models.IntegerField(unique=True, null=True, blank=True)
     class Meta:
         unique_together = (("number", "division", "organization"),)
 
@@ -351,7 +351,8 @@ class TeamMatch(models.Model):
         parent          The TeamMatch the winner will advance to
         parent_side     The side of the parent the winner will play on
         root_match      Whether this is the root_match of the division
-        teams           ManyToMany relationship of teams in the match
+        blue_team       The Team fighting in blue for this match
+        red_team        The Team fighting in red for this match
         ring_number     The number of the assigned ring
         ring_assignment_time
                         The time at which the ring was assigned

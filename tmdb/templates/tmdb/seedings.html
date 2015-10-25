@@ -1,0 +1,21 @@
+<h2>Creating brackets for {{division_name}} division</h2>
+<p>Below are the seedings for all teams. In order to create a bracket, the following conditions must be met:
+  <ul>
+    <li>
+    All seed numbers must be either blank or greater than zero.
+    </li>
+    <li>
+    All seed numbers which are not blank must be unique.
+    </li>
+  </ul>
+If a team is not assigned a seed, it will not be placed into the bracket. It can be added manually afterward.
+</p>
+<form action="/tmdb/seedings/{{division}}" method="post">
+  {% csrf_token %}
+  <table>
+  {% for form in team_forms %}
+    {{ form.as_table }}
+  {% endfor %}
+  </table>
+  <input type="submit" value="Make Bracket!"/>
+</form>
