@@ -32,6 +32,12 @@ This will create a copy of your Python installation into a directory called tmdb
 source tmdb_local/bin/activate
 for all active terminal sessions.
 
+** Make sure that you have the right version of python running. You can do 
+```python --version``` 
+to figure out what version you are running. 
+mkvirtualenv -p /usr/local/bin/python3.5 ectc
+source ectc/bin/activate
+
 Installing PostgreSQL (Required if using PostgreSQL)
 If you are using PostgreSQL, then it is recommended to install the latest version (currently 9.5.x). Django's implementation of the PostgreSQL database backend requires pelican and psycopg2, so install them by executing as follows:
 
@@ -39,11 +45,13 @@ If you are using PostgreSQL, then it is recommended to install the latest versio
 
 If you have not already done so, be sure to include postgresql-devel (or libpq-dev in Ubuntu)
 
-
+To install postgres, you should do;
+```sudo apt-get install postgresql postgresql-contrib```
 
 Credential Setup
 
 Establishing the correct credentials for the PostgreSQL database is fairly complex and dependent upon how PostgreSQL was installed, so it will not be convered here in detail. However, at a minimum, it is necessary to create a username and database for the tmdb user, and configure the tmdb user to connect locally. In order to run unit tests, it will also be necessary to grant permission to create and delete databases as the tmdb user.
+
 
 Run the following commands:
 
@@ -55,11 +63,22 @@ And add the following to pg_hba.conf:
 host    all             tmdb            127.0.0.1/32            trust
 # IPv6 local connections:
 host    all             tmdb            ::1/128                 trust`
+The location of the pg_hba.conf varies machine to machine, but mine was located at: /etc/postgresql/9.3/main
+
+After doing that, reload the pg_hba. Restart postgres 
+```/etc/init.d/postgresql restart```
+
 Installing Django (Required)
 Install Django into your Python environment:
 
 pip3 install django
+
 Running the Unit Tests
 Once the database is configured, navigate to where the source code was checked out and run the following command to test the models and database configuration:
 
 ```python3 manage.py test tests```
+
+Run Server
+python manage.py makemigrations tmdb 
+
+python manage.py runserver
