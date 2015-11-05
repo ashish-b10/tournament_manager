@@ -19,9 +19,13 @@ class SeedingForm(forms.ModelForm):
         fields = ['id', 'seed']
 
     @staticmethod
+    def modified_teams(seed_forms):
+        return [form.save(commit=False) for form in seed_forms]
+
+    @staticmethod
     def all_seeds_valid(seed_forms):
         errors = []
-        modified_teams = [form.save(commit=False) for form in seed_forms]
+        modified_teams = SeedingForm.modified_teams(seed_forms)
         for team in modified_teams:
             if team.seed is None: continue
             if team.seed >= 1: continue
@@ -49,3 +53,4 @@ class SeedingForm(forms.ModelForm):
                     + " multiple teams assigned: " + str(duplicated_seeds)))
         if errors:
             raise forms.ValidationError(errors)
+        return division

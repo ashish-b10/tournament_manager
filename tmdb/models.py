@@ -3,6 +3,8 @@ from django.core.exceptions import ValidationError
 import decimal
 from itertools import product
 
+from tmdb.util import Bracket
+
 class SexField(models.CharField):
     FEMALE_DB_VAL = 'F'
     MALE_DB_VAL = 'M'
@@ -216,9 +218,10 @@ class Team(models.Model):
             related_name="alternate1")
     alternate2 = models.ForeignKey(Competitor, null=True, blank=True,
             related_name="alternate2")
-    seed = models.IntegerField(unique=True, null=True, blank=True)
+    seed = models.IntegerField(null=True, blank=True)
     class Meta:
-        unique_together = (("number", "division", "organization"),)
+        unique_together = (("number", "division", "organization"),
+                ("seed", "division"))
 
     def _valid_member_organization(self, member):
         if member is None: return True
@@ -390,6 +393,37 @@ class TeamMatch(models.Model):
             return TeamMatch.objects.get(parent=self, parent_side=slot_side)
         except TeamMatch.DoesNotExist:
             return None
+
+    @staticmethod
+    def create_matches_from_seeds(division):
+        TeamMatch.objects.all().delete()
+        seeded_teams = Team.objects.filter(division=division).filter(
+                seed__isnull=False)
+        seeds = {team.seed:team for team in seeded_teams}
+        bracket = Bracket(seeds)
+        for bracket_match in bracket.bfs(seeds=False):
+            match = TeamMatch(division=division, number=bracket_match.number,
+                    parent_side=bracket_match.parent_side,
+                    root_match=bracket_match.is_root)
+
+            if not bracket_match.is_root:
+                match.parent = TeamMatch.objects.get(
+                        number=bracket_match.parent.number)
+
+            try:
+                match.blue_team = bracket_match.blue_team.team
+            except AttributeError:
+                pass
+            try:
+                bracket_match.red_team
+            except: pass
+            try:
+                match.red_team = bracket_match.red_team.team
+            except AttributeError:
+                pass
+
+            match.clean()
+            match.save()
 
     def validate_single_root_match(self):
         """ Validate that only one match in a division is the root. """

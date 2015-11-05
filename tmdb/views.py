@@ -54,26 +54,32 @@ def seedings(request, division_id):
                     instance=Team.objects.get(pk=int(team_id)))
             seed_forms.append(seed_form)
 
-        map(SeedingForm.is_valid, seed_forms)
+        if all(map(SeedingForm.is_valid, seed_forms)):
 
-        SeedingForm.all_seeds_valid(seed_forms)
+            division = SeedingForm.all_seeds_valid(seed_forms)
 
-        for form in seed_forms:
-            form.save()
-        return HttpResponseRedirect('/tmdb/seedings/' + division_id)
+            for team in SeedingForm.modified_teams(seed_forms):
+                team = Team.objects.get(pk=team.pk)
+                team.seed = None
+                team.save()
+
+            for form in seed_forms:
+                form.save()
+            TeamMatch.create_matches_from_seeds(division)
+            return HttpResponseRedirect('/tmdb/matches/' + division_id)
 
     else:
-        division_name = str(Division.objects.get(pk=division_id))
-
-        team_forms = []
+        seed_forms = []
         for team in Team.objects.filter(division=division_id):
-            team_form = SeedingForm(prefix=str(team.id), instance=team)
-            team_form.name = str(team)
-            team_forms.append(team_form)
+            seed_form = SeedingForm(prefix=str(team.id), instance=team)
+            seed_form.name = str(team)
+            seed_forms.append(seed_form)
 
-        context = {'division': division_id, 'team_forms': team_forms,
-                'division_name': division_name}
-        return render(request, 'tmdb/seedings.html', context)
+    division_name = str(Division.objects.get(pk=division_id))
+
+    context = {'division': division_id, 'seed_forms': seed_forms,
+            'division_name': division_name}
+    return render(request, 'tmdb/seedings.html', context)
 
 def match(request, match_num):
     match = TeamMatch.objects.get(number=match_num)
@@ -82,7 +88,8 @@ def match(request, match_num):
 
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect('/tmdb')
+            return HttpResponseRedirect('/tmdb/matches/'
+                    + str(match.division.pk))
     else:
         form = MatchForm(instance=match)
         form.fields['winning_team'].queryset = Team.objects.filter(

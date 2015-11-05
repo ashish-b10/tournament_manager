@@ -13,7 +13,7 @@ If a team is not assigned a seed, it will not be placed into the bracket. It can
 <form action="/tmdb/seedings/{{division}}" method="post">
   {% csrf_token %}
   <table>
-  {% for form in team_forms %}
+  {% for form in seed_forms %}
     {{ form.as_table }}
   {% endfor %}
   </table>
