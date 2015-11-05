@@ -92,8 +92,13 @@ def match(request, match_num):
                     + str(match.division.pk))
     else:
         form = MatchForm(instance=match)
+        match_teams = []
+        if match.blue_team is not None:
+            match_teams.append(match.blue_team.pk)
+        if match.red_team is not None:
+            match_teams.append(match.red_team.pk)
         form.fields['winning_team'].queryset = Team.objects.filter(
-                pk__in=[match.blue_team.pk, match.red_team.pk])
+                pk__in=match_teams)
 
     return render(request, 'tmdb/match_edit.html', {'form': form.as_p(),
             'match_num': match_num})
