@@ -24,13 +24,13 @@ class LoadSampleTmdbData():
         self.divisions = []
 
         division = mdls.Division(name="Men's A",
-           sex=mdls.SexField.MALE_DB_VAL)
+           sex=mdls.SexField.MALE_DB_VAL, match_num_start_val=100)
         division.clean()
         division.save()
         self.divisions.append(division)
 
         division = mdls.Division(name="Women's A",
-           sex=mdls.SexField.FEMALE_DB_VAL)
+           sex=mdls.SexField.FEMALE_DB_VAL, match_num_start_val=200)
         division.clean()
         division.save()
         self.divisions.append(division)

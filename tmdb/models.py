@@ -86,6 +86,7 @@ class Division(models.Model):
     max_weight = WeightField(null=True, blank=True)
     belt_ranks = models.ManyToManyField(BeltRank)
     sex = SexField()
+    match_num_start_val = models.IntegerField()
     class Meta:
         unique_together = (("sex", "min_age", "max_age", "min_weight",
                 "max_weight"),)
@@ -100,6 +101,10 @@ class Division(models.Model):
     DIVISION_SEX_NAMES = {"F" : "Women's", "M" : "Men's"}
     ECTC_DIVISION_SKILLS = {"A" : a_team_belt_ranks, "B" : b_team_belt_ranks,
             "C" : c_team_belt_ranks}
+
+    @staticmethod
+    def get_match_number_start_val(division):
+        division = Division.objects.get(division)
 
     def _validate_sex(self, competitor):
         if self.sex == competitor.sex: return
@@ -153,6 +158,15 @@ class Division(models.Model):
         self._validate_max_weight(competitor)
         self._validate_belt_group(competitor)
 
+    @staticmethod
+    def get_match_num_start_val(sex, skill):
+        if sex == "M" and skill == "A": return 100
+        if sex == "F" and skill == "A": return 200
+        if sex == "M" and skill == "B": return 300
+        if sex == "F" and skill == "B": return 400
+        if sex == "M" and skill == "C": return 500
+        if sex == "F" and skill == "C": return 600
+
     @classmethod
     def create_ectc_divisions(self):
         for sex, skill_name in product(("F", "M"),
@@ -160,7 +174,10 @@ class Division(models.Model):
             belt_ranks = Division.ECTC_DIVISION_SKILLS[skill_name]
             name = "%s %s" %(Division.DIVISION_SEX_NAMES[sex],
                     skill_name)
-            division = Division.objects.create(name=name, sex=sex)
+            match_num_start_val = Division.get_match_number_start_val(sex,
+                    skill_name)
+            division = Division.objects.create(name=name, sex=sex,
+                    match_num_start_val=match_num_start_val)
             division.belt_ranks.add(*BeltRank.objects.filter(
                     belt_rank__in=belt_ranks))
 
@@ -396,11 +413,12 @@ class TeamMatch(models.Model):
 
     @staticmethod
     def create_matches_from_seeds(division):
-        TeamMatch.objects.all().delete()
+        TeamMatch.objects.filter(division=division).delete()
         seeded_teams = Team.objects.filter(division=division).filter(
                 seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
-        bracket = Bracket(seeds)
+        bracket = Bracket(seeds,
+                match_number_start_val=division.match_num_start_val)
         for bracket_match in bracket.bfs(seeds=False):
             match = TeamMatch(division=division, number=bracket_match.number,
                     parent_side=bracket_match.parent_side,
