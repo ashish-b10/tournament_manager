@@ -87,6 +87,7 @@ class Division(models.Model):
     belt_ranks = models.ManyToManyField(BeltRank)
     sex = SexField()
     match_num_start_val = models.IntegerField()
+
     class Meta:
         unique_together = (("sex", "min_age", "max_age", "min_weight",
                 "max_weight"),)

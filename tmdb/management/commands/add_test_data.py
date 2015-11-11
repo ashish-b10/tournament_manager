@@ -20,7 +20,8 @@ class LoadSampleTmdbData():
             self.orgs[i] = org
 
     def add_global_data(self):
-        mdls.BeltRank.create_tkd_belt_ranks()
+        if mdls.BeltRank is None:
+            mdls.BeltRank.create_tkd_belt_ranks()
         self.divisions = []
 
         division = mdls.Division(name="Men's A",

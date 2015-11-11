@@ -50,7 +50,7 @@ To install postgres, you should do;
 
 Credential Setup
 
-Establishing the correct credentials for the PostgreSQL database is fairly complex and dependent upon how PostgreSQL was installed, so it will not be convered here in detail. However, at a minimum, it is necessary to create a username and database for the tmdb user, and configure the tmdb user to connect locally. In order to run unit tests, it will also be necessary to grant permission to create and delete databases as the tmdb user.
+Establishing the correct credentials for the PostgreSQL database is fairly complex and dependent upon how PostgreSQL was installed, so it will not be covered here in detail. However, at a minimum, it is necessary to create a username and database for the tmdb user, and configure the tmdb user to connect locally. In order to run unit tests, it will also be necessary to grant permission to create and delete databases as the tmdb user.
 
 
 Run the following commands:
