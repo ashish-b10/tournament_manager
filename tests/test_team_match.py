@@ -6,10 +6,10 @@ from django.db.utils import IntegrityError
 class TeamMatchTestCase(TestCase):
     def setUp(self):
         mdls.BeltRank.create_tkd_belt_ranks()
-        self.division = mdls.Division(name="test_division",
-                sex=mdls.SexField.FEMALE_DB_VAL)
-        self.division.clean()
-        self.division.save()
+        mdls.Division.create_ectc_divisions()
+        self.division = mdls.Division.objects.get(
+                sex=mdls.SexField.FEMALE_DB_VAL,
+                skill_level=mdls.DivisionSkillField.A_TEAM_VAL)
 
         self.org1 = mdls.Organization(name="org1")
         self.org1.clean()

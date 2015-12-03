@@ -26,6 +26,30 @@ class SexField(models.CharField):
     def __str__(self):
         return self._sexes_names[self.sex]
 
+class DivisionSkillField(models.CharField):
+    A_TEAM_VAL = 'A'
+    B_TEAM_VAL = 'B'
+    C_TEAM_VAL = 'C'
+    choices = (
+        (A_TEAM_VAL, 'A-team'),
+        (B_TEAM_VAL, 'B-team'),
+        (C_TEAM_VAL, 'C-team'),
+    )
+    _division_skills_names = dict(choices)
+
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 1
+        super(DivisionSkillField, self).__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        if not value in DivisionSkillField._division_skills_names.keys():
+            raise(ValidationError("Invalid DivisionSkillField value: "
+                    + value))
+        return value
+
+    def __str__(self):
+        return self._division_skills_names[self.division_skill]
+
 class BeltRank(models.Model):
     BELT_RANKS = (
         ('WH', 'White'),
@@ -79,21 +103,28 @@ class Organization(models.Model):
         return self.name
 
 class Division(models.Model):
-    name = models.CharField(max_length=31, unique=True)
-    min_age = models.IntegerField(null=True, blank=True)
-    max_age = models.IntegerField(null=True, blank=True)
-    min_weight = WeightField(null=True, blank=True)
-    max_weight = WeightField(null=True, blank=True)
     belt_ranks = models.ManyToManyField(BeltRank)
     sex = SexField()
-    match_num_start_val = models.IntegerField()
+    skill_level = DivisionSkillField()
 
     class Meta:
-        unique_together = (("sex", "min_age", "max_age", "min_weight",
-                "max_weight"),)
+        unique_together = (("sex", "skill_level"),)
 
     def __str__(self):
-        return self.name
+        if self.sex == SexField.MALE_DB_VAL: sex_name = "Men's"
+        if self.sex == SexField.FEMALE_DB_VAL: sex_name = "Women's"
+        return sex_name + ' ' + self.skill_level
+
+    def match_num_start_val(self):
+        if self.skill_level == DivisionSkillField.A_TEAM_VAL:
+            match_num = 100
+        if self.skill_level == DivisionSkillField.B_TEAM_VAL:
+            match_num = 300
+        if self.skill_level == DivisionSkillField.B_TEAM_VAL:
+            match_num = 500
+        if self.sex == SexField.FEMALE_DB_VAL:
+            match_num += 100
+        return match_num
 
     c_team_belt_ranks = ("WH", "YL", "OR", "GN")
     b_team_belt_ranks = ("GN", "BL", "PL", "BR", "RD")
@@ -112,38 +143,6 @@ class Division(models.Model):
         raise ValidationError(("Competitor %s cannot be added to Division %s"
                 + " (invalid sex)") %(str(competitor), str(self)))
 
-    def _validate_min_age(self, competitor):
-        if self.min_age is None: return
-        if self.min_age < competitor.age: return
-        raise ValidationError(("Competitor %s's age (%d) does not meet minimum"
-                + " age requirement (%d) for Division %s")
-                %(str(competitor), competitor.age, self.min_age,
-                str(self)))
-
-    def _validate_max_age(self, competitor):
-        if self.max_age is None: return
-        if self.max_age > competitor.age: return
-        raise ValidationError(("Competitor %s's age (%d) does not meet maximum"
-                + " age requirement (%d) for Division %s")
-                %(str(competitor), competitor.age, self.max_age,
-                str(self)))
-
-    def _validate_min_weight(self, competitor):
-        if self.min_weight is None: return
-        if self.min_weight < competitor.weight: return
-        raise ValidationError(("Competitor %s's weight (%d) does not meet"
-                + " minimum weight requirement (%d) for Division %s")
-                %(str(competitor), competitor.weight, self.min_weight,
-                str(self)))
-
-    def _validate_max_weight(self, competitor):
-        if self.max_weight is None: return
-        if self.max_weight > competitor.weight: return
-        raise ValidationError(("Competitor %s's weight (%d) does not meet"
-                + " maximum weight requirement (%d) for Division %s")
-                %(str(competitor), competitor.weight, self.max_weight,
-                str(self)))
-
     def _validate_belt_group(self, competitor):
         if competitor.skill_level in self.belt_ranks.all():
             return
@@ -153,10 +152,6 @@ class Division(models.Model):
     def validate_competitor(self, competitor):
         if competitor is None: return
         self._validate_sex(competitor)
-        self._validate_min_age(competitor)
-        self._validate_max_age(competitor)
-        self._validate_min_weight(competitor)
-        self._validate_max_weight(competitor)
         self._validate_belt_group(competitor)
 
     @staticmethod
@@ -173,12 +168,7 @@ class Division(models.Model):
         for sex, skill_name in product(("F", "M"),
                 Division.ECTC_DIVISION_SKILLS):
             belt_ranks = Division.ECTC_DIVISION_SKILLS[skill_name]
-            name = "%s %s" %(Division.DIVISION_SEX_NAMES[sex],
-                    skill_name)
-            match_num_start_val = Division.get_match_number_start_val(sex,
-                    skill_name)
-            division = Division.objects.create(name=name, sex=sex,
-                    match_num_start_val=match_num_start_val)
+            division = Division.objects.create(sex=sex, skill_level=skill_name)
             division.belt_ranks.add(*BeltRank.objects.filter(
                     belt_rank__in=belt_ranks))
 
@@ -419,7 +409,7 @@ class TeamMatch(models.Model):
                 seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
         bracket = Bracket(seeds,
-                match_number_start_val=division.match_num_start_val)
+                match_number_start_val=division.match_num_start_val())
         for bracket_match in bracket.bfs(seeds=False):
             match = TeamMatch(division=division, number=bracket_match.number,
                     parent_side=bracket_match.parent_side,
