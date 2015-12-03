@@ -478,8 +478,6 @@ class TeamMatch(models.Model):
     def validate_parent_participant_available(self):
         if not self.parent:
             return
-        if self.winning_team is None:
-            return
         if self.parent_side == 0:
             slot_team = self.parent.blue_team
         elif self.parent_side == 1:
@@ -487,7 +485,15 @@ class TeamMatch(models.Model):
         else:
             raise ValueError("parent_side is %d, must be 0 or 1",
                     self.parent_side)
-        if slot_team is None or slot_team == self.winning_team:
+        if slot_team is None:
+            return
+        if slot_team == self.red_team or slot_team == self.blue_team:
+            if self.parent_side == 0:
+                self.parent.blue_team = None
+            else:
+                self.parent.red_team = None
+            self.parent.clean()
+            self.parent.save()
             return
         raise ValidationError(("Cannot create on this side of parent %s"
                 + " (already has %s as %s)") %(self.parent, slot_team,
