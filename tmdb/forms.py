@@ -1,8 +1,13 @@
 from django import forms
 
-from .models import TeamMatch, Team
+from .models import TeamMatch, Team, Tournament
 
 from collections import defaultdict
+
+class TournamentForm(forms.ModelForm):
+    class Meta:
+        model = Tournament
+        exclude=['slug']
 
 class MatchForm(forms.ModelForm):
     class Meta:

@@ -15,6 +15,10 @@ urlpatterns = [
     url(r'^matches/*$', views.match_list, name='match_list'),
     url(r'^seedings/(?P<division_id>[0-9]+)/*$', views.seedings,
             name='seedings'),
+    url(r'^new_tournament/*$', views.tournament_edit, name='tournament_edit'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/edit/*$',
+            views.tournament_edit, name='tournament_edit'),
+    url(r'^divisions/*$', views.division_list, name='divisions'),
     url(r'^$', views.index, name='index'),
 ]
 

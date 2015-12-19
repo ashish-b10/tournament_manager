@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 import decimal
 from itertools import product
+from django.template.defaultfilters import slugify
 
 from tmdb.util import Bracket
 
@@ -96,11 +97,40 @@ class WeightField(models.DecimalField):
         kwargs['decimal_places'] = 1
         super(WeightField, self).__init__(*args, **kwargs)
 
+class Tournament(models.Model):
+    slug = models.SlugField(unique=True)
+    location = models.CharField(max_length=63)
+    date = models.DateField()
+    registration_doc_url = models.URLField(unique=True)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = self.slugify()
+
+        super(Tournament, self).save(*args, **kwargs)
+
+    def slugify(self):
+        return slugify(self.location) + '-' + slugify(self.date)
+
+    def __str__(self):
+        return self.slug if self.slug else self.slugify()
+
 class Organization(models.Model):
     name = models.CharField(max_length=31, unique=True)
+    tournaments = models.ManyToManyField('Tournament',
+            through='TournamentOrganization')
 
     def __str__(self):
         return self.name
+
+class TournamentOrganization(models.Model):
+    tournament = models.ForeignKey(Tournament)
+    organization = models.ForeignKey(Organization)
+    registration_doc_url = models.URLField(unique=True)
+    imported = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (('tournament', 'organization'),)
 
 class Division(models.Model):
     belt_ranks = models.ManyToManyField(BeltRank)

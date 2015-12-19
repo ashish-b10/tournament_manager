@@ -1,17 +1,38 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.forms.models import modelformset_factory
+from django.core.urlresolvers import reverse
 
-from .models import TeamMatch, Team, Division
-from .forms import MatchForm, SeedingForm
+from .models import TeamMatch, Team, Division, Tournament
+from .forms import MatchForm, SeedingForm, TournamentForm
 
 from collections import defaultdict
 import re
+import datetime
 
-def index(request):
+def division_list(request):
     divisions = Division.objects.all()
     context = {'divisions' : divisions}
+    return render(request, 'tmdb/division.html', context)
+
+def index(request):
+    context = {'tournaments' : Tournament.objects.all()}
     return render(request, 'tmdb/index.html', context)
+
+def tournament_edit(request, tournament_slug=None):
+    if request.method == 'POST':
+        form = TournamentForm(request.POST)
+        if form.is_valid():
+            tournament = form.save()
+            return HttpResponseRedirect(reverse('tmdb:index'))
+    else:
+        if tournament_slug:
+            form = TournamentForm(instance=Tournament.objects.get(
+                    slug=tournament_slug))
+        else:
+            today = datetime.date.today()
+            form = TournamentForm(initial={'date': today})
+    return render(request, 'tmdb/tournament_edit.html', {'form': form})
 
 def match_list(request, division_id=None):
     if division_id is None:
