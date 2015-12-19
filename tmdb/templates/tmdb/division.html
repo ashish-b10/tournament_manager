@@ -1,0 +1,22 @@
+{% extends "tmdb/base.html" %}
+
+{% block content %}
+  <h1>Divisions</h1>
+  {% for division in divisions %}
+    <h2>{{division}}</h2>
+    <p>
+      <a href="{% url 'tmdb:match_list' division.pk %}">Matches</a>
+      <a href="{% url 'tmdb:team_list' division.pk %}">Teams</a>
+      <a href="{% url 'tmdb:seedings' division.pk %}">Seedings</a>
+    </p>
+  {% endfor %}
+  <h2>All</h2>
+  <p>
+    <a href="{% url 'tmdb:match_list' %}">Matches</a>
+    <a href="{% url 'tmdb:team_list' %}">Teams</a>
+  </p>
+
+  <h1>Ring Queues</h1>
+  <p><a href="{% url 'tmdb:rings' %}">Ring match queues</a></p>
+  <p><a href="{% url 'tmdb:rings' %}?all_matches=1">Ring match queues (all matches)</a></p>
+{% endblock %}
