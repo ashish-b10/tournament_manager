@@ -1,17 +1,17 @@
 from django import forms
 
-from .models import TeamMatch, Team, Tournament
+from . import models
 
 from collections import defaultdict
 
 class TournamentForm(forms.ModelForm):
     class Meta:
-        model = Tournament
+        model = models.Tournament
         exclude=['slug']
 
 class MatchForm(forms.ModelForm):
     class Meta:
-        model = TeamMatch
+        model = models.TeamMatch
         fields = ['ring_number', 'winning_team']
 
 class SeedingForm(forms.ModelForm):
@@ -20,7 +20,7 @@ class SeedingForm(forms.ModelForm):
         self.fields['seed'].label = str(self.instance)
 
     class Meta:
-        model = Team
+        model = models.Team
         fields = ['id', 'seed']
 
     @staticmethod
@@ -44,7 +44,7 @@ class SeedingForm(forms.ModelForm):
             raise forms.ValidationError(errors)
         division = divisions.pop()
 
-        teams = {t.id:t for t in Team.objects.filter(division=division)}
+        teams = {t.id:t for t in models.Team.objects.filter(division=division)}
         for team in modified_teams:
             teams[team.id] = team
         filled_seeds = defaultdict(list)
@@ -59,3 +59,15 @@ class SeedingForm(forms.ModelForm):
         if errors:
             raise forms.ValidationError(errors)
         return division
+
+class ConfigurationSetting(forms.ModelForm):
+    class Meta:
+        model = models.ConfigurationSetting
+        exclude = []
+        widgets = {
+            'key': forms.HiddenInput(),
+            'value': forms.Textarea()
+        }
+        labels = {
+            'value': ''
+        }

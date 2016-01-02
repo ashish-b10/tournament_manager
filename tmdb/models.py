@@ -550,3 +550,8 @@ class TeamMatch(models.Model):
 
     def clean(self, *args, **kwargs):
         self.validate_team_match()
+
+class ConfigurationSetting(models.Model):
+    key = models.TextField(unique=True)
+    value = models.TextField()
+    REGISTRATION_CREDENTIALS = 'registration_credentials'

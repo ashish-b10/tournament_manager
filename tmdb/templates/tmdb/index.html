@@ -12,4 +12,6 @@
   <tr><td>There are no existing tournaments in the database.</td></tr>
   {% endif %}
   </table>
+  <h1>Administrative Operations</h1>
+  <a href="{% url 'tmdb:registration_credentials' %}">Set import registration credentials</a>
 {% endblock %}

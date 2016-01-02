@@ -1,0 +1,13 @@
+{% extends "tmdb/base.html" %}
+
+{% block content %}
+<h1>Configuration Editor</h1>
+
+<p>Enter the {{ setting_name }} below:</p>
+
+<form action="{% url 'tmdb:registration_credentials' %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <p><input type="submit" value="Submit"/></p>
+</form>
+{% endblock %}
