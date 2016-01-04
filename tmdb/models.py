@@ -102,6 +102,7 @@ class Tournament(models.Model):
     location = models.CharField(max_length=63)
     date = models.DateField()
     registration_doc_url = models.URLField(unique=True)
+    imported = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -114,6 +115,49 @@ class Tournament(models.Model):
 
     def __str__(self):
         return self.slug if self.slug else self.slugify()
+
+    def download_registration(self):
+        """Downloads registration spreadsheet from registration_doc_url."""
+        from ectc_registration import GoogleDocsDownloader
+        from ectc_registration import RegistrationExtractor
+        try:
+            creds = ConfigurationSetting.objects.get(
+                    key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
+        except tmdb.models.DoesNotExist:
+            raise IntegrityError("Registration credentials have not been"
+                    + " provided")
+        downloader = GoogleDocsDownloader(creds)
+        reg_extractor = RegistrationExtractor(self.registration_doc_url,
+                downloader)
+        return reg_extractor.get_registration_workbooks()
+
+    def save_downloaded_school(self, school):
+        school_object = Organization.objects.filter(
+                name=school.school_name).first()
+        if school_object is None:
+            school_object = Organization(name=school.school_name)
+            school_object.clean()
+            school_object.save()
+        registration = TournamentOrganization(tournament=self,
+                organization=school_object,
+                registration_doc_url=school.registration_doc_feed_url)
+        registration.clean()
+        registration.save()
+
+    def save_downloaded_schools(self, schools):
+        for school in schools:
+            self.save_downloaded_school(school)
+
+    def import_tournament_organizations(self):
+        """Imports organizations from registration_doc_url."""
+        if self.imported:
+            raise ValidationError(("%s is already imported - to reimport,"
+                    + " unimport first, then run import again") %self)
+        registered_schools = self.download_registration()
+        self.save_downloaded_schools(registered_schools)
+
+        self.imported = True
+        self.save()
 
 class Organization(models.Model):
     name = models.CharField(max_length=31, unique=True)
@@ -131,6 +175,9 @@ class TournamentOrganization(models.Model):
 
     class Meta:
         unique_together = (('tournament', 'organization'),)
+
+    def __str__(self):
+        return '%s/%s' %(self.tournament, self.organization,)
 
 class Division(models.Model):
     belt_ranks = models.ManyToManyField(BeltRank)

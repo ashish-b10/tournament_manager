@@ -20,19 +20,29 @@ def index(request):
     return render(request, 'tmdb/index.html', context)
 
 def tournament_edit(request, tournament_slug=None):
+    instance = models.Tournament.objects.filter(slug=tournament_slug).first()
     if request.method == 'POST':
-        form = forms.TournamentForm(request.POST)
-        if form.is_valid():
-            tournament = form.save()
+        edit_form = forms.TournamentEditForm(request.POST, instance=instance)
+        if edit_form.is_valid():
+            tournament = edit_form.save()
             return HttpResponseRedirect(reverse('tmdb:index'))
     else:
-        if tournament_slug:
-            form = forms.TournamentForm(instance=models.Tournament.objects.get(
-                    slug=tournament_slug))
+        context = {}
+        if instance is not None:
+            edit_form = forms.TournamentEditForm(instance=instance)
+            import_form = forms.TournamentImportForm(instance=instance)
+            context['import_form'] = import_form
         else:
             today = datetime.date.today()
-            form = forms.TournamentForm(initial={'date': today})
-    return render(request, 'tmdb/tournament_edit.html', {'form': form})
+            edit_form = forms.TournamentEditForm(initial={'date': today})
+        context['edit_form'] = edit_form
+    return render(request, 'tmdb/tournament_edit.html', context)
+
+def tournament_import(request, tournament_slug):
+    instance = models.Tournament.objects.filter(slug=tournament_slug).first()
+    if request.method == "POST":
+        instance.import_tournament_organizations()
+    return HttpResponseRedirect(reverse('tmdb:index'))
 
 def match_list(request, division_id=None):
     if division_id is None:

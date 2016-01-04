@@ -6,7 +6,13 @@
   <table>
   {% if tournaments %}
     {% for tournament in tournaments %}
-    <tr><td><a href="{% url 'tmdb:tournament_edit' tournament.slug %}">{{tournament.date}} {{tournament.location}}</a></td></tr>
+    <tr><td><a href="{% url 'tmdb:tournament_edit' tournament.slug %}">{{tournament.date}} {{tournament.location}}</a>
+      {% if tournament.imported %}
+        <p>Imported</p>
+      {% else %}
+        <p>Not imported.</p>
+      {% endif %}
+      </td></tr>
     {% endfor %}
   {% else %}
   <tr><td>There are no existing tournaments in the database.</td></tr>

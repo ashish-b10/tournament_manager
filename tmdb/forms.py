@@ -4,10 +4,15 @@ from . import models
 
 from collections import defaultdict
 
-class TournamentForm(forms.ModelForm):
+class TournamentEditForm(forms.ModelForm):
     class Meta:
         model = models.Tournament
-        exclude=['slug']
+        exclude = ['slug', 'imported']
+
+class TournamentImportForm(forms.ModelForm):
+    class Meta:
+        model = models.Tournament
+        fields = []
 
 class MatchForm(forms.ModelForm):
     class Meta:

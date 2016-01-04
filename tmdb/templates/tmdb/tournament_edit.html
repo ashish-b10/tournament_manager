@@ -3,9 +3,21 @@
 {% block content %}
 <h1>Editing Tournament</h1>
 
-<form action="{% url 'tmdb:tournament_edit' %}" method="post">
+<form action="{% url 'tmdb:tournament_edit' edit_form.instance.slug %}" method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ edit_form.as_p }}
     <input type="submit" value="Submit Tournament"/>
 </form>
+
+{% if import_form %}
+<h1>Import</h1>
+    {% if not form.instance.imported %}
+    <p>Tournament has not been imported.</p>
+    <form action="{% url 'tmdb:tournament_import' import_form.instance.slug %}" method="post">
+        {% csrf_token %}
+        {{ import_form.as_p }}
+        <input type="submit" value="Import"/>
+    </form>
+    {% endif %}
+{% endif %}
 {% endblock %}
