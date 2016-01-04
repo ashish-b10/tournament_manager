@@ -149,8 +149,12 @@ def registration_credentials(request):
             form.save()
             return HttpResponseRedirect(reverse('tmdb:index'))
     else:
+        if existing_value is not None:
+            value = existing_value.value
+        else:
+            value = None
         form = forms.ConfigurationSetting(initial={'key': setting_key,
-                'value': existing_value.value})
+                'value': value})
     context = {
             "setting_name": "Registration Import Credentials",
             "form": form
