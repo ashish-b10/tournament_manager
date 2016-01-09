@@ -16,7 +16,7 @@ def division_list(request):
     return render(request, 'tmdb/division.html', context)
 
 def index(request):
-    context = {'tournaments' : models.Tournament.objects.all()}
+    context = {'tournaments' : models.Tournament.objects.order_by('-date')}
     return render(request, 'tmdb/index.html', context)
 
 def tournament_edit(request, tournament_slug=None):
