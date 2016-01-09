@@ -22,6 +22,8 @@ urlpatterns = [
             views.tournament_edit, name='tournament_edit'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/import/*$',
             views.tournament_import, name='tournament_import'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/schools/*$',
+            views.tournament_schools, name='tournament_schools'),
     url(r'^divisions/*$', views.division_list, name='divisions'),
     url(r'^$', views.index, name='index'),
 ]

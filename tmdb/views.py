@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.forms.models import modelformset_factory
 from django.core.urlresolvers import reverse
@@ -43,6 +43,14 @@ def tournament_import(request, tournament_slug):
     if request.method == "POST":
         instance.import_tournament_organizations()
     return HttpResponseRedirect(reverse('tmdb:index'))
+
+def tournament_schools(request, tournament_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    import pdb ; pdb.set_trace()
+    organizations = models.TournamentOrganization.objects.filter(
+            tournament=tournament).order_by('organization__name')
+    context = {'tournament': tournament, 'organizations': organizations}
+    return render(request, 'tmdb/tournament_schools.html', context)
 
 def match_list(request, division_id=None):
     if division_id is None:

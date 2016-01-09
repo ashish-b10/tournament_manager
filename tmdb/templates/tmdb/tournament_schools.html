@@ -1,0 +1,13 @@
+{% extends "tmdb/base.html" %}
+
+{% block content %}
+<h1>{{tournament.location}} {{tournament.date}} schools</h1>
+  {% for school in organizations %}
+    <h2>{{school.organization.name}}</h2>
+      {% if school.imported %}
+      <p>Imported</p>
+      {% else %}
+      <p>Not imported</p>
+      {% endif %}
+  {% endfor %}
+{% endblock %}
