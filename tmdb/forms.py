@@ -9,6 +9,11 @@ class TournamentEditForm(forms.ModelForm):
         model = models.Tournament
         exclude = ['slug', 'imported']
 
+class TournamentDeleteForm(forms.ModelForm):
+    class Meta:
+        model = models.Tournament
+        fields = []
+
 class TournamentImportForm(forms.ModelForm):
     class Meta:
         model = models.Tournament

@@ -6,7 +6,7 @@
   <table>
   {% if tournaments %}
     {% for tournament in tournaments %}
-    <tr><td><a href="{% url 'tmdb:tournament_edit' tournament.slug %}"><h2>{{tournament.date}} {{tournament.location}}</h2></a>
+    <tr><td><h2>{{tournament.date}} {{tournament.location}} <a href="{% url 'tmdb:tournament_edit' tournament.slug %}">[edit]</a> <a href="{% url 'tmdb:tournament_delete' tournament.slug %}">[delete]</a></h2>
       {% if tournament.imported %}
         <tr>
             <td><a href="{% url 'tmdb:tournament_schools' tournament.slug %}"><h3>Schools</h3></a>

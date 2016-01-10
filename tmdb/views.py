@@ -50,6 +50,19 @@ def tournament_edit(request, tournament_slug):
     context['edit_form'] = edit_form
     return render(request, 'tmdb/tournament_edit.html', context)
 
+def tournament_delete(request, tournament_slug):
+    instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+    if request.method == 'POST':
+        delete_form = forms.TournamentDeleteForm(request.POST,
+                instance=instance)
+        if delete_form.is_valid():
+            instance.delete()
+            return HttpResponseRedirect(reverse('tmdb:index'))
+    else:
+        delete_form = forms.TournamentDeleteForm(instance=instance)
+    context = {'delete_form': delete_form, 'tournament': instance}
+    return render(request, 'tmdb/tournament_delete.html', context)
+
 def tournament_import(request, tournament_slug):
     instance = models.Tournament.objects.filter(slug=tournament_slug).first()
     if request.method == "POST":
