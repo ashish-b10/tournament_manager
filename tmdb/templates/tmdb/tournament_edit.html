@@ -1,7 +1,7 @@
 {% extends "tmdb/base.html" %}
 
 {% block content %}
-<h1>Editing Tournament</h1>
+<h1>Edit Tournament</h1>
 
 {% if edit_form.instance.slug %}
 <form action="{% url 'tmdb:tournament_edit' edit_form.instance.slug %}" method="post">
@@ -10,7 +10,7 @@
 {% endif %}
     {% csrf_token %}
     {{ edit_form.as_p }}
-    <input type="submit" value="Submit Tournament"/>
+    <input type="submit" value="Create/Edit Tournament"/>
 </form>
 
 {% if import_form %}
@@ -24,4 +24,7 @@
     </form>
     {% endif %}
 {% endif %}
+
+<h1>Delete</h1>
+Click <a href="{% url 'tmdb:tournament_delete' edit_form.instance.slug %}">here</a> to delete this tournament.
 {% endblock %}

@@ -43,6 +43,8 @@ def tournament_edit(request, tournament_slug):
         edit_form = forms.TournamentEditForm(instance=instance)
         import_form = forms.TournamentImportForm(instance=instance)
         context['import_form'] = import_form
+        delete_form = forms.TournamentDeleteForm(instance=instance)
+        context['delete_form'] = delete_form
     context['edit_form'] = edit_form
     return render(request, 'tmdb/tournament_edit.html', context)
 
