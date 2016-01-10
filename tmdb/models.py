@@ -119,6 +119,7 @@ class Tournament(models.Model):
     def download_registration(self):
         """Downloads registration spreadsheet from registration_doc_url."""
         from ectc_registration import GoogleDocsDownloader
+        from ectc_registration import spreadsheet_feed_url
         from ectc_registration import RegistrationExtractor
         try:
             creds = ConfigurationSetting.objects.get(
@@ -127,8 +128,8 @@ class Tournament(models.Model):
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
         downloader = GoogleDocsDownloader(creds)
-        reg_extractor = RegistrationExtractor(self.registration_doc_url,
-                downloader)
+        doc_url = spreadsheet_feed_url(doc_url=self.registration_doc_url)
+        reg_extractor = RegistrationExtractor(doc_url, downloader)
         return reg_extractor.get_registration_workbooks()
 
     def save_downloaded_school(self, school):
