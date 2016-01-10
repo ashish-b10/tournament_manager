@@ -6,7 +6,7 @@
 {% if edit_form.instance.slug %}
 <form action="{% url 'tmdb:tournament_edit' edit_form.instance.slug %}" method="post">
 {% else %}
-<form action="{% url 'tmdb:tournament_edit' %}" method="post">
+<form action="{% url 'tmdb:tournament_create' %}" method="post">
 {% endif %}
     {% csrf_token %}
     {{ edit_form.as_p }}

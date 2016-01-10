@@ -2,7 +2,7 @@
 
 {% block content %}
   <h1>Tournament Manager</h1>
-  <p>Select from one of the tournaments below, or <a href="{% url 'tmdb:tournament_edit' %}">create a new one.</a></p>
+  <p>Select from one of the tournaments below, or <a href="{% url 'tmdb:tournament_create' %}">create a new one.</a></p>
   <table>
   {% if tournaments %}
     {% for tournament in tournaments %}

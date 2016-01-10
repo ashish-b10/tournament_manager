@@ -19,15 +19,27 @@ def index(request):
     context = {'tournaments' : models.Tournament.objects.order_by('-date')}
     return render(request, 'tmdb/index.html', context)
 
-def tournament_edit(request, tournament_slug=None):
-    instance = models.Tournament.objects.filter(slug=tournament_slug).first()
+def tournament_create(request):
+    if request.method == 'POST':
+        edit_form = forms.TournamentEditForm(request.POST)
+        if edit_form.is_valid():
+            edit_form.save()
+            return HttpResponseRedirect(reverse('tmdb:index'))
+    else:
+        today = datetime.date.today()
+        edit_form = forms.TournamentEditForm(initial={'date': today})
+    context = {'edit_form': edit_form}
+    return render(request, 'tmdb/tournament_edit.html', context)
+
+def tournament_edit(request, tournament_slug):
+    instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+    context = {}
     if request.method == 'POST':
         edit_form = forms.TournamentEditForm(request.POST, instance=instance)
         if edit_form.is_valid():
             tournament = edit_form.save()
             return HttpResponseRedirect(reverse('tmdb:index'))
     else:
-        context = {}
         if instance is not None:
             edit_form = forms.TournamentEditForm(instance=instance)
             import_form = forms.TournamentImportForm(instance=instance)
@@ -35,7 +47,7 @@ def tournament_edit(request, tournament_slug=None):
         else:
             today = datetime.date.today()
             edit_form = forms.TournamentEditForm(initial={'date': today})
-        context['edit_form'] = edit_form
+    context['edit_form'] = edit_form
     return render(request, 'tmdb/tournament_edit.html', context)
 
 def tournament_import(request, tournament_slug):
@@ -46,7 +58,6 @@ def tournament_import(request, tournament_slug):
 
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    import pdb ; pdb.set_trace()
     organizations = models.TournamentOrganization.objects.filter(
             tournament=tournament).order_by('organization__name')
     context = {'tournament': tournament, 'organizations': organizations}
