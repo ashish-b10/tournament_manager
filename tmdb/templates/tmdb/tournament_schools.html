@@ -3,23 +3,32 @@
 {% block content %}
 <h1>Schools List at {{tournament.location}} on {{tournament.date}}</h1>
   <table class="table table-striped">
-  	<thead>
+    <thead>
     <th> School Name </th>
     <th> Import URL </th>
     <th> Status </th>
-	</thead>
+    <th> Import </th>
+    </thead>
   {% for school in organizations %}
     <tr>
       <td>{{school.organization.name}}</td>
-      <td> https://URL </td>
+      <td><a href="{{school.registration_doc_url}}">{{school.registration_doc_url}}</a></td>
       <td>
-	      {% if school.imported %}
-	      <p>Imported</p>
-	      {% else %}
-	      <a class="btn btn-primary"> Need to Import</a>
-	      {% endif %}
-	  </td>
+          {% if school.imported %}
+          <p>Imported</p>
+          {% else %}
+          <a class="btn btn-primary"> Need to Import</a>
+          {% endif %}
+      </td>
+      <td>
+        <form action="{% url 'tmdb:tournament_schools_import' tournament.slug school.organization.name %}" method="post">
+          {% csrf_token %}
+          {{ school.import_form.as_p }}
+          <input type="submit" value="Import Teams"/>
+        </form>
+      </td>
+
     </tr>
   {% endfor %}
-	</table>
+  </table>
 {% endblock %}
