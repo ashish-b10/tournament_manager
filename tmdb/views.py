@@ -19,6 +19,9 @@ def index(request):
     context = {'tournaments' : models.Tournament.objects.order_by('-date')}
     return render(request, 'tmdb/index.html', context)
 
+def settings(request):
+    return render(request, 'tmdb/settings.html')
+
 def tournament_create(request):
     if request.method == 'POST':
         edit_form = forms.TournamentEditForm(request.POST)
