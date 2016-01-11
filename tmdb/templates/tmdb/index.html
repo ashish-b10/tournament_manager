@@ -3,14 +3,14 @@
 {% block content %}
   <h1>Tournament Manager</h1>
   <p>Select from one of the tournaments below, or <a href="{% url 'tmdb:tournament_create' %}">create a new one.</a></p>
-  <table class="table">
-    <tr>
+  <table class="table table-striped">
+    <thead>
       <th>Tournament Name</th>
       <th>Date</th>
       <th>Details</th>
       <th>Schools</th>
       <th>Delete</th>
-    </tr>
+    </thead>
   {% if tournaments %}
     {% for tournament in tournaments %}
     <tr>
