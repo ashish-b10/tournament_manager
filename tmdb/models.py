@@ -152,8 +152,8 @@ class Tournament(models.Model):
     def import_tournament_organizations(self):
         """Imports organizations from registration_doc_url."""
         if self.imported:
-            raise ValidationError(("%s is already imported - to reimport,"
-                    + " unimport first, then run import again") %self)
+            raise IntegrityError(("%s is already imported" %(self)
+                    + " - and cannot be imported again"))
         registered_schools = self.download_registration()
         self.save_downloaded_schools(registered_schools)
 
