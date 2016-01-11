@@ -2,10 +2,12 @@
 
 {% block content %}
 <h1>Schools List at {{tournament.location}} on {{tournament.date}}</h1>
-  <table class="table">
+  <table class="table table-striped">
+  	<thead>
     <th> School Name </th>
     <th> Import URL </th>
     <th> Status </th>
+	</thead>
   {% for school in organizations %}
     <tr>
       <td>{{school.organization.name}}</td>
