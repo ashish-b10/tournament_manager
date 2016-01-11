@@ -19,6 +19,11 @@ class TournamentImportForm(forms.ModelForm):
         model = models.Tournament
         fields = []
 
+class TournamentOrganizationImportForm(forms.ModelForm):
+    class Meta:
+        model = models.TournamentOrganization
+        fields = []
+
 class MatchForm(forms.ModelForm):
     class Meta:
         model = models.TeamMatch

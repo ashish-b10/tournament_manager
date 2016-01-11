@@ -180,6 +180,39 @@ class TournamentOrganization(models.Model):
     def __str__(self):
         return '%s/%s' %(self.tournament, self.organization,)
 
+    def download_school_registration(self):
+        from ectc_registration import GoogleDocsDownloader
+        from ectc_registration import SchoolRegistrationExtractor
+        from ectc_registration import spreadsheet_feed_url
+        try:
+            creds = ConfigurationSetting.objects.get(
+                    key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
+        except tmdb.models.DoesNotExist:
+            raise IntegrityError("Registration credentials have not been"
+                    + " provided")
+        downloader = GoogleDocsDownloader(creds)
+        url = spreadsheet_feed_url(self.registration_doc_url)
+        registration_extractor = SchoolRegistrationExtractor(
+                school_name=self.organization.name,
+                registration_doc_feed_url=url)
+        registration_extractor.extract(downloader)
+        return registration_extractor
+
+    def save_imported_competitors(self, extracted_competitors):
+        model_competitors = []
+        for competitor in extracted_competitors:
+            raise NotImplementedError("Save extracted competitors") # TODO
+
+    def import_competitors_and_teams(self):
+        if self.imported:
+            raise IntegrityError(("%s is already imported" %(self)
+                    + " - and cannot be imported again"))
+
+        school_extracted_data = self.download_school_registration()
+        self.save_imported_competitors(
+                school_extracted_data.imported_competitors)
+        raise NotImplementedError("Save extracted teams")
+
 class Division(models.Model):
     belt_ranks = models.ManyToManyField(BeltRank)
     sex = SexField()

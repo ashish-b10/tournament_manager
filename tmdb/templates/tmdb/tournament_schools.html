@@ -8,6 +8,11 @@
       <p>Imported</p>
       {% else %}
       <p>Not imported</p>
+      <form action="{% url 'tmdb:tournament_schools_import' tournament.slug school.organization.name %}" method="post">
+        {% csrf_token %}
+        {{ school.import_form.as_p }}
+        <input type="submit" value="Import Teams"/>
+      </form>
       {% endif %}
   {% endfor %}
 {% endblock %}

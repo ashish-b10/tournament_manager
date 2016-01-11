@@ -71,8 +71,25 @@ def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     organizations = models.TournamentOrganization.objects.filter(
             tournament=tournament).order_by('organization__name')
-    context = {'tournament': tournament, 'organizations': organizations}
+    for org in organizations:
+        org.import_form = forms.TournamentOrganizationImportForm(instance=org)
+    context = {
+        'tournament': tournament,
+        'organizations': organizations,
+    }
     return render(request, 'tmdb/tournament_schools.html', context)
+
+def tournament_schools_import(request, tournament_slug, school_name):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    organization = get_object_or_404(models.Organization, name=school_name)
+    tournament_organization = get_object_or_404(models.TournamentOrganization,
+            tournament=tournament, organization=organization)
+    if request.method == "POST":
+        form = forms.TournamentOrganizationImportForm(request.POST)
+        if form.is_valid():
+            tournament_organization.import_competitors_and_teams()
+    return HttpResponseRedirect(reverse('tmdb:tournament_schools',
+            args=(tournament.slug,)))
 
 def match_list(request, division_id=None):
     if division_id is None:
