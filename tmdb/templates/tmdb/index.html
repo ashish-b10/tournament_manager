@@ -3,18 +3,27 @@
 {% block content %}
   <h1>Tournament Manager</h1>
   <p>Select from one of the tournaments below, or <a href="{% url 'tmdb:tournament_create' %}">create a new one.</a></p>
-  <table>
+  <table class="table">
+    <tr>
+      <th>Tournament Name</th>
+      <th>Date</th>
+      <th>Schools</th>
+      <th>Delete</th>
+    </tr>
   {% if tournaments %}
     {% for tournament in tournaments %}
-    <tr><td><a href="{% url 'tmdb:tournament_edit' tournament.slug %}"><h2>{{tournament.date}} {{tournament.location}}</h2></a>
-      {% if tournament.imported %}
-        <tr>
-            <td><a href="{% url 'tmdb:tournament_schools' tournament.slug %}"><h3>Schools</h3></a>
-        </tr>
-      {% else %}
-        <p>Not imported.</p>
-      {% endif %}
-      </td></tr>
+    <tr>
+      <td><a href="{% url 'tmdb:tournament_edit' tournament.slug %}">{{tournament.location}}</a> </td>
+      <td>{{tournament.date}} </td>
+      <td>
+        {% if tournament.imported %}
+          <a href="{% url 'tmdb:tournament_schools' tournament.slug %}">Import</a>
+        {% else %}
+          <p>Not imported</p>
+        {% endif %}
+      </td>
+      <td><a class="btn btn-danger" href="#" role="button">Delete</a></td>
+    </tr>
     {% endfor %}
   {% else %}
   <tr><td>There are no existing tournaments in the database.</td></tr>
