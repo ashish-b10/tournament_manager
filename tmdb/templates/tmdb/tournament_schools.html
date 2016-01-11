@@ -1,13 +1,23 @@
 {% extends "tmdb/base.html" %}
 
 {% block content %}
-<h1>{{tournament.location}} {{tournament.date}} schools</h1>
+<h1>Schools List at {{tournament.location}} on {{tournament.date}}</h1>
+  <table class="table">
+    <th> School Name </th>
+    <th> Import URL </th>
+    <th> Status </th>
   {% for school in organizations %}
-    <h2>{{school.organization.name}}</h2>
-      {% if school.imported %}
-      <p>Imported</p>
-      {% else %}
-      <p>Not imported</p>
-      {% endif %}
+    <tr>
+      <td>{{school.organization.name}}</td>
+      <td> https://URL </td>
+      <td>
+	      {% if school.imported %}
+	      <p>Imported</p>
+	      {% else %}
+	      <a class="btn btn-primary"> Need to Import</a>
+	      {% endif %}
+	  </td>
+    </tr>
   {% endfor %}
+	</table>
 {% endblock %}
