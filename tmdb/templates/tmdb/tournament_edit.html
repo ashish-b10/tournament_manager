@@ -25,6 +25,8 @@
     {% endif %}
 {% endif %}
 
+{% if delete_form %}
 <h1>Delete</h1>
 Click <a href="{% url 'tmdb:tournament_delete' edit_form.instance.slug %}">here</a> to delete this tournament.
+{% endif %}
 {% endblock %}
