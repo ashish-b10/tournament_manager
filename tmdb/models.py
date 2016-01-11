@@ -128,7 +128,7 @@ class Tournament(models.Model):
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
         downloader = GoogleDocsDownloader(creds)
-        doc_url = spreadsheet_feed_url(doc_url=self.registration_doc_url)
+        doc_url = spreadsheet_feed_url(self.registration_doc_url)
         reg_extractor = RegistrationExtractor(doc_url, downloader)
         return reg_extractor.get_registration_workbooks()
 
