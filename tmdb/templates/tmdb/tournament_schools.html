@@ -17,14 +17,14 @@
           {% if school.imported %}
           <p>Imported</p>
           {% else %}
-          <a class="btn btn-primary"> Need to Import</a>
+          <p>Not Imported</p>
           {% endif %}
       </td>
       <td>
         <form action="{% url 'tmdb:tournament_schools_import' tournament.slug school.organization.name %}" method="post">
           {% csrf_token %}
           {{ school.import_form.as_p }}
-          <input type="submit" value="Import Teams"/>
+          <button class="btn btn-primary" input type="submit"> Import Teams </button>
         </form>
       </td>
 
