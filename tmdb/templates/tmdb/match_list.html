@@ -4,14 +4,16 @@
     {% for division, team_matches in team_matches %}
     <h2>Division: {{division}}</h2>
           {% if team_matches %}
-            <table class="table match_table">
+            <table id="match_table" class="table">
               <tr>
                 <th>Match No.</th>
                 <th>Blue Team</th>
                 <th>Red Team</th>
                 <th>Ring No.</th>
-                <th>Division</th>
+              <!--   <th>Division</th> -->
                 <th>Winning Team</th>
+                <th> Status </th>
+                <th> Modify </th>
               </tr>
               {% for team_match in team_matches %}
               <tr>
@@ -31,13 +33,14 @@
                 {% else %}
                 <td></td>
                 {% endif %}
-                <td>{{team_match.division}}</td>
+               <!--  <td>{{team_match.division}}</td> -->
                 {% if team_match.winning_team %}
                 <td>{{team_match.winning_team}}</td>
                 {% else %}
                 <td></td>
                 {% endif %}
-                <td><a href="{% url 'tmdb:match' team_match.number %}">Modify</a></td>
+                <td> TO BE MODIFIED </td>
+                <td><a class="btn" href="{% url 'tmdb:match' team_match.number %}">Modify</a></td>
               </tr>
               {% endfor %}
             </table>
