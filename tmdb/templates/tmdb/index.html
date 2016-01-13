@@ -14,7 +14,7 @@
   {% if tournaments %}
     {% for tournament in tournaments %}
     <tr>
-      <td>{{tournament.location}}</td>
+      <td><a href="{% url 'tmdb:tournament_dashboard' tournament.slug %}">{{tournament.location}}</a></td>
       <td>{{tournament.date}} </td>
       <td><a class="btn btn-primary" href="{% url 'tmdb:tournament_edit' tournament.slug %}">Edit</a></td>
       <td>

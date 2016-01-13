@@ -70,6 +70,18 @@ def tournament_import(request, tournament_slug):
         instance.import_tournament_organizations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
+def tournament_dashboard(request, tournament_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    organizations = models.TournamentOrganization.objects.filter(
+            tournament=tournament).order_by('organization__name')
+    for org in organizations:
+        org.import_form = forms.TournamentOrganizationImportForm(instance=org)
+    context = {
+        'tournament': tournament,
+        'organizations': organizations,
+    }
+    return render(request, 'tmdb/tournament_dashboard.html', context)
+
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     organizations = models.TournamentOrganization.objects.filter(
