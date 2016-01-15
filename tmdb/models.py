@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 import decimal
 from itertools import product
 from django.template.defaultfilters import slugify
@@ -121,13 +122,13 @@ class Tournament(models.Model):
         from ectc_registration import GoogleDocsDownloader
         from ectc_registration import spreadsheet_feed_url
         from ectc_registration import RegistrationExtractor
-        try:
-            creds = ConfigurationSetting.objects.get(
-                    key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
-        except tmdb.models.DoesNotExist:
+
+        creds = ConfigurationSetting.objects.filter(
+                key=ConfigurationSetting.REGISTRATION_CREDENTIALS).first()
+        if creds is None:
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
-        downloader = GoogleDocsDownloader(creds)
+        downloader = GoogleDocsDownloader(creds.value)
         doc_url = spreadsheet_feed_url(self.registration_doc_url)
         reg_extractor = RegistrationExtractor(doc_url, downloader)
         return reg_extractor.get_registration_workbooks()
