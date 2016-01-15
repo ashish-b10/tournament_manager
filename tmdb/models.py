@@ -164,6 +164,16 @@ class Organization(models.Model):
     name = models.CharField(max_length=31, unique=True)
     tournaments = models.ManyToManyField('Tournament',
             through='TournamentOrganization')
+    slug = models.SlugField(unique=True)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = self.slugify()
+
+        super(Organization, self).save(*args, **kwargs)
+
+    def slugify(self):
+        return slugify(self.name)
 
     def __str__(self):
         return self.name
