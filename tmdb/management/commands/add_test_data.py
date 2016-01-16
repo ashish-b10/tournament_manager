@@ -37,13 +37,13 @@ class LoadSampleTmdbData():
             mdls.BeltRank.create_tkd_belt_ranks()
         self.divisions = []
 
-        division = mdls.Division(sex=mdls.SexField.MALE_DB_VAL,
+        division = mdls.Division(sex=mdls.SexField_old.MALE_DB_VAL,
             skill_level=mdls.DivisionSkillField.A_TEAM_VAL)
         division.clean()
         division.save()
         self.divisions.append(division)
 
-        division = mdls.Division(sex=mdls.SexField.FEMALE_DB_VAL,
+        division = mdls.Division(sex=mdls.SexField_old.FEMALE_DB_VAL,
             skill_level=mdls.DivisionSkillField.A_TEAM_VAL)
         division.clean()
         division.save()

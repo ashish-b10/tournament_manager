@@ -7,7 +7,40 @@ from django.template.defaultfilters import slugify
 
 from tmdb.util import Bracket
 
-class SexField(models.CharField):
+from django_enumfield import enum
+
+class SexEnum(enum.Enum):
+    F = 0
+    M = 1
+
+    labels = {
+        F: 'Female',
+        M: 'Male',
+    }
+
+class DivisionEnum(enum.Enum):
+    A = 0
+    B = 1
+    C = 2
+
+    labels = {
+        A: 'A-team',
+        B: 'B-team',
+        C: 'C-team',
+    }
+
+class BeltRankEnum(enum.Enum):
+    WHITE = 0
+    YELLOW = 1
+    ORANGE = 2
+    GREEN = 3
+    BLUE = 4
+    PURPLE = 5
+    BROWN = 6
+    RED = 7
+    BLACK = 8
+
+class SexField_old(models.CharField):
     FEMALE_DB_VAL = 'F'
     MALE_DB_VAL = 'M'
     choices = (
@@ -18,11 +51,11 @@ class SexField(models.CharField):
 
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 1
-        super(SexField, self).__init__(*args, **kwargs)
+        super(SexField_old, self).__init__(*args, **kwargs)
 
     def to_python(self, value):
-        if not value in SexField._sexes_names.keys():
-            raise ValidationError("Invalid SexField value: " + value)
+        if not value in SexField_old._sexes_names.keys():
+            raise ValidationError("Invalid SexField_old value: " + value)
         return value
 
     def __str__(self):
@@ -211,8 +244,18 @@ class TournamentOrganization(models.Model):
 
     def save_imported_competitors(self, extracted_competitors):
         model_competitors = []
-        for competitor in extracted_competitors:
-            raise NotImplementedError("Save extracted competitors") # TODO
+        import pdb ; pdb.set_trace()
+        for c in extracted_competitors:
+            competitor = Competitor()
+            competitor.name = c['name']
+            competitor.sex = SexEnum.get(c['sex']).value
+            competitor.belt_rank = BeltRankEnum.get(c['rank']).value
+            competitor.weight = float(c['weight'])
+            competitor.registration = self
+            competitor.clean()
+            model_competitors.append(competitor)
+        import pdb ; pdb.set_trace()
+        Competitor.objects.bulk_create(model_competitors)
 
     def import_competitors_and_teams(self):
         if self.imported:
@@ -223,18 +266,20 @@ class TournamentOrganization(models.Model):
         self.save_imported_competitors(
                 school_extracted_data.imported_competitors)
         raise NotImplementedError("Save extracted teams")
+        self.imported = True
+        self.save()
 
 class Division(models.Model):
     belt_ranks = models.ManyToManyField(BeltRank)
-    sex = SexField()
+    sex = SexField_old()
     skill_level = DivisionSkillField()
 
     class Meta:
         unique_together = (("sex", "skill_level"),)
 
     def __str__(self):
-        if self.sex == SexField.MALE_DB_VAL: sex_name = "Men's"
-        if self.sex == SexField.FEMALE_DB_VAL: sex_name = "Women's"
+        if self.sex == SexField_old.MALE_DB_VAL: sex_name = "Men's"
+        if self.sex == SexField_old.FEMALE_DB_VAL: sex_name = "Women's"
         return sex_name + ' ' + self.skill_level
 
     def match_num_start_val(self):
@@ -242,9 +287,9 @@ class Division(models.Model):
             match_num = 100
         if self.skill_level == DivisionSkillField.B_TEAM_VAL:
             match_num = 300
-        if self.skill_level == DivisionSkillField.B_TEAM_VAL:
+        if self.skill_level == DivisionSkillField.C_TEAM_VAL:
             match_num = 500
-        if self.sex == SexField.FEMALE_DB_VAL:
+        if self.sex == SexField_old.FEMALE_DB_VAL:
             match_num += 100
         return match_num
 
@@ -295,6 +340,20 @@ class Division(models.Model):
                     belt_rank__in=belt_ranks))
 
 class Competitor(models.Model):
+    """ A person who may compete in a tournament. """
+    name = models.CharField(max_length=63)
+    sex = enum.EnumField(SexEnum)
+    belt_rank = enum.EnumField(BeltRankEnum)
+    weight = WeightField(null=True, blank=True)
+    registration = models.ForeignKey(TournamentOrganization)
+
+    def __str__(self):
+        return "%s (%s)" % (self.name, self.registration.organization)
+
+    class Meta:
+        unique_together = (("name", "registration"),)
+
+class Competitor_old(models.Model):
     """ Cutoff weights for each weight class in pounds inclusive. """
     WEIGHT_CUTOFFS = {
         'F' : {
@@ -309,7 +368,7 @@ class Competitor(models.Model):
         },
     }
     name = models.CharField(max_length=63)
-    sex = SexField()
+    sex = SexField_old()
     skill_level = models.ForeignKey(BeltRank)
     age = models.IntegerField()
     organization = models.ForeignKey(Organization)
@@ -319,7 +378,7 @@ class Competitor(models.Model):
 
     @staticmethod
     def _is_between_cutoffs(weight, sex, weightclass):
-        cutoffs = Competitor.WEIGHT_CUTOFFS[sex][weightclass]
+        cutoffs = Competitor_old.WEIGHT_CUTOFFS[sex][weightclass]
         return weight >= cutoffs[0] and weight <= cutoffs[1]
 
     def is_lightweight(self):
@@ -338,15 +397,15 @@ class Team(models.Model):
     number = models.IntegerField()
     division = models.ForeignKey(Division)
     organization = models.ForeignKey(Organization)
-    lightweight = models.ForeignKey(Competitor, null=True, blank=True,
+    lightweight = models.ForeignKey(Competitor_old, null=True, blank=True,
             related_name="lightweight")
-    middleweight = models.ForeignKey(Competitor, null=True, blank=True,
+    middleweight = models.ForeignKey(Competitor_old, null=True, blank=True,
             related_name="middleweight")
-    heavyweight = models.ForeignKey(Competitor, null=True, blank=True,
+    heavyweight = models.ForeignKey(Competitor_old, null=True, blank=True,
             related_name="heavyweight")
-    alternate1 = models.ForeignKey(Competitor, null=True, blank=True,
+    alternate1 = models.ForeignKey(Competitor_old, null=True, blank=True,
             related_name="alternate1")
-    alternate2 = models.ForeignKey(Competitor, null=True, blank=True,
+    alternate2 = models.ForeignKey(Competitor_old, null=True, blank=True,
             related_name="alternate2")
     seed = models.IntegerField(null=True, blank=True)
     class Meta:
