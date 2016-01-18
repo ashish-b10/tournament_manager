@@ -350,7 +350,7 @@ class TournamentOrganization(models.Model):
                         division=division, number=team_num+1)[0]
                 tournament_division = TournamentDivision.objects.get(
                         tournament=self.tournament, division=division)
-                team_reg = TeamTournamentRegistration.objects.get_or_create(
+                team_reg = TeamRegistration.objects.get_or_create(
                         tournament_division=tournament_division, team=team)[0]
                 self.save_team_roster(team_reg, roster)
 
@@ -524,7 +524,7 @@ class Team(models.Model):
     division = models.ForeignKey(Division)
     number = models.SmallIntegerField()
     registrations = models.ManyToManyField(TournamentDivision,
-            through="TeamTournamentRegistration")
+            through="TeamRegistration")
 
     class Meta:
         unique_together = (('school', 'division', 'number',),)
@@ -533,7 +533,7 @@ class Team(models.Model):
         return "%s %s %d" %(str(self.school), str(self.division), self.number,)
 
 #TODO team.division must equal tournament_division.division
-class TeamTournamentRegistration(models.Model):
+class TeamRegistration(models.Model):
     tournament_division = models.ForeignKey(TournamentDivision)
     team = models.ForeignKey(Team)
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
