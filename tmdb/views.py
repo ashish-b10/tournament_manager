@@ -90,7 +90,7 @@ def tournament_school(request, tournament_slug, school_slug):
     tournament_organization = get_object_or_404(models.TournamentOrganization,
             tournament=tournament, organization=organization)
     competitors = models.Competitor.objects.filter(
-            registration=tournament_organization)
+            registration=tournament_organization).order_by('name')
     team_registrations = models.TeamRegistration.objects.filter(
             tournament_division__tournament=tournament,
             team__school=organization).order_by(
