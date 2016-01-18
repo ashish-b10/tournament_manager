@@ -11,7 +11,7 @@
     </thead>
   {% for school in organizations %}
     <tr>
-      <td>{{school.organization.name}}</td>
+      <td><a href="{% url 'tmdb:tournament_school' tournament.slug school.organization.slug %}">{{school.organization.name}}</a></td>
       <td><a href="{{school.registration_doc_url}}">{{school.registration_doc_url}}</a></td>
       <td>
           {% if school.imported %}

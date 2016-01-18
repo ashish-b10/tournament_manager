@@ -40,6 +40,18 @@ class BeltRankEnum(enum.Enum):
     RED = 7
     BLACK = 8
 
+    labels = {
+        WHITE: 'White',
+        YELLOW: 'Yellow',
+        ORANGE: 'Orange',
+        GREEN: 'Green',
+        BLUE: 'Blue',
+        PURPLE: 'Purple',
+        BROWN: 'Brown',
+        RED: 'Red',
+        BLACK: 'Black',
+    }
+
 class SexField_old(models.CharField):
     FEMALE_DB_VAL = 'F'
     MALE_DB_VAL = 'M'
@@ -472,6 +484,12 @@ class Competitor(models.Model):
     belt_rank = enum.EnumField(BeltRankEnum)
     weight = WeightField(null=True, blank=True)
     registration = models.ForeignKey(TournamentOrganization)
+
+    def belt_rank_label(self):
+        return BeltRankEnum.label(self.belt_rank)
+
+    def sex_label(self):
+        return SexEnum.label(self.sex)
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.registration.organization)

@@ -1,0 +1,43 @@
+{% extends "tmdb/base.html" %}
+
+{% block content %}
+<h1>Competitor information for {{tournament_organization.organization}} at {{tournament_organization.tournament.location}} on {{tournament_organization.tournament.date}}</h1>
+  <h2>Competitors</h2>
+  <table class="table table-striped">
+    <thead>
+    <th> Name </th>
+    <th> Sex </th>
+    <th> Belt Rank </th>
+    <th> Weight (lbs) </th>
+    </thead>
+  {% for competitor in competitors %}
+    <tr>
+      <td> {{competitor.name}} </td>
+      <td> {{competitor.sex_label}} </td>
+      <td> {{competitor.belt_rank_label}} </td>
+      <td> {{competitor.weight}} </td>
+    </tr>
+  {% endfor %}
+  </table>
+  <h2>Teams</h2>
+  <table class="table table-striped">
+    <thead>
+    <th> Team Name </th>
+    <th> Lightweight </th>
+    <th> Middleweight </th>
+    <th> Heavyweight </th>
+    <th> Alternate #1 </th>
+    <th> Alternate #2 </th>
+    </thead>
+  {% for team_registration in team_registrations %}
+    <tr>
+      <td> {{team_registration.team}} </td>
+      <td> {{team_registration.lightweight.name|default:"-"}} </td>
+      <td> {{team_registration.middleweight.name|default:"-"}} </td>
+      <td> {{team_registration.heavyweight.name|default:"-"}} </td>
+      <td> {{team_registration.alternate1.name|default:"-"}} </td>
+      <td> {{team_registration.alternate2.name|default:"-"}} </td>
+    </tr>
+  {% endfor %}
+  </table>
+{% endblock %}

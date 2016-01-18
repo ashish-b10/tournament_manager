@@ -84,6 +84,24 @@ def tournament_dashboard(request, tournament_slug):
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
 
+def tournament_school(request, tournament_slug, school_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    organization = get_object_or_404(models.Organization, slug=school_slug)
+    tournament_organization = get_object_or_404(models.TournamentOrganization,
+            tournament=tournament, organization=organization)
+    competitors = models.Competitor.objects.filter(
+            registration=tournament_organization)
+    team_registrations = models.TeamRegistration.objects.filter(
+            tournament_division__tournament=tournament,
+            team__school=organization).order_by(
+                    'tournament_division__division', 'team__number')
+    context = {
+        'tournament_organization': tournament_organization,
+        'competitors': competitors,
+        'team_registrations': team_registrations,
+    }
+    return render(request, 'tmdb/tournament_school_competitors.html', context)
+
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     organizations = models.TournamentOrganization.objects.filter(
