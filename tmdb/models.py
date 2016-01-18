@@ -299,11 +299,14 @@ class TournamentOrganization(models.Model):
     def save_extracted_competitors(self, extracted_competitors):
         model_competitors = []
         for c in extracted_competitors:
+            weight = None
+            if 'weight' in c:
+                weight = float(c['weight'])
             competitor = Competitor.objects.get_or_create(name=c['name'],
                     registration=self, defaults={
                             'sex': SexEnum.get(c['sex']).value,
                             'belt_rank': BeltRankEnum.get(c['rank']).value,
-                            'weight': float(c['weight']),
+                            'weight': weight,
                     })[0]
             model_competitors.append(competitor)
         return model_competitors
@@ -373,7 +376,7 @@ class TournamentOrganization(models.Model):
 
         school_extracted_data = self.download_school_registration()
         self.save_extracted_competitors(
-                school_extracted_data.imported_competitors)
+                school_extracted_data.extracted_competitors)
         self.save_extracted_teams(
                 school_extracted_data.teams)
         self.imported = True
