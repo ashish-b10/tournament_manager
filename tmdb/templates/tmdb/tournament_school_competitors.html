@@ -15,7 +15,7 @@
       <td> {{competitor.name}} </td>
       <td> {{competitor.sex_label}} </td>
       <td> {{competitor.belt_rank_label}} </td>
-      <td> {{competitor.weight}} </td>
+      <td> {{competitor.weight|default:"-"}} </td>
     </tr>
   {% endfor %}
   </table>
