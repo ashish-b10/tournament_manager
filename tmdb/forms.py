@@ -35,7 +35,7 @@ class SeedingForm(forms.ModelForm):
         self.fields['seed'].label = str(self.instance)
 
     class Meta:
-        model = models.Team
+        model = models.Team_old
         fields = ['id', 'seed']
 
     @staticmethod
@@ -59,7 +59,7 @@ class SeedingForm(forms.ModelForm):
             raise forms.ValidationError(errors)
         division = divisions.pop()
 
-        teams = {t.id:t for t in models.Team.objects.filter(division=division)}
+        teams = {t.id:t for t in models.Team_old.objects.filter(division=division)}
         for team in modified_teams:
             teams[team.id] = team
         filled_seeds = defaultdict(list)

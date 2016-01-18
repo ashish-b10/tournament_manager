@@ -153,7 +153,6 @@ class Tournament(models.Model):
         return slugify(self.location) + '-' + slugify(self.date)
 
     def create_divisions(self):
-        import pdb ; pdb.set_trace()
         for sex, skill_level in product(('M', 'F'),('A', 'B', 'C',),):
             sex = SexEnum.get(sex).value
             skill_level = DivisionLevelEnum.get(skill_level).value
@@ -163,8 +162,7 @@ class Tournament(models.Model):
                 division = Division(sex=sex, skill_level=skill_level)
                 division.clean()
                 division.save()
-            td = TournamentDivision(tournament=self,
-                    division=division)
+            td = TournamentDivision(tournament=self, division=division)
             td.clean()
             td.save()
 
@@ -222,10 +220,33 @@ class Organization(models.Model):
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
+        new_organization = False
         if not self.id:
+            new_organization = True
             self.slug = self.slugify()
 
         super(Organization, self).save(*args, **kwargs)
+
+        if new_organization:
+            self.create_teams()
+
+    def create_teams(self):
+        for sex, skill_level in product(('M', 'F'),('A', 'B', 'C',),):
+            sex = SexEnum.get(sex).value
+            skill_level = DivisionLevelEnum.get(skill_level).value
+            division = Division.objects.filter(sex=sex,
+                    skill_level=skill_level).first()
+            if division is None:
+                division = Division(sex=sex, skill_level=skill_level)
+                division.clean()
+                division.save()
+            self.create_division_teams(division)
+
+    def create_division_teams(self, division):
+        for team_num in range(1,11):
+            team = Team(school=self, division=division, number=team_num)
+            team.clean()
+            team.save()
 
     def slugify(self):
         return slugify(self.name)
@@ -263,18 +284,75 @@ class TournamentOrganization(models.Model):
         registration_extractor.extract(downloader)
         return registration_extractor
 
-    def save_imported_competitors(self, extracted_competitors):
+    def save_extracted_competitors(self, extracted_competitors):
         model_competitors = []
         for c in extracted_competitors:
-            competitor = Competitor()
-            competitor.name = c['name']
-            competitor.sex = SexEnum.get(c['sex']).value
-            competitor.belt_rank = BeltRankEnum.get(c['rank']).value
-            competitor.weight = float(c['weight'])
-            competitor.registration = self
-            competitor.clean()
+            competitor = Competitor.objects.get_or_create(name=c['name'],
+                    registration=self, defaults={
+                            'sex': SexEnum.get(c['sex']).value,
+                            'belt_rank': BeltRankEnum.get(c['rank']).value,
+                            'weight': float(c['weight']),
+                    })[0]
             model_competitors.append(competitor)
-        Competitor.objects.bulk_create(model_competitors)
+        return model_competitors
+
+    @staticmethod
+    def _parse_team(division_name):
+        sex = skill = None
+        if division_name == "Mens_A":
+            sex = SexEnum.get('M').value
+            skill = DivisionLevelEnum.get('A').value
+        elif division_name == "Mens_B":
+            sex = SexEnum.get('M').value
+            skill = DivisionLevelEnum.get('B').value
+        elif division_name == "Mens_C":
+            sex = SexEnum.get('M').value
+            skill = DivisionLevelEnum.get('C').value
+        elif division_name == "Womens_A":
+            sex = SexEnum.get('F').value
+            skill = DivisionLevelEnum.get('A').value
+        elif division_name == "Womens_B":
+            skill = DivisionLevelEnum.get('B').value
+            sex = SexEnum.get('F').value
+        elif division_name == "Womens_C":
+            sex = SexEnum.get('F').value
+            skill = DivisionLevelEnum.get('C').value
+        if sex is None or skill is None:
+            raise ValueError("Invalid division supplied: %s" %(division_name,))
+        return Division.objects.get(sex=sex, skill_level = skill)
+
+    def save_team_roster(self, team_registration, roster):
+        if roster[0]:
+            team_registration.lightweight = Competitor.objects.get(
+                    name=roster[0], registration=self)
+        if roster[1]:
+            team_registration.middleweight = Competitor.objects.get(
+                    name=roster[1], registration=self)
+        if roster[2]:
+            team_registration.heavyweight = Competitor.objects.get(
+                    name=roster[2], registration=self)
+        if roster[3]:
+            team_registration.alternate1 = Competitor.objects.get(
+                    name=roster[3], registration=self)
+        if roster[4]:
+            team_registration.alternate2 = Competitor.objects.get(
+                    name=roster[4], registration=self)
+        team_registration.clean()
+        team_registration.save()
+
+    def save_extracted_teams(self, teams):
+        for division_name, rosters in teams.items():
+            division = self._parse_team(division_name)
+            for team_num, roster in enumerate(rosters):
+                if not roster:
+                    continue
+                team = Team.objects.get_or_create(school=self.organization,
+                        division=division, number=team_num+1)[0]
+                tournament_division = TournamentDivision.objects.get(
+                        tournament=self.tournament, division=division)
+                team_reg = TeamTournamentRegistration.objects.get_or_create(
+                        tournament_division=tournament_division, team=team)[0]
+                self.save_team_roster(team_reg, roster)
 
     def import_competitors_and_teams(self):
         if self.imported:
@@ -282,9 +360,10 @@ class TournamentOrganization(models.Model):
                     + " - and cannot be imported again"))
 
         school_extracted_data = self.download_school_registration()
-        self.save_imported_competitors(
+        self.save_extracted_competitors(
                 school_extracted_data.imported_competitors)
-        raise NotImplementedError("Save extracted teams")
+        self.save_extracted_teams(
+                school_extracted_data.teams)
         self.imported = True
         self.save()
 
@@ -306,8 +385,11 @@ class TournamentDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
     division = models.ForeignKey(Division)
 
-    class meta:
+    class Meta:
         unique_together = (('tournament', 'division'),)
+
+    def __str__(self):
+        return "%s (%s)" %(self.division, self.tournament)
 
 class TournamentDivisionBeltRanks(models.Model):
     belt_rank = enum.EnumField(BeltRankEnum)
@@ -438,6 +520,42 @@ class Competitor_old(models.Model):
         return "%s (%s)" % (self.name, self.organization)
 
 class Team(models.Model):
+    school = models.ForeignKey(Organization)
+    division = models.ForeignKey(Division)
+    number = models.SmallIntegerField()
+    registrations = models.ManyToManyField(TournamentDivision,
+            through="TeamTournamentRegistration")
+
+    class Meta:
+        unique_together = (('school', 'division', 'number',),)
+
+    def __str__(self):
+        return "%s %s %d" %(str(self.school), str(self.division), self.number,)
+
+#TODO team.division must equal tournament_division.division
+class TeamTournamentRegistration(models.Model):
+    tournament_division = models.ForeignKey(TournamentDivision)
+    team = models.ForeignKey(Team)
+    seed = models.PositiveSmallIntegerField(null=True, blank=True)
+    lightweight = models.ForeignKey(Competitor, null=True, blank=True,
+            related_name="lightweight")
+    middleweight = models.ForeignKey(Competitor, null=True, blank=True,
+            related_name="middleweight")
+    heavyweight = models.ForeignKey(Competitor, null=True, blank=True,
+            related_name="heavyweight")
+    alternate1 = models.ForeignKey(Competitor, null=True, blank=True,
+            related_name="alternate1")
+    alternate2 = models.ForeignKey(Competitor, null=True, blank=True,
+            related_name="alternate2")
+
+    class Meta:
+        unique_together = (('tournament_division', 'team'),)
+
+    def __str__(self):
+        return "%s (%s)" %(str(self.team),
+                str(self.tournament_division.tournament),)
+
+class Team_old(models.Model):
     number = models.IntegerField()
     division = models.ForeignKey(Division_old)
     organization = models.ForeignKey(Organization)
@@ -508,7 +626,7 @@ class Team(models.Model):
         """
         teams = []
         for field_name in field_names:
-            teams += Team.objects.filter(**{field_name: competitor})
+            teams += Team_old.objects.filter(**{field_name: competitor})
         return teams
 
     def _validate_team_members_unique(self):
@@ -529,7 +647,7 @@ class Team(models.Model):
         for competitor in [self.lightweight, self.middleweight,
                 self.heavyweight]:
             if competitor is None: continue
-            teams = set(Team._get_competitor_teams(competitor, ["lightweight",
+            teams = set(Team_old._get_competitor_teams(competitor, ["lightweight",
                     "middleweight", "heavyweight", "alternate1",
                     "alternate2"]))
             if self.pk: teams.discard(self)
@@ -538,7 +656,7 @@ class Team(models.Model):
                         + " other team(s): [%s]") %(competitor, self, teams))
         for competitor in [self.alternate1, self.alternate2]:
             if competitor is None: continue
-            teams = set(Team._get_competitor_teams(competitor, ["lightweight",
+            teams = set(Team_old._get_competitor_teams(competitor, ["lightweight",
                     "middleweight", "heavyweight"]))
             if self.pk: teams.discard(self)
             if teams:
@@ -599,13 +717,13 @@ class TeamMatch(models.Model):
     parent = models.ForeignKey('self', blank=True, null=True)
     parent_side = models.IntegerField()
     root_match = models.BooleanField()
-    blue_team = models.ForeignKey(Team, related_name="blue_team", blank=True,
+    blue_team = models.ForeignKey(Team_old, related_name="blue_team", blank=True,
             null=True)
-    red_team = models.ForeignKey(Team, related_name="red_team", blank=True,
+    red_team = models.ForeignKey(Team_old, related_name="red_team", blank=True,
             null=True)
     ring_number = models.PositiveIntegerField(blank=True, null=True)
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
-    winning_team = models.ForeignKey(Team, blank=True, null=True,
+    winning_team = models.ForeignKey(Team_old, blank=True, null=True,
             related_name="winning_team")
     class Meta:
         unique_together = (("parent", "parent_side"),)
@@ -630,7 +748,7 @@ class TeamMatch(models.Model):
     @staticmethod
     def create_matches_from_seeds(division):
         TeamMatch.objects.filter(division=division).delete()
-        seeded_teams = Team.objects.filter(division=division).filter(
+        seeded_teams = Team_old.objects.filter(division=division).filter(
                 seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
         bracket = Bracket(seeds,
