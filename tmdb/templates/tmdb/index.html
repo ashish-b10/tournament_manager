@@ -1,7 +1,10 @@
 {% extends "tmdb/base.html" %}
 
 {% block content %}
-  <h1>Tournament Manager</h1>
+  <div class="row">
+    <h1 class="col-sm-5 col-md-5"> Tournament Manager</h1>
+    <a class="col-sm-offset-4 col-sm-2 col-md-offset-4 col-md-3 btn btn-primary" href="{% url 'tmdb:tournament_create' %}"> Create New Tournament</a>
+  </div>
   <p>Select from one of the tournaments below, or <a href="{% url 'tmdb:tournament_create' %}">create a new one.</a></p>
   <table class="table table-striped">
     <thead>
@@ -16,12 +19,12 @@
     <tr>
       <td><a href="{% url 'tmdb:tournament_dashboard' tournament.slug %}">{{tournament.location}}</a></td>
       <td>{{tournament.date}} </td>
-      <td><a class="btn btn-primary" href="{% url 'tmdb:tournament_edit' tournament.slug %}">Edit</a></td>
+      <td><a class="btn btn-default" href="{% url 'tmdb:tournament_edit' tournament.slug %}">Edit</a></td>
       <td>
         {% if tournament.imported %}
-          <a class="btn btn-primary" href="{% url 'tmdb:tournament_schools' tournament.slug %}">Import</a>
+          <a class="btn btn-default" href="{% url 'tmdb:tournament_schools' tournament.slug %}">Import</a>
         {% else %}
-          <p>Not imported</p>
+          <p>Need to add schools.</p>
         {% endif %}
       </td>
       <td>
