@@ -96,9 +96,9 @@ def tournament_schools(request, tournament_slug):
     }
     return render(request, 'tmdb/tournament_schools.html', context)
 
-def tournament_schools_import(request, tournament_slug, school_name):
+def tournament_schools_import(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    organization = get_object_or_404(models.Organization, name=school_name)
+    organization = get_object_or_404(models.Organization, slug=school_slug)
     tournament_organization = get_object_or_404(models.TournamentOrganization,
             tournament=tournament, organization=organization)
     if request.method == "POST":
