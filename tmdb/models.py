@@ -294,7 +294,7 @@ class TournamentOrganization(models.Model):
         return registration_extractor
 
     def save_extracted_competitors(self, extracted_competitors):
-        model_competitors = []
+        model_competitors = {}
         for c in extracted_competitors:
             weight = None
             if 'weight' in c:
@@ -305,11 +305,11 @@ class TournamentOrganization(models.Model):
                             'belt_rank': BeltRankEnum.get(c['rank']).value,
                             'weight': weight,
                     })[0]
-            model_competitors.append(competitor)
+            model_competitors[competitor.name] = competitor
         return model_competitors
 
     @staticmethod
-    def _parse_team(division_name):
+    def _parse_division(division_name):
         sex = skill = None
         if division_name == "Mens_A":
             sex = SexEnum.get('M').value
@@ -333,28 +333,31 @@ class TournamentOrganization(models.Model):
             raise ValueError("Invalid division supplied: %s" %(division_name,))
         return Division.objects.get(sex=sex, skill_level = skill)
 
+    def check_roster_competitors(self, team_registration, roster, competitors):
+        competitor_names = {c for c in roster if c}
+        missing_competitors = competitor_names - set(competitors.keys())
+        if missing_competitors:
+            raise Competitor.DoesNotExist("Could not find Competitor(s): ["
+                    + ", ".join(missing_competitors) + "] for team ["
+                    + str(team_registration.team) + "]")
+
     def save_team_roster(self, team_registration, roster):
         if roster[0]:
-            team_registration.lightweight = Competitor.objects.get(
-                    name=roster[0], registration=self)
+            team_registration.lightweight = competitors[roster[0]]
         if roster[1]:
-            team_registration.middleweight = Competitor.objects.get(
-                    name=roster[1], registration=self)
+            team_registration.middleweight = competitors[roster[1]]
         if roster[2]:
-            team_registration.heavyweight = Competitor.objects.get(
-                    name=roster[2], registration=self)
+            team_registration.heavyweight = competitors[roster[2]]
         if roster[3]:
-            team_registration.alternate1 = Competitor.objects.get(
-                    name=roster[3], registration=self)
+            team_registration.alternate1 = competitors[roster[3]]
         if roster[4]:
-            team_registration.alternate2 = Competitor.objects.get(
-                    name=roster[4], registration=self)
+            team_registration.alternate2 = competitors[roster[4]]
         team_registration.clean()
         team_registration.save()
 
-    def save_extracted_teams(self, teams):
+    def save_extracted_teams(self, teams, competitors):
         for division_name, rosters in teams.items():
-            division = self._parse_team(division_name)
+            division = self._parse_division(division_name)
             for team_num, roster in enumerate(rosters):
                 if not roster:
                     continue
@@ -364,6 +367,7 @@ class TournamentOrganization(models.Model):
                         tournament=self.tournament, division=division)
                 team_reg = TeamRegistration.objects.get_or_create(
                         tournament_division=tournament_division, team=team)[0]
+                self.check_roster_competitors(team_reg, roster, competitors)
                 self.save_team_roster(team_reg, roster)
 
     def import_competitors_and_teams(self):
@@ -372,10 +376,9 @@ class TournamentOrganization(models.Model):
                     + " - and cannot be imported again"))
 
         school_extracted_data = self.download_school_registration()
-        self.save_extracted_competitors(
+        competitors = self.save_extracted_competitors(
                 school_extracted_data.extracted_competitors)
-        self.save_extracted_teams(
-                school_extracted_data.teams)
+        self.save_extracted_teams(school_extracted_data.teams, competitors)
         self.imported = True
         self.save()
 
