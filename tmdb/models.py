@@ -385,11 +385,20 @@ class TournamentOrganization(models.Model):
 class Division(models.Model):
     sex = enum.EnumField(SexEnum)
     skill_level = enum.EnumField(DivisionLevelEnum)
+    slug = models.SlugField(unique=True)
     tournaments = models.ManyToManyField('Tournament',
             through='TournamentDivision')
 
     class Meta:
         unique_together = (("sex", "skill_level"),)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = self.slugify()
+        super(Division, self).save(*args, **kwargs)
+
+    def slugify(self):
+        return slugify(str(self))
 
     def __str__(self):
         if self.sex == SexEnum.F: sex_name = "Women's"
