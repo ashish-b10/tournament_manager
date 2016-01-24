@@ -184,7 +184,6 @@ class Tournament(models.Model):
     def download_registration(self):
         """Downloads registration spreadsheet from registration_doc_url."""
         from ectc_registration import GoogleDocsDownloader
-        from ectc_registration import spreadsheet_feed_url
         from ectc_registration import RegistrationExtractor
 
         creds = ConfigurationSetting.objects.filter(
@@ -193,7 +192,7 @@ class Tournament(models.Model):
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
         downloader = GoogleDocsDownloader(creds.value)
-        doc_url = spreadsheet_feed_url(self.registration_doc_url)
+        doc_url = self.registration_doc_url
         reg_extractor = RegistrationExtractor(doc_url, downloader)
         return reg_extractor.get_registration_workbooks()
 
@@ -206,7 +205,7 @@ class Tournament(models.Model):
             school_object.save()
         registration = TournamentOrganization(tournament=self,
                 organization=school_object,
-                registration_doc_url=school.registration_doc_feed_url)
+                registration_doc_url=school.registration_doc_url)
         registration.clean()
         registration.save()
 
@@ -281,7 +280,6 @@ class TournamentOrganization(models.Model):
     def download_school_registration(self):
         from ectc_registration import GoogleDocsDownloader
         from ectc_registration import SchoolRegistrationExtractor
-        from ectc_registration import spreadsheet_feed_url
         try:
             creds = ConfigurationSetting.objects.get(
                     key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
@@ -289,10 +287,9 @@ class TournamentOrganization(models.Model):
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
         downloader = GoogleDocsDownloader(creds)
-        url = spreadsheet_feed_url(self.registration_doc_url)
+        url = self.registration_doc_url
         registration_extractor = SchoolRegistrationExtractor(
-                school_name=self.organization.name,
-                registration_doc_feed_url=url)
+                school_name=self.organization.name, registration_doc_url=url)
         registration_extractor.extract(downloader)
         return registration_extractor
 
