@@ -341,7 +341,8 @@ class TournamentOrganization(models.Model):
                     + ", ".join(missing_competitors) + "] for team ["
                     + str(team_registration.team) + "]")
 
-    def save_team_roster(self, team_registration, roster):
+    def save_team_roster(self, team_registration, roster, competitors):
+        self.check_roster_competitors(team_registration, roster, competitors)
         if roster[0]:
             team_registration.lightweight = competitors[roster[0]]
         if roster[1]:
@@ -367,8 +368,7 @@ class TournamentOrganization(models.Model):
                         tournament=self.tournament, division=division)
                 team_reg = TeamRegistration.objects.get_or_create(
                         tournament_division=tournament_division, team=team)[0]
-                self.check_roster_competitors(team_reg, roster, competitors)
-                self.save_team_roster(team_reg, roster)
+                self.save_team_roster(team_reg, roster, competitors)
 
     def import_competitors_and_teams(self):
         if self.imported:

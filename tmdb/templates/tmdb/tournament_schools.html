@@ -21,7 +21,7 @@
           {% endif %}
       </td>
       <td>
-        <form action="{% url 'tmdb:tournament_schools_import' tournament.slug school.organization.slug %}" method="post">
+        <form action="{% url 'tmdb:tournament_schools' tournament.slug %}" method="post">
           {% csrf_token %}
           {{ school.import_form.as_p }}
           <button class="btn btn-primary" input type="submit"> Import Teams </button>

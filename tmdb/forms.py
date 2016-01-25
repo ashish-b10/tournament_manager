@@ -19,10 +19,9 @@ class TournamentImportForm(forms.ModelForm):
         model = models.Tournament
         fields = []
 
-class TournamentOrganizationImportForm(forms.ModelForm):
-    class Meta:
-        model = models.TournamentOrganization
-        fields = []
+class SchoolRegistrationImportForm(forms.Form):
+    school_registration = forms.IntegerField(required=True,
+            widget=forms.HiddenInput())
 
 class MatchForm(forms.ModelForm):
     class Meta:
