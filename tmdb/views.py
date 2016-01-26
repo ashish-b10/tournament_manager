@@ -77,10 +77,24 @@ def tournament_dashboard(request, tournament_slug):
     for org in organizations:
         org.import_form = forms.TournamentOrganizationImportForm(instance=org)
     divisions = models.Division.objects.all()
+
+
+    # Information about the matches.
+    if 'all_matches' not in request.GET: all_matches=False
+    else:
+        try:
+            all_matches = int(request.GET['all_matches']) > 0
+        except ValueError:
+            all_matches = False
+    matches_by_ring = defaultdict(list)
+    for match in models.TeamMatch.objects.filter(ring_number__isnull=False):
+        if all_matches or match.winning_team is None:
+            matches_by_ring[str(match.ring_number)].append(match)
     context = {
         'tournament': tournament,
         'organizations': organizations,
         'divisions': divisions,
+        'matches_by_ring':sorted(matches_by_ring.items()),
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
 
