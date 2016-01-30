@@ -2,9 +2,11 @@
 
 {% block content %}
   <h1>Current Tournament</h1>
-  <h1>Divisions</h1>
-  {% for division in divisions %}
-    <h2>{{division}}</h2>
+  <h2>Matches (based on divisions)</h2>
+  {% include "tmdb/match_table.html" %}
+
+  <!-- {% for division in divisions %}
+    <h3>{{division}}</h3>
     <p>
       <a href="{% url 'tmdb:match_list' division.pk %}">Matches</a>
       <a href="{% url 'tmdb:team_list' division.pk %}">Teams</a>
@@ -16,8 +18,9 @@
     <a href="{% url 'tmdb:match_list' %}">Matches</a>
     <a href="{% url 'tmdb:team_list' %}">Teams</a>
   </p>
-
-  <h1>Ring Queues</h1>
+ -->
+  <hr>
+  <h2>Ring Queues</h2>
   <div class="ring-queue">
     {% if matches_by_ring %}
     <ul class="nav nav-tabs" role="tablist">
@@ -29,7 +32,7 @@
 
     <div class="tab-content">
       <div role="tabpanel" class="tab-pane active" id="allRings"> 
-        <table class="table ring_table">
+        <table class="table table-striped ring_table">
             <tr>
               <th>Ring No.</th>
               <th>Match No.</th>
@@ -100,7 +103,7 @@
       {% endfor %} 
     </div>
   {% endif %}
-</div>
+  </div>
 
 {% endblock %}
 

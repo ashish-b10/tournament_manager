@@ -70,16 +70,27 @@ def tournament_import(request, tournament_slug):
         instance.import_tournament_organizations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
-def tournament_dashboard(request, tournament_slug):
+def tournament_dashboard(request, tournament_slug, division_id=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug) 
     organizations = models.TournamentOrganization.objects.filter(
             tournament=tournament).order_by('organization__name')
     for org in organizations:
         org.import_form = forms.TournamentOrganizationImportForm(instance=org)
-    divisions = models.Division.objects.all()
 
+    # Divisions
+    if division_id is None:
+        divisions = models.Division.objects.all()
+    else:
+        divisions=[models.Division.objects.get(pk=division_id)]
 
-    # Information about the matches.
+    # Team matches
+    matches = []
+    for division in divisions:
+        team_matches = models.TeamMatch.objects.filter(
+                division=division).order_by('number')
+        matches.append((division, team_matches))
+
+    # Information about the matches by ring.
     if 'all_matches' not in request.GET: all_matches=False
     else:
         try:
@@ -90,11 +101,14 @@ def tournament_dashboard(request, tournament_slug):
     for match in models.TeamMatch.objects.filter(ring_number__isnull=False):
         if all_matches or match.winning_team is None:
             matches_by_ring[str(match.ring_number)].append(match)
+
+    # Add all to the context.
     context = {
         'tournament': tournament,
         'organizations': organizations,
         'divisions': divisions,
         'matches_by_ring':sorted(matches_by_ring.items()),
+        'team_matches': matches
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
 

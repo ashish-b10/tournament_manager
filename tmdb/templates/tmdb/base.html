@@ -29,31 +29,10 @@
             </ul>
           <ul class="nav navbar-nav">
             <!-- <li class="active"><a href="{% url 'tmdb:index' %}">Home</a></li> -->
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Matches <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                  {% for division in divisions %}
-                  <li> <a href="{% url 'tmdb:match_list' division.pk %}"> {{division}} </a> </li>
-                  {% endfor %}
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Teams <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                  {% for division in divisions %}
-                  <li> <a href="{% url 'tmdb:team_list' division.pk %}"> {{division}} </a> </li>
-                  {% endfor %}
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Seedings <span class="caret"></span></a>
-                <ul class="dropdown-menu">
-                  {% for division in divisions %}
-                  <li> <a href="{% url 'tmdb:seedings' division.pk %}"> {{division}} </a> </li>
-                  {% endfor %}
-                </ul>
-            </li>
-
+              <li class="active"><a href="{% url 'tmdb:index' %}">Overview <span class="sr-only">(current)</span></a></li>
+              <li><a href="#">Reports</a></li>
+              <li><a href="#">Analytics</a></li>
+              <li><a href="#">League Standings</a></li>
           </ul>
 
           </li>
@@ -66,17 +45,12 @@
         <div class="row">
           <div class="col-sm-3 col-md-2 sidebar">
             <ul class="nav nav-sidebar">
-              <li class="active"><a href="{% url 'tmdb:index' %}">Overview <span class="sr-only">(current)</span></a></li>
-              <li><a href="#">Reports</a></li>
-              <li><a href="#">Analytics</a></li>
-            </ul>
-            <hr />
-            <ul class="nav nav-sidebar">
             <li><a href="">Current Dashboard</a></li>
             <li><a href="">Divisions</a></li>
             <li><a href="">Ring Queues</a></li>
             <li><a href="">Seedings</a></li>
-            <li><a href="">Standings</a></li>
+            <li><a href="">Teams</a></li>
+            <li><a href="">Bracket View</a></li>
           </ul>
           </div>
           <div class="col-sm-9 col-md-10 main">
