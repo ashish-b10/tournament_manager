@@ -1,0 +1,8 @@
+{% extends "tmdb/base.html" %}
+
+{% block content %}
+    {% for division, team_matches in team_matches %}
+    <h2>Division: {{division}}</h2>
+          {% include "tmdb/match_table.html" %}
+    {% endfor %}
+{% endblock %}
