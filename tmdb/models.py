@@ -585,138 +585,6 @@ class TeamRegistration(models.Model):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
 
-class Team_old(models.Model):
-    number = models.IntegerField()
-    division = models.ForeignKey(Division_old)
-    organization = models.ForeignKey(Organization)
-    lightweight = models.ForeignKey(Competitor_old, null=True, blank=True,
-            related_name="lightweight")
-    middleweight = models.ForeignKey(Competitor_old, null=True, blank=True,
-            related_name="middleweight")
-    heavyweight = models.ForeignKey(Competitor_old, null=True, blank=True,
-            related_name="heavyweight")
-    alternate1 = models.ForeignKey(Competitor_old, null=True, blank=True,
-            related_name="alternate1")
-    alternate2 = models.ForeignKey(Competitor_old, null=True, blank=True,
-            related_name="alternate2")
-    seed = models.IntegerField(null=True, blank=True)
-    class Meta:
-        unique_together = (("number", "division", "organization"),
-                ("seed", "division"))
-
-    def _valid_member_organization(self, member):
-        if member is None: return True
-        return self.organization == member.organization
-
-    def _validate_member_organizations(self):
-        if not self._valid_member_organization(self.lightweight):
-            raise ValidationError(("Lightweight [%s] is not from same" +
-                    " organization as [%s]") %(self.lightweight, self))
-        if not self._valid_member_organization(self.middleweight):
-            raise ValidationError(("Middleweight [%s] is not from same" +
-                    " organization as [%s]") %(self.lightweight, self))
-        if not self._valid_member_organization(self.heavyweight):
-            raise ValidationError(("Heavyweight [%s] is not from same" +
-                    " organization as [%s]") %(self.lightweight, self))
-        if not self._valid_member_organization(self.alternate1):
-            raise ValidationError(("Alternate1 [%s] is not from same" +
-                    " organization as [%s]") %(self.lightweight, self))
-        if not self._valid_member_organization(self.alternate2):
-            raise ValidationError(("Alternate2 [%s] is not from same" +
-                    " organization as [%s]") %(self.lightweight, self))
-
-    def _validate_lightweight_eligibility(self):
-        if self.lightweight is None: return
-
-        if not self.lightweight.is_lightweight():
-            raise ValidationError(("Competitor %s has invalid weight for"
-                    + " lightweight spot [%d lbs]")
-                    %(self.lightweight, self.lightweight.weight))
-
-    def _validate_middleweight_eligibility(self):
-        if self.middleweight is None: return
-
-        if self.middleweight.is_heavyweight():
-            raise ValidationError(("Competitor %s has invalid weight for"
-                    + " middleweight spot [%d lbs]")
-                    %(self.middleweight, self.middleweight.weight))
-
-    def _validate_heavyweight_eligibility(self):
-        if self.heavyweight is None: return
-
-        if self.heavyweight.is_lightweight():
-            raise ValidationError(("Competitor %s has invalid weight for"
-                    + " heavyweight spot [%d lbs]")
-                    %(self.heavyweight, self.heavyweight.weight))
-
-    def _get_competitor_teams(competitor, field_names=None):
-        """
-        Return all teams which have competitor in any of the field names. The
-        returned list could possibly contain duplicates.
-        """
-        teams = []
-        for field_name in field_names:
-            teams += Team_old.objects.filter(**{field_name: competitor})
-        return teams
-
-    def _validate_team_members_unique(self):
-        """ Ensure that no member has multiple spots on this team. """
-        # get all members that are not none
-        members = [m for m in [self.lightweight, self.middleweight,
-                self.heavyweight, self.alternate1, self.alternate2] if m]
-        if len(members) != len(set(members)):
-            raise ValidationError(("Duplicates found in members for team %s:"
-                    + " %s") %(str(self), str(members)))
-
-    def _validate_competitors_on_multiple_teams(self):
-        """
-        Validate that lightweight, middleweight and heavyweight are only on one
-        team. Validate that alternates are not in a lightweight, middleweight,
-        or heavyweight spot on any team.
-        """
-        for competitor in [self.lightweight, self.middleweight,
-                self.heavyweight]:
-            if competitor is None: continue
-            teams = set(Team_old._get_competitor_teams(competitor, ["lightweight",
-                    "middleweight", "heavyweight", "alternate1",
-                    "alternate2"]))
-            if self.pk: teams.discard(self)
-            if teams:
-                raise ValidationError(("Cannot add %s to team %s: already on"
-                        + " other team(s): [%s]") %(competitor, self, teams))
-        for competitor in [self.alternate1, self.alternate2]:
-            if competitor is None: continue
-            teams = set(Team_old._get_competitor_teams(competitor, ["lightweight",
-                    "middleweight", "heavyweight"]))
-            if self.pk: teams.discard(self)
-            if teams:
-                raise ValidationError(("Cannot add %s to team %s: already on"
-                        + " other team(s): [%s] as non-alternate")
-                        %(competitor, self, teams))
-
-    def validate_team_members(self):
-        """
-        Validates that members of a team obey all ECTC rules. It is expected
-        that this check is run BEFORE the team is committed to the database.
-        """
-        self._validate_member_organizations()
-        self._validate_lightweight_eligibility()
-        self._validate_middleweight_eligibility()
-        self._validate_heavyweight_eligibility()
-        self._validate_team_members_unique()
-        self._validate_competitors_on_multiple_teams()
-        self.division.validate_competitor(self.lightweight)
-        self.division.validate_competitor(self.middleweight)
-        self.division.validate_competitor(self.heavyweight)
-        self.division.validate_competitor(self.alternate1)
-        self.division.validate_competitor(self.alternate2)
-
-    def clean(self, *args, **kwargs):
-        self.validate_team_members()
-
-    def __str__(self):
-        return "%s %s%i" %(self.organization, self.division, self.number)
-
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
     can have multiple CompetitorMatches.
@@ -747,13 +615,13 @@ class TeamMatch(models.Model):
     parent = models.ForeignKey('self', blank=True, null=True)
     parent_side = models.IntegerField()
     root_match = models.BooleanField()
-    blue_team = models.ForeignKey(Team_old, related_name="blue_team", blank=True,
-            null=True)
-    red_team = models.ForeignKey(Team_old, related_name="red_team", blank=True,
-            null=True)
+    blue_team = models.ForeignKey(TeamRegistration, related_name="blue_team",
+            blank=True, null=True)
+    red_team = models.ForeignKey(TeamRegistration, related_name="red_team",
+            blank=True, null=True)
     ring_number = models.PositiveIntegerField(blank=True, null=True)
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
-    winning_team = models.ForeignKey(Team_old, blank=True, null=True,
+    winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
             related_name="winning_team")
     class Meta:
         unique_together = (("parent", "parent_side"),)
@@ -778,7 +646,7 @@ class TeamMatch(models.Model):
     @staticmethod
     def create_matches_from_seeds(division):
         TeamMatch.objects.filter(division=division).delete()
-        seeded_teams = Team_old.objects.filter(division=division).filter(
+        seeded_teams = Team.objects.filter(division=division).filter(
                 seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
         bracket = Bracket(seeds,
