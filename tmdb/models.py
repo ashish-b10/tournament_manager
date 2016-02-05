@@ -52,27 +52,6 @@ class BeltRankEnum(enum.Enum):
         BLACK: 'Black',
     }
 
-class SexField_old(models.CharField):
-    FEMALE_DB_VAL = 'F'
-    MALE_DB_VAL = 'M'
-    choices = (
-        (FEMALE_DB_VAL, 'Female'),
-        (MALE_DB_VAL, 'Male'),
-    )
-    _sexes_names = dict(choices)
-
-    def __init__(self, *args, **kwargs):
-        kwargs['max_length'] = 1
-        super(SexField_old, self).__init__(*args, **kwargs)
-
-    def to_python(self, value):
-        if not value in SexField_old._sexes_names.keys():
-            raise ValidationError("Invalid SexField_old value: " + value)
-        return value
-
-    def __str__(self):
-        return self._sexes_names[self.sex]
-
 class DivisionSkillField(models.CharField):
     A_TEAM_VAL = 'A'
     B_TEAM_VAL = 'B'
@@ -96,46 +75,6 @@ class DivisionSkillField(models.CharField):
 
     def __str__(self):
         return self._division_skills_names[self.division_skill]
-
-class BeltRank(models.Model):
-    BELT_RANKS = (
-        ('WH', 'White'),
-        ('YL', 'Yellow'),
-        ('OR', 'Orange'),
-        ('GN', 'Green'),
-        ('BL', 'Blue'),
-        ('PL', 'Purple'),
-        ('BR', 'Brown'),
-        ('RD', 'Red'),
-        ('BK', 'Black'),
-        ('1D', '1 Dan'),
-        ('2D', '2 Dan'),
-        ('3D', '3 Dan'),
-        ('4D', '4 Dan'),
-        ('5D', '5 Dan'),
-        ('6D', '6 Dan'),
-        ('7D', '7 Dan'),
-        ('8D', '8 Dan'),
-        ('9D', '9 Dan'),
-    )
-    _belt_ranks_names = dict(BELT_RANKS)
-    _belt_ranks_set = {rank[0] for rank in BELT_RANKS}
-
-    belt_rank = models.CharField(max_length=2, choices=BELT_RANKS, unique=True)
-
-    def save(self, *args, **kwargs):
-        if not self.belt_rank in BeltRank._belt_ranks_set:
-            raise ValidationError("Invalid BeltRank value: "
-                    + str(self.belt_rank))
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self._belt_ranks_names[self.belt_rank]
-
-    @staticmethod
-    def create_tkd_belt_ranks():
-        for belt_rank in BeltRank._belt_ranks_set:
-            BeltRank.objects.create(belt_rank = belt_rank)
 
 class WeightField(models.DecimalField):
     def __init__(self, *args, **kwargs):
@@ -419,76 +358,6 @@ class TournamentDivisionBeltRanks(models.Model):
     belt_rank = enum.EnumField(BeltRankEnum)
     tournament_division = models.ForeignKey(TournamentDivision)
 
-class Division_old(models.Model):
-    belt_ranks = models.ManyToManyField(BeltRank)
-    sex = SexField_old()
-    skill_level = DivisionSkillField()
-
-    class Meta:
-        unique_together = (("sex", "skill_level"),)
-
-    def __str__(self):
-        if self.sex == SexField_old.MALE_DB_VAL: sex_name = "Men's"
-        if self.sex == SexField_old.FEMALE_DB_VAL: sex_name = "Women's"
-        return sex_name + ' ' + self.skill_level
-
-    def match_num_start_val(self):
-        if self.skill_level == DivisionSkillField.A_TEAM_VAL:
-            match_num = 100
-        if self.skill_level == DivisionSkillField.B_TEAM_VAL:
-            match_num = 300
-        if self.skill_level == DivisionSkillField.C_TEAM_VAL:
-            match_num = 500
-        if self.sex == SexField_old.FEMALE_DB_VAL:
-            match_num += 100
-        return match_num
-
-    c_team_belt_ranks = ("WH", "YL", "OR", "GN")
-    b_team_belt_ranks = ("GN", "BL", "PL", "BR", "RD")
-    a_team_belt_ranks = ("BL", "PL", "BR", "RD", "BK", "1D", "2D", "3D", "4D",
-            "5D", "6D", "7D", "8D", "9D",)
-    DIVISION_SEX_NAMES = {"F" : "Women's", "M" : "Men's"}
-    ECTC_DIVISION_SKILLS = {"A" : a_team_belt_ranks, "B" : b_team_belt_ranks,
-            "C" : c_team_belt_ranks}
-
-    @staticmethod
-    def get_match_number_start_val(division):
-        division = Division_old.objects.get(division)
-
-    def _validate_sex(self, competitor):
-        if self.sex == competitor.sex: return
-        raise ValidationError(("Competitor %s cannot be added to Division %s"
-                + " (invalid sex)") %(str(competitor), str(self)))
-
-    def _validate_belt_group(self, competitor):
-        if competitor.skill_level in self.belt_ranks.all():
-            return
-        raise ValidationError(("Competitor %s's belt rank is invalid for"
-                + " division %s") %(str(competitor), str(self)))
-
-    def validate_competitor(self, competitor):
-        if competitor is None: return
-        self._validate_sex(competitor)
-        self._validate_belt_group(competitor)
-
-    @staticmethod
-    def get_match_num_start_val(sex, skill):
-        if sex == "M" and skill == "A": return 100
-        if sex == "F" and skill == "A": return 200
-        if sex == "M" and skill == "B": return 300
-        if sex == "F" and skill == "B": return 400
-        if sex == "M" and skill == "C": return 500
-        if sex == "F" and skill == "C": return 600
-
-    @classmethod
-    def create_ectc_divisions(self):
-        for sex, skill_name in product(("F", "M"),
-                Division_old.ECTC_DIVISION_SKILLS):
-            belt_ranks = Division_old.ECTC_DIVISION_SKILLS[skill_name]
-            division = Division_old.objects.create(sex=sex, skill_level=skill_name)
-            division.belt_ranks.add(*BeltRank.objects.filter(
-                    belt_rank__in=belt_ranks))
-
 class Competitor(models.Model):
     """ A person who may compete in a tournament. """
     name = models.CharField(max_length=63)
@@ -508,46 +377,6 @@ class Competitor(models.Model):
 
     class Meta:
         unique_together = (("name", "registration"),)
-
-class Competitor_old(models.Model):
-    """ Cutoff weights for each weight class in pounds inclusive. """
-    WEIGHT_CUTOFFS = {
-        'F' : {
-            'light': (decimal.Decimal('0'), decimal.Decimal('117.0')),
-            'middle': (decimal.Decimal('117.1'), decimal.Decimal('137.0')),
-            'heavy': (decimal.Decimal('137.1'), decimal.Decimal('999.9')),
-        },
-        'M' : {
-            'light': (decimal.Decimal('0'), decimal.Decimal('145.0')),
-            'middle': (decimal.Decimal('145.1'), decimal.Decimal('172.0')),
-            'heavy': (decimal.Decimal('172.1'), decimal.Decimal('999.9')),
-        },
-    }
-    name = models.CharField(max_length=63)
-    sex = SexField_old()
-    skill_level = models.ForeignKey(BeltRank)
-    age = models.IntegerField()
-    organization = models.ForeignKey(Organization)
-    weight = WeightField()
-    class Meta:
-        unique_together = (("name", "organization"),)
-
-    @staticmethod
-    def _is_between_cutoffs(weight, sex, weightclass):
-        cutoffs = Competitor_old.WEIGHT_CUTOFFS[sex][weightclass]
-        return weight >= cutoffs[0] and weight <= cutoffs[1]
-
-    def is_lightweight(self):
-        return self._is_between_cutoffs(self.weight, self.sex, 'light')
-
-    def is_middleweight(self):
-        return self._is_between_cutoffs(self.weight, self.sex, 'middle')
-
-    def is_heavyweight(self):
-        return self._is_between_cutoffs(self.weight, self.sex, 'heavy')
-
-    def __str__(self):
-        return "%s (%s)" % (self.name, self.organization)
 
 class Team(models.Model):
     school = models.ForeignKey(Organization)
@@ -597,7 +426,7 @@ class TeamMatch(models.Model):
     division for which root_match is True.
 
     Attributes:
-        division        The division that the match belongs to
+        division        The TournamentDivision that the match belongs to
         number          The match number (unique amongst all
                         TeamMatches)
         parent          The TeamMatch the winner will advance to
@@ -610,7 +439,7 @@ class TeamMatch(models.Model):
                         The time at which the ring was assigned
         winning_team    The winner of the TeamMatch
     """
-    division = models.ForeignKey(Division_old)
+    division = models.ForeignKey(TournamentDivision)
     number = models.PositiveIntegerField(unique=True)
     parent = models.ForeignKey('self', blank=True, null=True)
     parent_side = models.IntegerField()

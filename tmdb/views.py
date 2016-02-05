@@ -75,9 +75,9 @@ def tournament_dashboard(request, tournament_slug):
     organizations = models.TournamentOrganization.objects.filter(
             tournament=tournament).order_by('organization__name')
     for org in organizations:
-        org.import_form = forms.SchoolRegistrationImportForm(instance=org)
+        org.import_form = forms.SchoolRegistrationImportForm(
+                initial={'school_registration': org.pk})
     divisions = models.Division.objects.all()
-
 
     # Information about the matches.
     if 'all_matches' not in request.GET: all_matches=False
