@@ -72,12 +72,7 @@ def tournament_import(request, tournament_slug):
 
 def tournament_dashboard(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    organizations = models.TournamentOrganization.objects.filter(
-            tournament=tournament).order_by('organization__name')
-    for org in organizations:
-        org.import_form = forms.SchoolRegistrationImportForm(
-                initial={'school_registration': org.pk})
-    divisions = models.Division.objects.all()
+    divisions = models.TournamentDivision.objects.filter(tournament=tournament)
 
     # Information about the matches.
     if 'all_matches' not in request.GET: all_matches=False
@@ -92,7 +87,6 @@ def tournament_dashboard(request, tournament_slug):
             matches_by_ring[str(match.ring_number)].append(match)
     context = {
         'tournament': tournament,
-        'organizations': organizations,
         'divisions': divisions,
         'matches_by_ring':sorted(matches_by_ring.items()),
     }
