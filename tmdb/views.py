@@ -72,7 +72,8 @@ def tournament_import(request, tournament_slug):
 
 def tournament_dashboard(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    divisions = models.TournamentDivision.objects.filter(tournament=tournament)
+    tournament_divisions = models.TournamentDivision.objects.filter(
+            tournament=tournament)
 
     # Information about the matches.
     if 'all_matches' not in request.GET: all_matches=False
@@ -82,12 +83,13 @@ def tournament_dashboard(request, tournament_slug):
         except ValueError:
             all_matches = False
     matches_by_ring = defaultdict(list)
-    for match in models.TeamMatch.objects.filter(ring_number__isnull=False):
+    for match in models.TeamMatch.objects.filter(ring_number__isnull=False,
+            division__tournament=tournament):
         if all_matches or match.winning_team is None:
             matches_by_ring[str(match.ring_number)].append(match)
     context = {
         'tournament': tournament,
-        'divisions': divisions,
+        'tournament_divisions': tournament_divisions,
         'matches_by_ring':sorted(matches_by_ring.items()),
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
@@ -137,14 +139,15 @@ def tournament_schools(request, tournament_slug):
             context['organizations'] = organizations
     return render(request, 'tmdb/tournament_schools.html', context)
 
-def match_list(request, division_id=None):
-    if division_id is None:
-        divisions = models.Division.objects.all()
-    else:
-        divisions=[models.Division.objects.get(pk=division_id)]
+def match_list(request, tournament_slug, division_slug=None):
+    tournament_divisions = models.TournamentDivision.objects.filter(
+            tournament__slug=tournament_slug)
+    if division_slug is not None:
+        tournament_divisions = tournament_divisions.filter(
+                division__slug=division_slug)
 
     matches = []
-    for division in divisions:
+    for division in tournament_divisions:
         team_matches = models.TeamMatch.objects.filter(
                 division=division).order_by('number')
         matches.append((division, team_matches))
@@ -166,43 +169,53 @@ def team_list(request, division_id=None):
     context = { 'division_teams' : division_teams }
     return render(request, 'tmdb/team_list.html', context)
 
-seedings_form_re = re.compile('(?P<team_id>[0-9]+)-seed$')
-def seedings(request, division_id):
+seedings_form_re = re.compile('(?P<team_reg_id>[0-9]+)-seed$')
+def seedings(request, tournament_slug, division_slug):
     if request.method == 'POST':
         seed_forms = []
+        tournament_division_pk = request.POST["tournament_division_pk"]
+        tournament_division = get_object_or_404(models.TournamentDivision,
+                pk=tournament_division_pk)
         for post_field in request.POST:
             re_match = seedings_form_re.match(post_field)
             if not re_match: continue
-            team_id = re_match.group('team_id')
-            seed_form = forms.SeedingForm(request.POST, prefix=str(team_id),
-                    instance=models.Team.objects.get(pk=int(team_id)))
+            team_reg_id = re_match.group('team_reg_id')
+            seed_form = forms.SeedingForm(request.POST, prefix=str(team_reg_id),
+                    instance=models.TeamRegistration.objects.get(
+                            pk=int(team_reg_id)))
             seed_forms.append(seed_form)
 
         if all(map(forms.SeedingForm.is_valid, seed_forms)):
 
-            division = forms.SeedingForm.all_seeds_valid(seed_forms)
+            tournament_division = forms.SeedingForm.all_seeds_valid(seed_forms)
 
             for team in forms.SeedingForm.modified_teams(seed_forms):
-                team = models.Team.objects.get(pk=team.pk)
+                team = models.TeamRegistration.objects.get(pk=team.pk)
                 team.seed = None
                 team.save()
 
             for form in seed_forms:
                 form.save()
-            models.TeamMatch.create_matches_from_seeds(division)
-            return HttpResponseRedirect('/tmdb/matches/' + division_id)
+            models.TeamMatch.create_matches_from_seeds(tournament_division)
+            return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
+                    args=(tournament_division.tournament,)))
 
     else:
+        tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+        tournament_division = get_object_or_404(models.TournamentDivision,
+                tournament=tournament, division__slug=division_slug)
+        teams = models.TeamRegistration.objects.filter(
+                tournament_division=tournament_division)
         seed_forms = []
-        for team in models.Team.objects.filter(division=division_id):
+        for team in teams:
             seed_form = forms.SeedingForm(prefix=str(team.id), instance=team)
             seed_form.name = str(team)
             seed_forms.append(seed_form)
 
-    division_name = str(models.Division.objects.get(pk=division_id))
-
-    context = {'division': division_id, 'seed_forms': seed_forms,
-            'division_name': division_name}
+    context = {
+            'seed_forms': seed_forms,
+            'tournament_division': tournament_division,
+            }
     return render(request, 'tmdb/seedings.html', context)
 
 def match(request, match_num):

@@ -1,7 +1,7 @@
 {% extends "tmdb/base.html" %}
 
 {% block content %}
-  <h2>Creating brackets for {{division_name}} division</h2>
+  <h2>Creating brackets for {{tournament_division}}</h2>
   <p>Below are the seedings for all teams. In order to create a bracket, the following conditions must be met:
     <ul>
       <li>
@@ -16,8 +16,9 @@
   <p>
   ***WARNING*** As soon as you submit this form, ALL MATCHES IN THIS DIVISION WILL BE DELETED. This means that ALL RING ASSIGNMENTS AND MATCH RESULTS WILL BE COMPLETELY LOST AND DELETED. Under no circumstances should this button be pressed once the bracket has started and matches have been completed.
   </p>
-  <form action="/tmdb/seedings/{{division}}" method="post">
+  <form action="{% url 'tmdb:seedings' tournament_division.tournament.slug tournament_division.division.slug %}" method="post">
     {% csrf_token %}
+    <input type="hidden" name="tournament_division_pk" value="{{tournament_division.pk}}"/>
     <table class="table">
     {% for form in seed_forms %}
       {{ form.as_table }}

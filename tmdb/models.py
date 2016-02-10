@@ -453,7 +453,7 @@ class TeamMatch(models.Model):
     winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
             related_name="winning_team")
     class Meta:
-        unique_together = (("parent", "parent_side"),)
+        unique_together = (("parent", "parent_side"), ("division", "number",),)
 
     def __str__(self):
         return "Match #" + str(self.number)
@@ -473,15 +473,17 @@ class TeamMatch(models.Model):
             return None
 
     @staticmethod
-    def create_matches_from_seeds(division):
-        TeamMatch.objects.filter(division=division).delete()
-        seeded_teams = Team.objects.filter(division=division).filter(
-                seed__isnull=False)
+    def create_matches_from_seeds(tournament_division):
+        TeamMatch.objects.filter(division=tournament_division).delete()
+        seeded_teams = TeamRegistration.objects.filter(
+                tournament_division=tournament_division, seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
-        bracket = Bracket(seeds,
-                match_number_start_val=division.match_num_start_val())
+        #start_val = tournament_division.match_number_start_val()
+        start_val = 100
+        bracket = Bracket(seeds, match_number_start_val=start_val)
         for bracket_match in bracket.bfs(seeds=False):
-            match = TeamMatch(division=division, number=bracket_match.number,
+            match = TeamMatch(division=tournament_division,
+                    number=bracket_match.number,
                     parent_side=bracket_match.parent_side,
                     root_match=bracket_match.is_root)
 
