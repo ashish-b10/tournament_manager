@@ -154,17 +154,19 @@ def match_list(request, tournament_slug, division_slug=None):
     context = {'team_matches' : matches}
     return render(request, 'tmdb/match_list.html', context)
 
-def team_list(request, division_id=None):
-    if division_id is None:
-        divisions = models.Division.objects.all()
-    else:
-        divisions=[models.Division.objects.get(pk=division_id)]
+def team_list(request, tournament_slug, division_slug=None):
+    tournament_divisions = models.TournamentDivision.objects.filter(
+            tournament__slug=tournament_slug)
+    if division_slug is not None:
+        tournament_divisions = tournament_divisions.filter(
+                division__slug=division_slug)
 
     division_teams = []
-    for division in divisions:
-        teams = models.Team.objects.filter(
-                division=division).order_by('organization').order_by('number')
-        division_teams.append((division, teams))
+    for tournament_division in tournament_divisions:
+        teams = models.TeamRegistration.objects.filter(
+                tournament_division=tournament_division).order_by(
+                        'organization').order_by('team__number')
+        division_teams.append((tournament_division, teams))
 
     context = { 'division_teams' : division_teams }
     return render(request, 'tmdb/team_list.html', context)

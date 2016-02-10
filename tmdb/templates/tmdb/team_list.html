@@ -5,15 +5,13 @@
 {% block content %}
     {% for division, teams in division_teams %}
 
-    <h1>Division: {{division}}</h1>
+    <h2>{{division}}</h2>
     <div class="content">
       <div id="main_table">
           {% if teams %}
           <table class="table team_table">
             <tr>
-              <th>Organization</th>
-           <!--    <th>Division</th> -->
-              <th>Number</th>
+              <th>Team Name</th>
               <th>Lightweight</th>
               <th>Middleweight</th>
               <th>Heavyweight</th>
@@ -23,13 +21,7 @@
             {% for team in teams %}
             <tr>
               <td>
-                {{team.organization}}
-              </td>
-             <!--  <td>
-                {{team.division}}
-              </td> -->
-              <td>
-                {{team.number}}
+                {{team}}
               </td>
               <td>
                 {% if team.lightweight %}

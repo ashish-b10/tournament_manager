@@ -11,12 +11,16 @@ urlpatterns = [
     url(r'^teams/(?P<division_id>[0-9]+)/*$', views.team_list,
             name='team_list'), #TODO delete me!
     url(r'^teams/*$', views.team_list, name='team_list'), #TODO delete me!
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/teams/*$',
+            views.team_list, name='team_list'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + '/teams/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.team_list, name='team_list'),
     url(r'^matches/(?P<division_id>[0-9]+)/*$', views.match_list,
             name='match_list'), #TODO delete me!
     url(r'^matches/*$', views.match_list, name='match_list'), #TODO delete me?
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/matches/*$',
+            views.match_list, name='match_list'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + '/matches/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.match_list, name='match_list'),
