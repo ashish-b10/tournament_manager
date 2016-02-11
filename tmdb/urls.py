@@ -6,7 +6,6 @@ from . import views
 urlpatterns = [
     url(r'^registration_credentials/*$', views.registration_credentials,
             name='registration_credentials'),
-    url(r'^match/(?P<match_num>[0-9]+)/*$', views.match, name='match'),
     url(r'^rings/*$', views.rings, name='rings'),
     url(r'^teams/(?P<division_id>[0-9]+)/*$', views.team_list,
             name='team_list'), #TODO delete me!

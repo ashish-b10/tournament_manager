@@ -232,28 +232,6 @@ def seedings(request, tournament_slug, division_slug):
             }
     return render(request, 'tmdb/seedings.html', context)
 
-def match(request, match_num):
-    match = models.TeamMatch.objects.get(number=match_num)
-    if request.method == 'POST':
-        form = forms.MatchForm(request.POST, instance=match)
-
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect('/tmdb/matches/'
-                    + str(match.division.pk))
-    else:
-        form = forms.MatchForm(instance=match)
-        match_teams = []
-        if match.blue_team is not None:
-            match_teams.append(match.blue_team.pk)
-        if match.red_team is not None:
-            match_teams.append(match.red_team.pk)
-        form.fields['winning_team'].queryset = models.Team.objects.filter(
-                pk__in=match_teams)
-
-    return render(request, 'tmdb/match_edit.html', {'form': form.as_p(),
-            'match_num': match_num})
-
 def rings(request):
     if 'all_matches' not in request.GET: all_matches=False
     else:
