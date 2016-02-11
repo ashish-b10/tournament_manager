@@ -135,6 +135,14 @@ def tournament_schools(request, tournament_slug):
     return render(request, 'tmdb/tournament_schools.html', context)
 
 def match_list(request, tournament_slug, division_slug=None):
+    if request.method == 'POST':
+        match = models.TeamMatch.objects.get(pk=request.POST['team_match_id'])
+        form = forms.MatchForm(request.POST, instance=match)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(request.path)
+
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament__slug=tournament_slug)
     if division_slug is not None:
@@ -145,6 +153,15 @@ def match_list(request, tournament_slug, division_slug=None):
     for division in tournament_divisions:
         team_matches = models.TeamMatch.objects.filter(
                 division=division).order_by('number')
+        for team_match in team_matches:
+            team_match.form = forms.MatchForm(instance=team_match)
+            match_teams = []
+            if team_match.blue_team is not None:
+                match_teams.append(team_match.blue_team.pk)
+            if team_match.red_team is not None:
+                match_teams.append(team_match.red_team.pk)
+            team_match.form.fields['winning_team'].queryset = \
+                    models.TeamRegistration.objects.filter(pk__in=match_teams)
         matches.append((division, team_matches))
     context = {'team_matches' : matches}
     return render(request, 'tmdb/match_list.html', context)
