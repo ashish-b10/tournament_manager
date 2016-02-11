@@ -344,6 +344,15 @@ class Division(models.Model):
         if self.sex == SexEnum.M: sex_name = "Men's"
         return sex_name + " " + DivisionLevelEnum.label(self.skill_level)
 
+    def match_number_start_val(self):
+        if self.skill_level == DivisionLevelEnum.A:
+            start_val = 100
+        elif self.skill_level == DivisionLevelEnum.B:
+            start_val = 300
+        elif self.skill_level == DivisionLevelEnum.C:
+            start_val = 500
+        return start_val + (100 if self.sex == SexEnum.F else 0)
+
 class TournamentDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
     division = models.ForeignKey(Division)
@@ -478,8 +487,7 @@ class TeamMatch(models.Model):
         seeded_teams = TeamRegistration.objects.filter(
                 tournament_division=tournament_division, seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
-        #start_val = tournament_division.match_number_start_val()
-        start_val = 100
+        start_val = tournament_division.division.match_number_start_val()
         bracket = Bracket(seeds, match_number_start_val=start_val)
         for bracket_match in bracket.bfs(seeds=False):
             match = TeamMatch(division=tournament_division,
