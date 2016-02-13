@@ -65,27 +65,31 @@ def tournament_import(request, tournament_slug):
         instance.import_tournament_organizations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
-def tournament_dashboard(request, tournament_slug, division_id=None):
+def tournament_dashboard(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug) 
     organizations = models.TournamentOrganization.objects.filter(
             tournament=tournament).order_by('organization__name')
-#    for org in organizations:
-#        org.import_form = forms.TournamentOrganizationImportForm(instance=org)
-
-    # Divisions
-    if division_id is None:
-        divisions = models.TournamentDivision.objects.all()
-    else:
-        divisions=[models.TournamentDivision.objects.get(pk=division_id)]
-
-    # Team matches
-    matches = []
-    for division in divisions:
-        team_matches = models.TeamMatch.objects.filter(division=division)
-        matches.append((division, team_matches))
 
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament=tournament)
+    if division_slug is not None:
+        tournament_divisions = tournament_divisions.filter(
+                division__slug=division_slug)
+
+    matches = []
+    for division in tournament_divisions:
+        team_matches = models.TeamMatch.objects.filter(
+                division=division).order_by('number')
+        for team_match in team_matches:
+            team_match.form = forms.MatchForm(instance=team_match)
+            match_teams = []
+            if team_match.blue_team is not None:
+                match_teams.append(team_match.blue_team.pk)
+            if team_match.red_team is not None:
+                match_teams.append(team_match.red_team.pk)
+            team_match.form.fields['winning_team'].queryset = \
+                    models.TeamRegistration.objects.filter(pk__in=match_teams)
+        matches.append((division, team_matches))
 
     # Information about the matches by ring.
     if 'all_matches' not in request.GET: all_matches=False
