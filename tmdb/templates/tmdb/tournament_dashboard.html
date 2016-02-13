@@ -1,4 +1,4 @@
-{% extends "tmdb/base.html" %}
+{% extends "tmdb/base_tournament_dashboard.html" %}
 
 {% block content %}
   <h1>Current Tournament</h1>
@@ -11,7 +11,6 @@
       <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a>
     </p>
   {% endfor %}
-
 
   {% include "tmdb/match_table_component.html" %}
   
