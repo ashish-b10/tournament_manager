@@ -69,20 +69,19 @@ def tournament_dashboard(request, tournament_slug, division_id=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug) 
     organizations = models.TournamentOrganization.objects.filter(
             tournament=tournament).order_by('organization__name')
-    for org in organizations:
-        org.import_form = forms.TournamentOrganizationImportForm(instance=org)
+#    for org in organizations:
+#        org.import_form = forms.TournamentOrganizationImportForm(instance=org)
 
     # Divisions
     if division_id is None:
-        divisions = models.Division.objects.all()
+        divisions = models.TournamentDivision.objects.all()
     else:
-        divisions=[models.Division.objects.get(pk=division_id)]
+        divisions=[models.TournamentDivision.objects.get(pk=division_id)]
 
     # Team matches
     matches = []
     for division in divisions:
-        team_matches = models.TeamMatch.objects.filter(
-                division=division).order_by('number')
+        team_matches = models.TeamMatch.objects.filter(division=division)
         matches.append((division, team_matches))
 
     tournament_divisions = models.TournamentDivision.objects.filter(

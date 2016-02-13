@@ -3,7 +3,23 @@
 {% block content %}
   <h1>Current Tournament</h1>
   <h2>Matches (based on divisions)</h2>
+  {% for tournament_div in tournament_divisions %}
+    <h2>{{tournament_div}}</h2>
+    <p>
+      <a href="{% url 'tmdb:match_list' tournament_div.tournament.slug tournament_div.division.slug %}">Matches</a>
+      <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a>
+      <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a>
+    </p>
+  {% endfor %}
+
+
   {% include "tmdb/match_table_component.html" %}
+  
+  <h2>All</h2>
+  <p>
+    <a href="{% url 'tmdb:match_list' %}">Matches</a>
+    <a href="{% url 'tmdb:team_list' %}">Teams</a>
+  </p>
 
   <!-- {% for division in divisions %}
     <h3>{{division}}</h3>

@@ -3,6 +3,6 @@
 {% block content %}
     {% for division, team_matches in team_matches %}
     <h2>Division: {{division}}</h2>
-          {% include "tmdb/match_table.html" %}
+          {% include "tmdb/match_table_component.html" %}
     {% endfor %}
 {% endblock %}
