@@ -39,6 +39,11 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'tmdb',
 )
+try:
+    import django_extensions
+    INSTALLED_APPS += ("django_extensions",)
+except ImportError:
+    pass
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',

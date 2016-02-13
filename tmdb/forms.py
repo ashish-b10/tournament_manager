@@ -19,10 +19,9 @@ class TournamentImportForm(forms.ModelForm):
         model = models.Tournament
         fields = []
 
-class TournamentOrganizationImportForm(forms.ModelForm):
-    class Meta:
-        model = models.TournamentOrganization
-        fields = []
+class SchoolRegistrationImportForm(forms.Form):
+    school_registration = forms.IntegerField(required=True,
+            widget=forms.HiddenInput())
 
 class MatchForm(forms.ModelForm):
     class Meta:
@@ -35,7 +34,7 @@ class SeedingForm(forms.ModelForm):
         self.fields['seed'].label = str(self.instance)
 
     class Meta:
-        model = models.Team
+        model = models.TeamRegistration
         fields = ['id', 'seed']
 
     @staticmethod
@@ -51,15 +50,17 @@ class SeedingForm(forms.ModelForm):
             if team.seed >= 1: continue
             errors.append(forms.ValidationError("Team " + str(team) + " has"
                     + " seed < 1 (%d)" %team.seed))
-        divisions = {form_team.division for form_team in modified_teams}
-        if len(divisions) > 1:
+        tournament_divisions = {form_team.tournament_division
+                for form_team in modified_teams}
+        if len(tournament_divisions) > 1:
             errors.append(forms.ValidationError("Cannot handle teams from"
-                    + " multiple divisions (teams supplied have %s)"
-                    %(divisions)))
+                    + " multiple TournamentDivisions (teams supplied have %s)"
+                    %(tournament_divisions)))
             raise forms.ValidationError(errors)
-        division = divisions.pop()
+        tournament_division = tournament_divisions.pop()
 
-        teams = {t.id:t for t in models.Team.objects.filter(division=division)}
+        teams = {t.id:t for t in models.TeamRegistration.objects.filter(
+                tournament_division=tournament_division)}
         for team in modified_teams:
             teams[team.id] = team
         filled_seeds = defaultdict(list)
@@ -73,7 +74,7 @@ class SeedingForm(forms.ModelForm):
                     + " multiple teams assigned: " + str(duplicated_seeds)))
         if errors:
             raise forms.ValidationError(errors)
-        return division
+        return tournament_division
 
 class ConfigurationSetting(forms.ModelForm):
     class Meta:

@@ -8,9 +8,9 @@
   <!-- {% for division in divisions %}
     <h3>{{division}}</h3>
     <p>
-      <a href="{% url 'tmdb:match_list' division.pk %}">Matches</a>
-      <a href="{% url 'tmdb:team_list' division.pk %}">Teams</a>
-      <a href="{% url 'tmdb:seedings' division.pk %}">Seedings</a>
+      <a href="{% url 'tmdb:match_list' tournament_div.tournament.slug tournament_div.division.slug %}">Matches</a>
+      <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a>
+      <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a>
     </p>
   {% endfor %}
   <h2>All</h2>
@@ -21,6 +21,7 @@
  -->
   <hr>
   {% include "tmdb/ring_table_component.html" %}
+
 {% endblock %}
 
 

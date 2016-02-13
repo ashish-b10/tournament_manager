@@ -11,8 +11,8 @@
     </thead>
   {% for school in organizations %}
     <tr>
-      <td>{{school.organization.name}}</td>
-      <td><a href="{{school.registration_doc_url}}">{{school.registration_doc_url}}</a></td>
+      <td><a href="{% url 'tmdb:tournament_school' tournament.slug school.organization.slug %}">{{school.organization.name}}</a></td>
+      <td><a href="{{school.registration_doc_url}}">Google Docs Registration spreadsheet</a></td>
       <td>
           {% if school.imported %}
           <p>Imported</p>
@@ -21,7 +21,7 @@
           {% endif %}
       </td>
       <td>
-        <form action="{% url 'tmdb:tournament_schools_import' tournament.slug school.organization.slug %}" method="post">
+        <form action="{% url 'tmdb:tournament_schools' tournament.slug %}" method="post">
           {% csrf_token %}
           {{ school.import_form.as_p }}
           <button class="btn btn-primary" input type="submit"> Import Teams </button>
