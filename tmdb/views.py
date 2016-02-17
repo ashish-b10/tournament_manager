@@ -237,7 +237,7 @@ def seedings(request, tournament_slug, division_slug):
                 form.save()
             models.TeamMatch.create_matches_from_seeds(tournament_division)
             return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
-                    args=(tournament_division.tournament,)))
+                    args=(tournament_slug,)))
 
     else:
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
