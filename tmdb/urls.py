@@ -20,11 +20,9 @@ urlpatterns = [
     url(r'^matches/*$', views.match_list, name='match_list'), #TODO delete me?
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/matches/*$',
             views.match_list, name='match_list'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + '/matches/*/(?P<division_slug>[a-z0-9_-]+)/*$',
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/matches/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.match_list, name='match_list'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + '/seedings/*/(?P<division_slug>[a-z0-9_-]+)/*$',
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/seedings/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.seedings, name='seedings'),
     url(r'^new_tournament/*$', views.tournament_create,
             name='tournament_create'),
@@ -39,7 +37,8 @@ urlpatterns = [
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + '/schools/*/(?P<school_slug>[a-z0-9_-]+)/*$',
             views.tournament_school, name='tournament_school'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/tournament_dashboard',
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/tournament_dashboard/rings', views.rings, name='rings'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/tournament_dashboard/',
             views.tournament_dashboard, name='tournament_dashboard'),
     url(r'^settings/*$', views.settings, name='settings'),
     url(r'^$', views.index, name='index'),

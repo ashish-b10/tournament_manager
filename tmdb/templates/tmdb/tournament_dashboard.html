@@ -1,104 +1,22 @@
-{% extends "tmdb/base.html" %}
+{% extends "tmdb/base_tournament_dashboard.html" %}
 
 {% block content %}
   <h1>Current Tournament</h1>
-  <h1>Divisions</h1>
   {% for tournament_div in tournament_divisions %}
-    <h2>{{tournament_div}}</h2>
+    <h4>{{tournament_div}}</h4>
     <p>
       <a href="{% url 'tmdb:match_list' tournament_div.tournament.slug tournament_div.division.slug %}">Matches</a>
       <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a>
       <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a>
     </p>
   {% endfor %}
-  <h2>All</h2>
-  <p>
-    <a href="{% url 'tmdb:match_list' %}">Matches</a>
-    <a href="{% url 'tmdb:team_list' %}">Teams</a>
-  </p>
 
-  <h1>Ring Queues</h1>
-  <div class="ring-queue">
-    <ul class="nav nav-tabs" role="tablist">
-      <li role="presentation" class="active"><a href="#allRings" aria-controls="allRings" role="tab" data-toggle="tab">All Rings</a></li>
-      {% for ring_num, team_matches in matches_by_ring %}
-      <li role="presentation"><a href="#ring{{ring_num}}" aria-controls="ring{{ring_num}}" role="tab" data-toggle="tab">Ring {{ring_num}}</a></li>
-      {% endfor %}
-    </ul>
+  <hr>
+  <h3>Matches (based on divisions)</h3>
+  {% include "tmdb/match_table_component.html" %}
 
-    <div class="tab-content">
-      <div role="tabpanel" class="tab-pane active" id="allRings">
-        <table class="table ring_table">
-            <tr>
-              <th>Ring No.</th>
-              <th>Match No.</th>
-              <th>Blue Team</th>
-              <th>Red Team</th>
-              <th>Division</th>
-              <th>Winning Team</th>
-            </tr>
-            {% for team_match in team_matches %}
-            <tr>
-              <td>{{ring_num}}</td>
-              <td>{{team_match.number}}</td>
-              {% if team_match.blue_team %}
-              <td>{{team_match.blue_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.red_team %}
-              <td>{{team_match.red_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              <td>{{team_match.division}}</td>
-              {% if team_match.winning_team %}
-              <td>{{team_match.winning_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              </tr>
-            {% endfor %}
-        </table>
-      </div>
-      {% for ring_num, team_matches in matches_by_ring %}
-        <div role="tabpanel" class="tab-pane" id="ring{{ring_num}}">
-          <table class="table ring_table">
-            <tr>
-              <th>Ring No.</th>
-              <th>Match No.</th>
-              <th>Blue Team</th>
-              <th>Red Team</th>
-              <th>Division</th>
-              <th>Winning Team</th>
-            </tr>
-            {% for team_match in team_matches %}
-            <tr>
-              <td>{{ring_num}}</td>
-              <td>{{team_match.number}}</td>
-              {% if team_match.blue_team %}
-              <td>{{team_match.blue_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.red_team %}
-              <td>{{team_match.red_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              <td>{{team_match.division}}</td>
-              {% if team_match.winning_team %}
-              <td>{{team_match.winning_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              </tr>
-            {% endfor %}
-          </table>
-        </div>
-      {% endfor %}
-    </div>
-</div>
+  <hr>
+  {% include "tmdb/ring_table_component.html" %}
 
 {% endblock %}
 
