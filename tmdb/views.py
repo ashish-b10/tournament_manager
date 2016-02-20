@@ -92,17 +92,10 @@ def tournament_dashboard(request, tournament_slug, division_slug=None):
         matches.append((division, team_matches))
 
     # Information about the matches by ring.
-    if 'all_matches' not in request.GET: all_matches=False
-    else:
-        try:
-            all_matches = int(request.GET['all_matches']) > 0
-        except ValueError:
-            all_matches = False
     matches_by_ring = defaultdict(list)
     for match in models.TeamMatch.objects.filter(ring_number__isnull=False,
-            division__tournament=tournament):
-        if all_matches or match.winning_team is None:
-            matches_by_ring[str(match.ring_number)].append(match)
+            division__tournament=tournament).order_by('-ring_assignment_time'):
+        matches_by_ring[str(match.ring_number)].append(match)
 
     # Add all to the context.
     context = {
