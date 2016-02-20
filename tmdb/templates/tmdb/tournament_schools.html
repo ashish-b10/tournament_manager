@@ -24,7 +24,11 @@
         <form action="{% url 'tmdb:tournament_schools' tournament.slug %}" method="post">
           {% csrf_token %}
           {{ school.import_form.as_p }}
+          {% if school.imported %}
+          <button class="btn btn-warning" input type="submit"> Re-import Teams </button>
+          {% else %}
           <button class="btn btn-primary" input type="submit"> Import Teams </button>
+          {% endif %}
         </form>
       </td>
 
