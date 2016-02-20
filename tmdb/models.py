@@ -526,65 +526,7 @@ class TeamMatch(models.Model):
         if self.parent_side != 0:
             raise ValidationError("parent_side must be 0 for root match")
 
-    def validate_as_root_match(self):
-        """ Validate this match as the root match. If it's not the root
-        match, perform no checks and return. """
-        if not self.root_match: return
-        self.validate_single_root_match()
-
-    def validate_as_nonroot_match(self):
-        """ Validate this match as a non-root match. If it's the root
-        match, perform no checks and return. """
-        if self.root_match: return
-        if self.parent is None:
-            raise ValidationError("Non-root match must have non-null parent")
-        if self.parent_side not in {0, 1}:
-            raise ValidationError("parent_side must be in {0, 1}")
-
-    def validate_distinct_participants(self):
-        """ Validate the blue_team != red_team. """
-        if self.blue_team is None: return
-        if self.red_team is None: return
-        if self.blue_team == self.red_team:
-            raise ValidationError("blue_team == red_team is not permitted")
-
-    def validate_winning_team(self):
-        if self.winning_team is None: return
-        if self.winning_team != self.blue_team and \
-                self.winning_team != self.red_team:
-            raise ValidationError("winning_team is %s, must be either %s or %s"
-                    %(self.winning_team, self.blue_team, self.red_team))
-
-    def validate_parent_participant_available(self):
-        if not self.parent:
-            return
-        if self.parent_side == 0:
-            slot_team = self.parent.blue_team
-        elif self.parent_side == 1:
-            slot_team = self.parent.red_team
-        else:
-            raise ValueError("parent_side is %d, must be 0 or 1",
-                    self.parent_side)
-        if slot_team is None:
-            return
-        if slot_team == self.red_team or slot_team == self.blue_team:
-            if self.parent_side == 0:
-                self.parent.blue_team = None
-            else:
-                self.parent.red_team = None
-            self.parent.clean()
-            self.parent.save()
-            return
-        raise ValidationError(("Cannot create on this side of parent %s"
-                + " (already has %s as %s)") %(self.parent, slot_team,
-                "blue_team" if self.parent_side == 0 else "red_team"))
-
     def validate_team_match(self):
-        self.validate_as_root_match()
-        self.validate_as_nonroot_match()
-        self.validate_distinct_participants()
-        self.validate_winning_team()
-        self.validate_parent_participant_available()
         self.update_parent_match()
 
     def update_parent_match(self):
