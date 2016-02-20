@@ -66,7 +66,7 @@ def tournament_import(request, tournament_slug):
     return HttpResponseRedirect(reverse('tmdb:index'))
 
 def tournament_dashboard(request, tournament_slug, division_slug=None):
-    tournament = get_object_or_404(models.Tournament, slug=tournament_slug) 
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     organizations = models.TournamentOrganization.objects.filter(
             tournament=tournament).order_by('organization__name')
 
@@ -250,17 +250,12 @@ def seedings(request, tournament_slug, division_slug):
             }
     return render(request, 'tmdb/seedings.html', context)
 
-def rings(request):
-    if 'all_matches' not in request.GET: all_matches=False
-    else:
-        try:
-            all_matches = int(request.GET['all_matches']) > 0
-        except ValueError:
-            all_matches = False
+def rings(request, tournament_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     matches_by_ring = defaultdict(list)
-    for match in models.TeamMatch.objects.filter(ring_number__isnull=False):
-        if all_matches or match.winning_team is None:
-            matches_by_ring[str(match.ring_number)].append(match)
+    for match in models.TeamMatch.objects.filter(ring_number__isnull=False,
+            division__tournament=tournament).order_by('-ring_assignment_time'):
+        matches_by_ring[str(match.ring_number)].append(match)
     context = {'matches_by_ring' : sorted(matches_by_ring.items())}
     return render(request, 'tmdb/rings.html', context)
 

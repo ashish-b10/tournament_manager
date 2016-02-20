@@ -6,7 +6,6 @@ from . import views
 urlpatterns = [
     url(r'^registration_credentials/*$', views.registration_credentials,
             name='registration_credentials'),
-    url(r'^rings/*$', views.rings, name='rings'),
     url(r'^teams/(?P<division_id>[0-9]+)/*$', views.team_list,
             name='team_list'), #TODO delete me!
     url(r'^teams/*$', views.team_list, name='team_list'), #TODO delete me!
@@ -37,7 +36,8 @@ urlpatterns = [
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + '/schools/*/(?P<school_slug>[a-z0-9_-]+)/*$',
             views.tournament_school, name='tournament_school'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/tournament_dashboard/rings/*$', views.rings, name='rings'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/tournament_dashboard/rings/*$',
+            views.rings, name='rings'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/tournament_dashboard/*$',
             views.tournament_dashboard, name='tournament_dashboard'),
     url(r'^settings/*$', views.settings, name='settings'),
