@@ -1,4 +1,5 @@
 from django import forms
+import datetime
 
 from . import models
 
@@ -24,9 +25,14 @@ class SchoolRegistrationImportForm(forms.Form):
             widget=forms.HiddenInput())
 
 class MatchForm(forms.ModelForm):
+    def clean(self):
+        if 'ring_number' in self.changed_data:
+            self.cleaned_data['ring_assignment_time'] = datetime.datetime.now()
+        return super(MatchForm, self).clean()
+
     class Meta:
         model = models.TeamMatch
-        fields = ['ring_number', 'winning_team']
+        fields = ['ring_number', 'ring_assignment_time', 'winning_team']
 
 class SeedingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
