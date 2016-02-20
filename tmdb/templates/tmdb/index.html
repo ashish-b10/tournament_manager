@@ -1,9 +1,9 @@
 {% extends "tmdb/base.html" %}
 
-{% block content %}
+{% block main-content %}
   <div class="row page-header">
     <h1 class="col-sm-5 col-md-5"> Tournament Manager</h1>
-    <a class="col-sm-offset-3 col-sm-2 col-md-offset-3 col-md-3 btn btn-primary" href="{% url 'tmdb:tournament_create' %}"> Create New Tournament</a>
+    <a class="col-sm-offset-2 col-sm-3 col-md-offset-3 col-md-3 btn btn-primary" href="{% url 'tmdb:tournament_create' %}"> Create New Tournament</a>
   </div>
   <p>Select from one of the tournaments below, or <a href="{% url 'tmdb:tournament_create' %}">create a new one.</a></p>
   <table class="table table-striped">
