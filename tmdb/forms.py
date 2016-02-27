@@ -21,8 +21,9 @@ class TournamentImportForm(forms.ModelForm):
         fields = []
 
 class SchoolRegistrationImportForm(forms.Form):
-    school_registration = forms.IntegerField(required=True,
+    school_registrations = forms.CharField(required=True,
             widget=forms.HiddenInput())
+    reimport = forms.BooleanField(required=False, widget=forms.HiddenInput())
 
 class MatchForm(forms.ModelForm):
     def clean(self):

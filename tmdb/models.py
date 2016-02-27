@@ -309,6 +309,18 @@ class TournamentOrganization(models.Model):
                         tournament_division=tournament_division, team=team)[0]
                 self.save_team_roster(team_reg, roster, competitors)
 
+    def drop_competitors_and_teams(self):
+        if not self.imported:
+            raise IntegrityError(("%s is not imported" %(self)
+                    + " - and must be imported before it is dropped"))
+
+        TeamRegistration.objects.filter(
+                tournament_division__tournament=self.tournament,
+                team__school=self.organization).delete()
+        Competitor.objects.filter(registration=self).delete()
+        self.imported = False
+        self.save()
+
     def import_competitors_and_teams(self):
         if self.imported:
             raise IntegrityError(("%s is already imported" %(self)

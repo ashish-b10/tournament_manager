@@ -127,29 +127,40 @@ def tournament_school(request, tournament_slug, school_slug):
 
 def tournament_schools(request, tournament_slug):
     context = {}
-    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    context['tournament'] = tournament
     if request.method == "POST":
+        tournament_slug = request.POST['tournament_slug']
+        tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
         form = forms.SchoolRegistrationImportForm(request.POST)
         if form.is_valid():
-            school_registration = models.TournamentOrganization.objects.get(
-                    pk=form.cleaned_data['school_registration'])
-            school_registration.import_competitors_and_teams()
+            school_reg_pks = list(map(int,
+                    form.cleaned_data['school_registrations'].split(',')))
+            school_regs = models.TournamentOrganization.objects.filter(
+                    pk__in=school_reg_pks)
+            for school_reg in school_regs:
+                if school_reg.imported and not form.cleaned_data['reimport']:
+                    continue
+                if school_reg.imported and form.cleaned_data['reimport']:
+                    school_reg.drop_competitors_and_teams()
+                school_reg.import_competitors_and_teams()
             return HttpResponseRedirect(reverse('tmdb:tournament_schools',
                     args=(tournament.slug,)))
-        if 'school_registration' in request.POST:
-            school_registration = models.TournamentOrganization.objects.get(
-                    pk=request.POST['school_registration'])
-            school_registration.import_form = form
-            context['organizations'] = [school_registration]
+        context['error_form'] = form
     else:
-        if 'organizations' not in context:
-            organizations = models.TournamentOrganization.objects.filter(
-                tournament=tournament).order_by('organization__name')
-            for org in organizations:
-                org.import_form = forms.SchoolRegistrationImportForm(
-                        initial={'school_registration': org.pk})
-            context['organizations'] = organizations
+        tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    organizations = models.TournamentOrganization.objects.filter(
+        tournament=tournament).order_by('organization__name')
+    all_orgs = []
+    for org in organizations:
+        org.import_form = forms.SchoolRegistrationImportForm(
+                initial={'school_registrations': org.pk, 'reimport': True})
+        all_orgs.append(org.pk)
+    context['schools'] = organizations
+    context['tournament'] = tournament
+    context['import_all_form'] = forms.SchoolRegistrationImportForm(
+            initial={
+                'reimport': False,
+                'school_registrations': ','.join(map(str, all_orgs))
+            })
     return render(request, 'tmdb/tournament_schools.html', context)
 
 def match_list(request, tournament_slug, division_slug=None):
