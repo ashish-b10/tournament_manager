@@ -84,7 +84,7 @@ class WeightField(models.DecimalField):
 
 class Tournament(models.Model):
     slug = models.SlugField(unique=True)
-    location = models.CharField(max_length=63)
+    location = models.CharField(max_length=127)
     date = models.DateField()
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
@@ -164,7 +164,7 @@ class Tournament(models.Model):
         self.save()
 
 class Organization(models.Model):
-    name = models.CharField(max_length=31, unique=True)
+    name = models.CharField(max_length=127, unique=True)
     tournaments = models.ManyToManyField('Tournament',
             through='TournamentOrganization')
     slug = models.SlugField(unique=True)
@@ -369,7 +369,7 @@ class TournamentDivisionBeltRanks(models.Model):
 
 class Competitor(models.Model):
     """ A person who may compete in a tournament. """
-    name = models.CharField(max_length=63)
+    name = models.CharField(max_length=127)
     sex = enum.EnumField(SexEnum)
     belt_rank = enum.EnumField(BeltRankEnum)
     weight = WeightField(null=True, blank=True)
