@@ -63,7 +63,8 @@ And add the following to pg_hba.conf:
 # IPv4 local connections:
 host    all             tmdb            127.0.0.1/32            trust
 # IPv6 local connections:
-host    all             tmdb            ::1/128                 trust```
+host    all             tmdb            ::1/128                 trust
+```
 The location of the pg_hba.conf varies machine to machine, but mine was located at: /etc/postgresql/9.3/main
 
 After doing that, reload the pg_hba. Restart postgres 
@@ -84,7 +85,8 @@ Once the database is configured, navigate to where the source code was checked o
 <h1> Downloading the ect-registration folder </h1>
 Be sure to check out the other repo [https://github.com/ashish-b10/ectc_registration] in a separate folder and run 
 ```
-python -m ectc_registration.gdocs_downloader -c /home/user/desktop/tournament_manager_credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)```
+python -m ectc_registration.gdocs_downloader -c /home/user/desktop/tournament_manager_credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)
+```
 to make sure it works properly. The `tournament_manager_credentials.json` should be downloaded from the Google account or can be requested by the owners of this repo. This json file should be saved in the same folder as everything else in this repo.
 
 This key wil include the `private_key` as well as various auth tokens that will be necessary for downloading the files directly from the Google spreadsheet.
@@ -101,4 +103,4 @@ If there are ever any changes to the models.py file, you will have to reset the 
 ```rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data``` or simply run `bash ./reset_db.sh`.
 
 <h2> Possible problems that may occur</h2>
-- Make sure to install libffi-dev if there is a version error by doing `sudo apt-get install libffi-dev`
+- Make sure to install libffi-dev if there is a version error. You can solve this by doing `sudo apt-get install libffi-dev`
