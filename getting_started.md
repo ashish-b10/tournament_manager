@@ -82,7 +82,7 @@ Once the database is configured, navigate to where the source code was checked o
 
 ```python3 manage.py test tests``` 
 
-<h1> Downloading the ect-registration folder </h1>
+<h1> Downloading the ectc-registration folder </h1>
 Be sure to check out the other repo [https://github.com/ashish-b10/ectc_registration] in a separate folder and run 
 ```
 python -m ectc_registration.gdocs_downloader -c /home/user/desktop/tournament_manager_credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)
