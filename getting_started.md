@@ -91,6 +91,8 @@ to make sure it works properly. The `tournament_manager_credentials.json` should
 
 This key wil include the `private_key` as well as various auth tokens that will be necessary for downloading the files directly from the Google spreadsheet.
 
+If you get an error of `SignedJwtAssertionCredentials`, you have to `pip install ouathclient=1.5.2`.
+
 
 <h2> Run Server </h2>
 To make model migrations: 
