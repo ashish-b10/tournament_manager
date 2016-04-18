@@ -10,8 +10,13 @@ from collections import defaultdict
 import re
 import datetime
 
-def index(request):
-    context = {'tournaments' : models.Tournament.objects.order_by('-date')}
+def index(request, tournament_slug=None):
+    if request.method == 'POST':
+        instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+        delete_form = forms.TournamentDeleteForm()
+        context['delete_form'] = delete_form
+    else:
+        context = {'tournaments' : models.Tournament.objects.order_by('-date')}
     return render(request, 'tmdb/index.html', context)
 
 def settings(request):
