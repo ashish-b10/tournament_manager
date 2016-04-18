@@ -375,6 +375,9 @@ class TournamentDivision(models.Model):
     def __str__(self):
         return "%s" %(self.division)
 
+    def __repr__(self):
+        return "%s (%s)" %(self.division, self.tournament)
+
 class TournamentDivisionBeltRanks(models.Model):
     belt_rank = enum.EnumField(BeltRankEnum)
     tournament_division = models.ForeignKey(TournamentDivision)
