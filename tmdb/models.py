@@ -373,7 +373,7 @@ class TournamentDivision(models.Model):
         unique_together = (('tournament', 'division'),)
 
     def __str__(self):
-        return "%s (%s)" %(self.division, self.tournament)
+        return "%s" %(self.division)
 
 class TournamentDivisionBeltRanks(models.Model):
     belt_rank = enum.EnumField(BeltRankEnum)
