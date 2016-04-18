@@ -435,6 +435,9 @@ class TeamRegistration(models.Model):
         unique_together = (('tournament_division', 'team'),)
 
     def __str__(self):
+        return "%s" %(str(self.team))
+
+    def __repr__(self):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
 
