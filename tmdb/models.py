@@ -24,9 +24,9 @@ class DivisionLevelEnum(enum.Enum):
     C = 2
 
     labels = {
-        A: 'A-team',
-        B: 'B-team',
-        C: 'C-team',
+        A: 'A',
+        B: 'B',
+        C: 'C',
     }
 
 class BeltRankEnum(enum.Enum):
@@ -410,7 +410,7 @@ class Team(models.Model):
         unique_together = (('school', 'division', 'number',),)
 
     def __str__(self):
-        return "%s %s %d" %(str(self.school), str(self.division), self.number,)
+        return "%s %s%d" %(str(self.school), str(self.division), self.number,)
 
 #TODO team.division must equal tournament_division.division
 class TeamRegistration(models.Model):
