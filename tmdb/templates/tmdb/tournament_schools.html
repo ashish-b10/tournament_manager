@@ -8,6 +8,11 @@
     </div>
     {% endif %}
     <h1 class="col-sm-5 col-md-5">Schools List at {{tournament.location}} on {{tournament.date}}</h1>
+    {% if all_schools_imported %}
+        <div class="col-sm-offset-2 col-sm-3 col-md-offset-3 col-md-3 btn btn-success"/>
+        All schools imported
+        </div>
+    {% else %}
     <form action="{% url 'tmdb:tournament_schools' tournament.slug %}" method="post">
         <input type="hidden" name="tournament_slug" value="{{tournament.slug}}"/>
         {% csrf_token %}
@@ -15,6 +20,7 @@
         {{import_all_form.reimport}}
         <input class="col-sm-offset-2 col-sm-3 col-md-offset-3 col-md-3 btn btn-primary" type="submit" value="Import All Schools"/>
     </form>
+    {% endif %}
   </div>
   <table class="table table-striped">
     <thead>

@@ -149,17 +149,20 @@ def tournament_schools(request, tournament_slug):
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     organizations = models.TournamentOrganization.objects.filter(
         tournament=tournament).order_by('organization__name')
-    all_orgs = []
+    org_pks = []
+    all_schools_imported = True
     for org in organizations:
         org.import_form = forms.SchoolRegistrationImportForm(
                 initial={'school_registrations': org.pk, 'reimport': True})
-        all_orgs.append(org.pk)
+        org_pks.append(org.pk)
+        all_schools_imported = all_schools_imported and org.imported
     context['schools'] = organizations
     context['tournament'] = tournament
+    context['all_schools_imported'] = all_schools_imported
     context['import_all_form'] = forms.SchoolRegistrationImportForm(
             initial={
                 'reimport': False,
-                'school_registrations': ','.join(map(str, all_orgs))
+                'school_registrations': ','.join(map(str, org_pks))
             })
     return render(request, 'tmdb/tournament_schools.html', context)
 
