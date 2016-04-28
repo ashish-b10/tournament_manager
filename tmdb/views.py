@@ -72,8 +72,6 @@ def tournament_import(request, tournament_slug):
 
 def tournament_dashboard(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    organizations = models.TournamentOrganization.objects.filter(
-            tournament=tournament).order_by('organization__name')
 
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament=tournament)
@@ -106,7 +104,6 @@ def tournament_dashboard(request, tournament_slug, division_slug=None):
     context = {
         'tournament': tournament,
         'tournament_divisions': tournament_divisions,
-        'organizations': organizations,
         'matches_by_ring':sorted(matches_by_ring.items()),
         'team_matches': matches
     }
