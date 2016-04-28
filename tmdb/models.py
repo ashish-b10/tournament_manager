@@ -143,7 +143,7 @@ class Tournament(models.Model):
             school_object.clean()
             school_object.save()
         registration = SchoolRegistration(tournament=self,
-                organization=school_object,
+                school=school_object,
                 registration_doc_url=school.registration_doc_url)
         registration.clean()
         registration.save()
@@ -206,15 +206,15 @@ class School(models.Model):
 
 class SchoolRegistration(models.Model):
     tournament = models.ForeignKey(Tournament)
-    organization = models.ForeignKey(School)
+    school = models.ForeignKey(School)
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = (('tournament', 'organization'),)
+        unique_together = (('tournament', 'school'),)
 
     def __str__(self):
-        return '%s/%s' %(self.tournament, self.organization,)
+        return '%s/%s' %(self.tournament, self.school,)
 
     def download_school_registration(self):
         from ectc_registration import GoogleDocsDownloader
@@ -228,7 +228,7 @@ class SchoolRegistration(models.Model):
         downloader = GoogleDocsDownloader(creds)
         url = self.registration_doc_url
         registration_extractor = SchoolRegistrationExtractor(
-                school_name=self.organization.name, registration_doc_url=url)
+                school_name=self.school.name, registration_doc_url=url)
         registration_extractor.extract(downloader)
         return registration_extractor
 
@@ -301,7 +301,7 @@ class SchoolRegistration(models.Model):
             for team_num, roster in enumerate(rosters):
                 if not roster:
                     continue
-                team = Team.objects.get_or_create(school=self.organization,
+                team = Team.objects.get_or_create(school=self.school,
                         division=division, number=team_num+1)[0]
                 tournament_division = TournamentDivision.objects.get(
                         tournament=self.tournament, division=division)
@@ -316,7 +316,7 @@ class SchoolRegistration(models.Model):
 
         TeamRegistration.objects.filter(
                 tournament_division__tournament=self.tournament,
-                team__school=self.organization).delete()
+                team__school=self.school).delete()
         Competitor.objects.filter(registration=self).delete()
         self.imported = False
         self.save()
@@ -397,7 +397,7 @@ class Competitor(models.Model):
         return SexEnum.label(self.sex)
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.registration.organization)
+        return "%s (%s)" % (self.name, self.registration.school)
 
     class Meta:
         unique_together = (("name", "registration"),)

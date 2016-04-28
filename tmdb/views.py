@@ -113,7 +113,7 @@ def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
     school_registration = get_object_or_404(models.SchoolRegistration,
-            tournament=tournament, organization=school)
+            tournament=tournament, school=school)
     competitors = models.Competitor.objects.filter(
             registration=school_registration).order_by('name')
     team_registrations = models.TeamRegistration.objects.filter(
@@ -150,7 +150,7 @@ def tournament_schools(request, tournament_slug):
     else:
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school_registrations = models.SchoolRegistration.objects.filter(
-        tournament=tournament).order_by('organization__name')
+        tournament=tournament).order_by('school__name')
     school_pks = []
     all_schools_imported = True
     for school_reg in school_registrations:
@@ -212,7 +212,7 @@ def team_list(request, tournament_slug, division_slug=None):
     for tournament_division in tournament_divisions:
         teams = models.TeamRegistration.objects.filter(
                 tournament_division=tournament_division).order_by(
-                        'organization').order_by('team__number')
+                        'school').order_by('team__number')
         division_teams.append((tournament_division, teams))
 
     context = { 'division_teams' : division_teams }

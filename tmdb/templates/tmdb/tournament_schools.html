@@ -31,7 +31,7 @@
     </thead>
   {% for school_reg in school_registrations %}
     <tr>
-      <td><a href="{% url 'tmdb:tournament_school' tournament.slug school_reg.organization.slug %}">{{school_reg.organization.name}}</a></td>
+      <td><a href="{% url 'tmdb:tournament_school' tournament.slug school_reg.school.slug %}">{{school_reg.school.name}}</a></td>
       <td><a href="{{school_reg.registration_doc_url}}">Google Docs Registration spreadsheet</a></td>
       <td>
           {% if school_reg.imported %}
