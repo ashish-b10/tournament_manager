@@ -111,14 +111,14 @@ def tournament_dashboard(request, tournament_slug, division_slug=None):
 
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    organization = get_object_or_404(models.Organization, slug=school_slug)
+    school = get_object_or_404(models.Organization, slug=school_slug)
     tournament_organization = get_object_or_404(models.TournamentOrganization,
-            tournament=tournament, organization=organization)
+            tournament=tournament, organization=school)
     competitors = models.Competitor.objects.filter(
             registration=tournament_organization).order_by('name')
     team_registrations = models.TeamRegistration.objects.filter(
             tournament_division__tournament=tournament,
-            team__school=organization).order_by(
+            team__school=school).order_by(
                     'tournament_division__division', 'team__number')
     context = {
         'tournament_organization': tournament_organization,
@@ -149,22 +149,22 @@ def tournament_schools(request, tournament_slug):
         context['error_form'] = form
     else:
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    organizations = models.TournamentOrganization.objects.filter(
+    schools = models.TournamentOrganization.objects.filter(
         tournament=tournament).order_by('organization__name')
-    org_pks = []
+    school_pks = []
     all_schools_imported = True
-    for org in organizations:
-        org.import_form = forms.SchoolRegistrationImportForm(
-                initial={'school_registrations': org.pk, 'reimport': True})
-        org_pks.append(org.pk)
-        all_schools_imported = all_schools_imported and org.imported
-    context['schools'] = organizations
+    for school in schools:
+        school.import_form = forms.SchoolRegistrationImportForm(
+                initial={'school_registrations': school.pk, 'reimport': True})
+        school_pks.append(school.pk)
+        all_schools_imported = all_schools_imported and school.imported
+    context['schools'] = schools
     context['tournament'] = tournament
     context['all_schools_imported'] = all_schools_imported
     context['import_all_form'] = forms.SchoolRegistrationImportForm(
             initial={
                 'reimport': False,
-                'school_registrations': ','.join(map(str, org_pks))
+                'school_registrations': ','.join(map(str, school_pks))
             })
     return render(request, 'tmdb/tournament_schools.html', context)
 
