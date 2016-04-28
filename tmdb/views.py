@@ -112,7 +112,7 @@ def tournament_dashboard(request, tournament_slug, division_slug=None):
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.TournamentOrganization,
+    school_registration = get_object_or_404(models.SchoolRegistration,
             tournament=tournament, organization=school)
     competitors = models.Competitor.objects.filter(
             registration=school_registration).order_by('name')
@@ -136,7 +136,7 @@ def tournament_schools(request, tournament_slug):
         if form.is_valid():
             school_reg_pks = list(map(int,
                     form.cleaned_data['school_registrations'].split(',')))
-            school_regs = models.TournamentOrganization.objects.filter(
+            school_regs = models.SchoolRegistration.objects.filter(
                     pk__in=school_reg_pks)
             for school_reg in school_regs:
                 if school_reg.imported and not form.cleaned_data['reimport']:
@@ -149,7 +149,7 @@ def tournament_schools(request, tournament_slug):
         context['error_form'] = form
     else:
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    school_registrations = models.TournamentOrganization.objects.filter(
+    school_registrations = models.SchoolRegistration.objects.filter(
         tournament=tournament).order_by('organization__name')
     school_pks = []
     all_schools_imported = True

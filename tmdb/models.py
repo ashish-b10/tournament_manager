@@ -142,7 +142,7 @@ class Tournament(models.Model):
             school_object = School(name=school.school_name)
             school_object.clean()
             school_object.save()
-        registration = TournamentOrganization(tournament=self,
+        registration = SchoolRegistration(tournament=self,
                 organization=school_object,
                 registration_doc_url=school.registration_doc_url)
         registration.clean()
@@ -166,7 +166,7 @@ class Tournament(models.Model):
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
     tournaments = models.ManyToManyField('Tournament',
-            through='TournamentOrganization')
+            through='SchoolRegistration')
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
@@ -204,7 +204,7 @@ class School(models.Model):
     def __str__(self):
         return self.name
 
-class TournamentOrganization(models.Model):
+class SchoolRegistration(models.Model):
     tournament = models.ForeignKey(Tournament)
     organization = models.ForeignKey(School)
     registration_doc_url = models.URLField(unique=True)
@@ -388,7 +388,7 @@ class Competitor(models.Model):
     sex = enum.EnumField(SexEnum)
     belt_rank = enum.EnumField(BeltRankEnum)
     weight = WeightField(null=True, blank=True)
-    registration = models.ForeignKey(TournamentOrganization)
+    registration = models.ForeignKey(SchoolRegistration)
 
     def belt_rank_label(self):
         return BeltRankEnum.label(self.belt_rank)
