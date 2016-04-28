@@ -153,7 +153,8 @@ class Tournament(models.Model):
             self.save_downloaded_school(school)
 
     def import_school_registrations(self):
-        """Imports organizations from registration_doc_url."""
+        """Imports a school's registration information from
+        registration_doc_url."""
         if self.imported:
             raise IntegrityError(("%s is already imported" %(self)
                     + " - and cannot be imported again"))
@@ -170,14 +171,14 @@ class School(models.Model):
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
-        new_organization = False
+        new_school = False
         if not self.id:
-            new_organization = True
+            new_school = True
             self.slug = self.slugify()
 
         super(School, self).save(*args, **kwargs)
 
-        if new_organization:
+        if new_school:
             self.create_teams()
 
     def create_teams(self):
