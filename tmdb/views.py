@@ -67,7 +67,7 @@ def tournament_delete(request, tournament_slug):
 def tournament_import(request, tournament_slug):
     instance = models.Tournament.objects.filter(slug=tournament_slug).first()
     if request.method == "POST":
-        instance.import_tournament_organizations()
+        instance.import_school_registrations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
 def tournament_dashboard(request, tournament_slug, division_slug=None):

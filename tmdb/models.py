@@ -152,7 +152,7 @@ class Tournament(models.Model):
         for school in schools:
             self.save_downloaded_school(school)
 
-    def import_tournament_organizations(self):
+    def import_school_registrations(self):
         """Imports organizations from registration_doc_url."""
         if self.imported:
             raise IntegrityError(("%s is already imported" %(self)
