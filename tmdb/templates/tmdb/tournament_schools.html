@@ -29,12 +29,12 @@
     <th> Status </th>
     <th> Import </th>
     </thead>
-  {% for school in schools %}
+  {% for school_reg in school_registrations %}
     <tr>
-      <td><a href="{% url 'tmdb:tournament_school' tournament.slug school.organization.slug %}">{{school.organization.name}}</a></td>
-      <td><a href="{{school.registration_doc_url}}">Google Docs Registration spreadsheet</a></td>
+      <td><a href="{% url 'tmdb:tournament_school' tournament.slug school_reg.organization.slug %}">{{school_reg.organization.name}}</a></td>
+      <td><a href="{{school_reg.registration_doc_url}}">Google Docs Registration spreadsheet</a></td>
       <td>
-          {% if school.imported %}
+          {% if school_reg.imported %}
           <p>Imported</p>
           {% else %}
           <p>Not Imported</p>
@@ -44,9 +44,9 @@
         <form action="{% url 'tmdb:tournament_schools' tournament.slug %}" method="post">
           <input type="hidden" name="tournament_slug" value="{{tournament.slug}}"/>
           {% csrf_token %}
-          {{ school.import_form.school_registrations }}
-          {{ school.import_form.reimport }}
-          {% if school.imported %}
+          {{ school_reg.import_form.school_registrations }}
+          {{ school_reg.import_form.reimport }}
+          {% if school_reg.imported %}
           <button class="btn btn-warning" input type="submit"> Re-import Teams </button>
           {% else %}
           <button class="btn btn-primary" input type="submit"> Import Teams </button>

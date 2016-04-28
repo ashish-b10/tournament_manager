@@ -149,16 +149,17 @@ def tournament_schools(request, tournament_slug):
         context['error_form'] = form
     else:
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    schools = models.TournamentOrganization.objects.filter(
+    school_registrations = models.TournamentOrganization.objects.filter(
         tournament=tournament).order_by('organization__name')
     school_pks = []
     all_schools_imported = True
-    for school in schools:
-        school.import_form = forms.SchoolRegistrationImportForm(
-                initial={'school_registrations': school.pk, 'reimport': True})
-        school_pks.append(school.pk)
-        all_schools_imported = all_schools_imported and school.imported
-    context['schools'] = schools
+    for school_reg in school_registrations:
+        initial = {'school_registrations': school_reg.pk, 'reimport': True}
+        school_reg.import_form = forms.SchoolRegistrationImportForm(
+                initial=initial)
+        school_pks.append(school_reg.pk)
+        all_schools_imported = all_schools_imported and school_reg.imported
+    context['school_registrations'] = school_registrations
     context['tournament'] = tournament
     context['all_schools_imported'] = all_schools_imported
     context['import_all_form'] = forms.SchoolRegistrationImportForm(
