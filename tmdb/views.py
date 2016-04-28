@@ -111,7 +111,7 @@ def tournament_dashboard(request, tournament_slug, division_slug=None):
 
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    school = get_object_or_404(models.Organization, slug=school_slug)
+    school = get_object_or_404(models.School, slug=school_slug)
     tournament_organization = get_object_or_404(models.TournamentOrganization,
             tournament=tournament, organization=school)
     competitors = models.Competitor.objects.filter(

@@ -136,10 +136,10 @@ class Tournament(models.Model):
         return reg_extractor.get_registration_workbooks()
 
     def save_downloaded_school(self, school):
-        school_object = Organization.objects.filter(
+        school_object = School.objects.filter(
                 name=school.school_name).first()
         if school_object is None:
-            school_object = Organization(name=school.school_name)
+            school_object = School(name=school.school_name)
             school_object.clean()
             school_object.save()
         registration = TournamentOrganization(tournament=self,
@@ -163,7 +163,7 @@ class Tournament(models.Model):
         self.imported = True
         self.save()
 
-class Organization(models.Model):
+class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
     tournaments = models.ManyToManyField('Tournament',
             through='TournamentOrganization')
@@ -175,7 +175,7 @@ class Organization(models.Model):
             new_organization = True
             self.slug = self.slugify()
 
-        super(Organization, self).save(*args, **kwargs)
+        super(School, self).save(*args, **kwargs)
 
         if new_organization:
             self.create_teams()
@@ -206,7 +206,7 @@ class Organization(models.Model):
 
 class TournamentOrganization(models.Model):
     tournament = models.ForeignKey(Tournament)
-    organization = models.ForeignKey(Organization)
+    organization = models.ForeignKey(School)
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
 
@@ -403,7 +403,7 @@ class Competitor(models.Model):
         unique_together = (("name", "registration"),)
 
 class Team(models.Model):
-    school = models.ForeignKey(Organization)
+    school = models.ForeignKey(School)
     division = models.ForeignKey(Division)
     number = models.SmallIntegerField()
     registrations = models.ManyToManyField(TournamentDivision,
