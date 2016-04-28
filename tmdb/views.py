@@ -112,16 +112,16 @@ def tournament_dashboard(request, tournament_slug, division_slug=None):
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    tournament_organization = get_object_or_404(models.TournamentOrganization,
+    school_registration = get_object_or_404(models.TournamentOrganization,
             tournament=tournament, organization=school)
     competitors = models.Competitor.objects.filter(
-            registration=tournament_organization).order_by('name')
+            registration=school_registration).order_by('name')
     team_registrations = models.TeamRegistration.objects.filter(
             tournament_division__tournament=tournament,
             team__school=school).order_by(
                     'tournament_division__division', 'team__number')
     context = {
-        'tournament_organization': tournament_organization,
+        'school_registration': school_registration,
         'competitors': competitors,
         'team_registrations': team_registrations,
     }
