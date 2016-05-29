@@ -123,16 +123,20 @@ class Tournament(models.Model):
     def download_registration(self):
         """Downloads registration spreadsheet from registration_doc_url."""
         from ectc_registration import GoogleDocsDownloader
+        from ectc_registration import GoogleDriveSpreadsheet
         from ectc_registration import RegistrationExtractor
 
-        creds = ConfigurationSetting.objects.filter(
-                key=ConfigurationSetting.REGISTRATION_CREDENTIALS).first()
-        if creds is None:
+        try:
+            creds = ConfigurationSetting.objects.get(
+                    key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
+        except ConfigurationSetting.DoesNotExist:
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
-        downloader = GoogleDocsDownloader(creds.value)
         doc_url = self.registration_doc_url
-        reg_extractor = RegistrationExtractor(doc_url, downloader)
+        doc_key = GoogleDocsDownloader.extract_file_id(doc_url)
+        downloader = GoogleDocsDownloader(creds_json=creds)
+        workbook = GoogleDriveSpreadsheet(downloader, doc_key)
+        reg_extractor = RegistrationExtractor(workbook)
         return reg_extractor.get_registration_workbooks()
 
     def save_downloaded_school(self, school):
@@ -223,10 +227,10 @@ class SchoolRegistration(models.Model):
         try:
             creds = ConfigurationSetting.objects.get(
                     key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
-        except tmdb.models.DoesNotExist:
+        except ConfigurationSetting.DoesNotExist:
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
-        downloader = GoogleDocsDownloader(creds)
+        downloader = GoogleDocsDownloader(creds_json=creds)
         url = self.registration_doc_url
         registration_extractor = SchoolRegistrationExtractor(
                 school_name=self.school.name, registration_doc_url=url)
