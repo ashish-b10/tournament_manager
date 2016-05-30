@@ -450,20 +450,19 @@ class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
     can have multiple CompetitorMatches.
 
-    There is a uniqueness constraint on parent and parent_side. If the
-    match is the root match of the division, then parent must be null,
-    parent_side must be set to 0, and root_match must be set to true.
-    Otherwise, parent_side and parent should be non-null and root_match
-    must be set to false. There should only be one match for each
-    division for which root_match is True.
-
     Attributes:
         division        The TournamentDivision that the match belongs to
         number          The match number (unique amongst all
                         TeamMatches)
-        parent          The TeamMatch the winner will advance to
-        parent_side     The side of the parent the winner will play on
-        root_match      Whether this is the root_match of the division
+        round_num       Which round is this match in terms of distance
+                        from the final? (0 means this match is the
+                        final, 1 means this match is the semi-final,
+                        etc.). The number of matches in a given round is
+                        (2**round_num)
+        round_slot      Which slot (from top to bottom) does this match
+                        belong to in its round? 0 means top of the
+                        bracket, 1 = second from the top of the round,
+                        and (2**round_num - 1) = bottom of the round.
         blue_team       The Team fighting in blue for this match
         red_team        The Team fighting in red for this match
         ring_number     The number of the assigned ring
@@ -473,9 +472,8 @@ class TeamMatch(models.Model):
     """
     division = models.ForeignKey(TournamentDivision)
     number = models.PositiveIntegerField(unique=True)
-    parent = models.ForeignKey('self', blank=True, null=True)
-    parent_side = models.IntegerField()
-    root_match = models.BooleanField()
+    round_num = models.SmallIntegerField()
+    round_slot = models.IntegerField()
     blue_team = models.ForeignKey(TeamRegistration, related_name="blue_team",
             blank=True, null=True)
     red_team = models.ForeignKey(TeamRegistration, related_name="red_team",
@@ -485,24 +483,38 @@ class TeamMatch(models.Model):
     winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
             related_name="winning_team")
     class Meta:
-        unique_together = (("parent", "parent_side"), ("division", "number",),)
+        unique_together = (
+                ("division", "round_num", "round_slot"),
+                ("division", "number",),
+        )
 
     def __str__(self):
         return "Match #" + str(self.number)
 
-    def get_root_match(self):
-        """ Return the root match of this match's division. """
-        root_matches = TeamMatch.objects.filter(
-                division=self.division).filter(root_match=True)
-        if not root_matches:
-            return None
-        return root_matches.get()
+    def get_child_matches(self):
+        return TeamMatch.objects.filter(division=self.division,
+                round_num=round_num + 1)
 
-    def get_child_match(self, slot_side):
+    def get_parent_match(self):
         try:
-            return TeamMatch.objects.get(parent=self, parent_side=slot_side)
+            return TeamMatch.objects.get(division=self.division,
+                    round_num=self.round_num-1,
+                    round_slot = self.round_slot / 2)
         except TeamMatch.DoesNotExist:
             return None
+
+    def update_winning_team(self):
+        if self.round_num != 0:
+            parent_match = self.get_parent_match()
+            if self.round_slot % 2:
+                parent_match.red_team = self.winning_team
+            else:
+                parent_match.blue_team = self.winning_team
+            parent_match.clean()
+            parent_match.save()
+
+    def clean(self, *args, **kwargs):
+        self.update_winning_team()
 
     @staticmethod
     def create_matches_from_seeds(tournament_division):
@@ -515,12 +527,8 @@ class TeamMatch(models.Model):
         for bracket_match in bracket.bfs(seeds=False):
             match = TeamMatch(division=tournament_division,
                     number=bracket_match.number,
-                    parent_side=bracket_match.parent_side,
-                    root_match=bracket_match.is_root)
-
-            if not bracket_match.is_root:
-                match.parent = TeamMatch.objects.get(
-                        number=bracket_match.parent.number)
+                    round_num = bracket_match.round_num,
+                    round_slot = bracket_match.round_slot)
 
             try:
                 match.blue_team = bracket_match.blue_team.team
@@ -536,35 +544,6 @@ class TeamMatch(models.Model):
 
             match.clean()
             match.save()
-
-    def validate_single_root_match(self):
-        """ Validate that only one match in a division is the root. """
-        if not self.root_match: return
-        root_match = self.get_root_match()
-        if root_match is not None and root_match != self:
-            raise ValidationError("Division %s already has a root match"
-                    %(self.division))
-        if self.parent is not None:
-            raise ValidationError("Root match must have null parent")
-        if self.parent_side != 0:
-            raise ValidationError("parent_side must be 0 for root match")
-
-    def validate_team_match(self):
-        self.update_parent_match()
-
-    def update_parent_match(self):
-        # set winning_team as blue_team or red_team in parent_match
-        if not self.parent:
-            return
-        if self.parent_side == 0:
-            self.parent.blue_team = self.winning_team
-        elif self.parent_side == 1:
-            self.parent.red_team = self.winning_team
-        #self.parent.clean() #cannot call clean because child is not saved yet
-        self.parent.save()
-
-    def clean(self, *args, **kwargs):
-        self.validate_team_match()
 
 class ConfigurationSetting(models.Model):
     key = models.TextField(unique=True)
