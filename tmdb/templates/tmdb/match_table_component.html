@@ -5,7 +5,7 @@
     </li>
     {% for division, team_matches in team_matches %}
       <li role="presentation">
-        <a href="#division{{division}}" aria-controls="division{{division}}" role="tab" data-toggle="tab">{{division}}</a>
+        <a href="#division-{{division.division.slug}}" aria-controls="division-{{division.division.slug}}" role="tab" data-toggle="tab">{{division}}</a>
       </li>
     {% endfor %}
   </ul>
@@ -44,7 +44,7 @@
       </table>
     </div>
     {% for division, team_matches in team_matches %}
-        <div role="tabpanel" class="tab-pane" id="division{{division}}">
+        <div role="tabpanel" class="tab-pane" id="division-{{division.division.slug}}">
           {% if team_matches %}
           <table id="match_table" class="table">
             <tr>
