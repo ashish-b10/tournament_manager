@@ -97,7 +97,7 @@ def tournament_dashboard(request, tournament_slug, division_slug=None):
     # Information about the matches by ring.
     matches_by_ring = defaultdict(list)
     for match in models.TeamMatch.objects.filter(ring_number__isnull=False,
-            division__tournament=tournament).order_by('-ring_assignment_time'):
+            division__tournament=tournament).order_by('ring_assignment_time'):
         matches_by_ring[str(match.ring_number)].append(match)
 
     # Add all to the context.
