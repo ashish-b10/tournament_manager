@@ -18,6 +18,12 @@ Most Linux distributions provide Python by default, but not all provide Python 3
 
 This tutorial will provide most instructions in Bash, so Cygwin is recommended for Windows developers, but not at all necessary for those who feel comfortable configuring their Python and database environment. Instructions on how to install Cygwin are not provided here, but again, all developers must take care to ensure that they are using Python 3.
 
+You can run
+
+```python3 --version```
+
+to make sure that you are using Python 3.
+
 #### Creating a Python Virtualenv (Recommended)
 A virtualenv is recommended, but not required, as doing so keeps tmdb development and dependencies separate from the root Python installation. virtualenv is generally not provided with Python by default, but can be installed as follows:
 
@@ -28,19 +34,12 @@ Root privileges may be required for this command to work.
 Then to create a virtualenv, run:
 
 ```virtualenv -p $(which python3) tmdb_local/```
+
 This will create a copy of your Python installation into a directory called tmdb_local/ (you are free to change this to any directory you like, of course). Having a copy of your Python installation will allow you to install Python dependencies into a location that's specific to tmdb development. It is only required to execute this command once. Then every time you wish to start Python development, you must execute:
 
 ```source tmdb_local/bin/activate ```
 
 for all active terminal sessions.
-
-#### Verify Python Installation
-
-Make sure that you have the right version of python running. You can do
-
-```python --version```
-
-to figure out what version you are running.
 
 ### PostgreSQL (Required if using PostgreSQL)
 #### Installation
@@ -48,10 +47,6 @@ to figure out what version you are running.
 On Ubuntu or other Debian-derived installations, one can simply execute
 
 ```sudo apt-get install postgresql postgresql-contrib```
-
-#### Other potential issues
-
-It may be necessary to install libffi-dev if there is a version error. You can solve this by doing `sudo apt-get install libffi-dev`
 
 #### Configuration
 
@@ -86,6 +81,10 @@ If you have not already done so, be sure to include postgresql-devel (or libpq-d
 To install postgres, you should do
 
 ```sudo apt-get install postgresql postgresql-contrib```
+
+### Miscellaneous packages to install
+
+It may be necessary to install libffi-dev if there is a version error. You can solve this by doing `sudo apt-get install libffi-dev`
 
 ### Django (Required)
 
