@@ -49,6 +49,10 @@ On Ubuntu or other Debian-derived installations, one can simply execute
 
 ```sudo apt-get install postgresql postgresql-contrib```
 
+#### Other potential issues
+
+It may be necessary to install libffi-dev if there is a version error. You can solve this by doing `sudo apt-get install libffi-dev`
+
 #### Configuration
 
 Establishing the correct credentials for the PostgreSQL database is fairly complex and dependent upon how PostgreSQL was installed, so it will not be covered here in detail. However, at a minimum, it is necessary to create a username and database for the tmdb user, and configure the tmdb user to connect locally. In order to run unit tests, it will also be necessary to grant permission to create and delete databases as the tmdb user.
@@ -125,8 +129,8 @@ This key wil include the `private_key` as well as various auth tokens that will 
 
 If you get an error of `SignedJwtAssertionCredentials`, you have to `pip install ouathclient=1.5.2`.
 
+## Run the service
 
-<h2> Run Server </h2>
 To make model migrations:
 ```python manage.py makemigrations tmdb```
 
@@ -135,6 +139,3 @@ To run the server locally,
 
 If there are ever any changes to the models.py file, you will have to reset the database. You can do this by doing either:
 ```rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data``` or simply run `bash ./reset_db.sh`.
-
-<h2> Possible problems that may occur</h2>
-- Make sure to install libffi-dev if there is a version error. You can solve this by doing `sudo apt-get install libffi-dev`
