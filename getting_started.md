@@ -21,7 +21,7 @@ This tutorial will provide most instructions in Bash, so Cygwin is recommended f
 #### Creating a Python Virtualenv (Recommended)
 A virtualenv is recommended, but not required, as doing so keeps tmdb development and dependencies separate from the root Python installation. virtualenv is generally not provided with Python by default, but can be installed as follows:
 
-```easy_install virtualenv``` 
+```easy_install virtualenv```
 
 Root privileges may be required for this command to work.
 
@@ -30,16 +30,17 @@ Then to create a virtualenv, run:
 ```virtualenv -p $(which python3) tmdb_local/```
 This will create a copy of your Python installation into a directory called tmdb_local/ (you are free to change this to any directory you like, of course). Having a copy of your Python installation will allow you to install Python dependencies into a location that's specific to tmdb development. It is only required to execute this command once. Then every time you wish to start Python development, you must execute:
 
-```source tmdb_local/bin/activate ``` 
+```source tmdb_local/bin/activate ```
+
 for all active terminal sessions.
 
 #### Verify Python Installation
 
-Make sure that you have the right version of python running. You can do 
+Make sure that you have the right version of python running. You can do
 
-```python --version``` 
+```python --version```
 
-to figure out what version you are running. 
+to figure out what version you are running.
 
 ### PostgreSQL (Required if using PostgreSQL)
 #### Installation
@@ -68,7 +69,7 @@ host    all             tmdb            ::1/128                 trust
 
 The location of the pg_hba.conf varies machine to machine, but mine was located at: /etc/postgresql/9.3/main
 
-After doing that, reload the pg_hba. Restart postgres 
+After doing that, reload the pg_hba. Restart postgres
 ```/etc/init.d/postgresql restart```
 
 #### Python bindings (required if using PostgreSQL)
@@ -82,24 +83,43 @@ To install postgres, you should do
 
 ```sudo apt-get install postgresql postgresql-contrib```
 
-<h2> Installing Django (Required) </h2>
-Install Django into your Python environment:
+### Django (Required)
 
-`pip3 install django`
+Make sure the virtualenv is already loaded:
 
-Note the version of Django is going to be important to the installation of this program. For now, use Django 1.8 or if you installed a later version, you can use django-enumfield 1.3b2 by doing `pip3 install --pre django-enumfield==1.3b2`
+```source tmdb_local/bin/activate ```
 
-<h1> Running the Unit Tests </h1>
-Once the database is configured, navigate to where the source code was checked out and run the following command to test the models and database configuration:
+Then install Django into your Python environment:
 
-```python3 manage.py test tests``` 
+```pip3 install django```
 
-<h1> Downloading the ectc-registration folder </h1>
-Be sure to check out the other repo [https://github.com/ashish-b10/ectc_registration] in a separate folder and run 
+If not using a virtualenv, then root privileges will probably be required.
+
+### Other Python dependencies
+
+#### django-enumfield
+
+```pip3 install --pre django-enumfield==1.3b2```
+
+#### ectc-registration
+
+The code for downloading registration information from Google Drive is stored in a separate repository: [https://github.com/ashish-b10/ectc_registration]
+
+Clone it:
+
+```git clone https://github.com/ashish-b10/ectc_registration.git```
+
+Then install it:
+
+```pip install -e ectc_registration/```
+
+The repository can be tested by running the below command:
+
 ```
-python -m ectc_registration.gdocs_downloader -c /home/user/desktop/tournament_manager_credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)
+python -m ectc_registration.gdocs_downloader -c /path/to/credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)
 ```
-to make sure it works properly. The `tournament_manager_credentials.json` should be downloaded from the Google account or can be requested by the owners of this repo. This json file should be saved in the same folder as everything else in this repo.
+
+The `tournament_manager_credentials.json` should be downloaded from the Google account or can be requested by the owners of this repo. This json file should be saved in the same folder as everything else in this repo.
 
 This key wil include the `private_key` as well as various auth tokens that will be necessary for downloading the files directly from the Google spreadsheet.
 
@@ -107,13 +127,13 @@ If you get an error of `SignedJwtAssertionCredentials`, you have to `pip install
 
 
 <h2> Run Server </h2>
-To make model migrations: 
-```python manage.py makemigrations tmdb``` 
+To make model migrations:
+```python manage.py makemigrations tmdb```
 
 To run the server locally,
 ```python manage.py runserver```
 
-If there are ever any changes to the models.py file, you will have to reset the database. You can do this by doing either: 
+If there are ever any changes to the models.py file, you will have to reset the database. You can do this by doing either:
 ```rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data``` or simply run `bash ./reset_db.sh`.
 
 <h2> Possible problems that may occur</h2>
