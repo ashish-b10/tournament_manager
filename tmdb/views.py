@@ -178,6 +178,7 @@ def match_list(request, tournament_slug, division_slug=None):
             form.save()
             return HttpResponseRedirect(request.path)
 
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament__slug=tournament_slug)
     if division_slug is not None:
@@ -198,10 +199,14 @@ def match_list(request, tournament_slug, division_slug=None):
             team_match.form.fields['winning_team'].queryset = \
                     models.TeamRegistration.objects.filter(pk__in=match_teams)
         matches.append((division, team_matches))
-    context = {'team_matches' : matches}
+    context = {
+        'team_matches' : matches,
+        'tournament': tournament,
+    }
     return render(request, 'tmdb/match_list.html', context)
 
 def team_list(request, tournament_slug, division_slug=None):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament__slug=tournament_slug)
     if division_slug is not None:
@@ -215,7 +220,10 @@ def team_list(request, tournament_slug, division_slug=None):
                         'school').order_by('team__number')
         division_teams.append((tournament_division, teams))
 
-    context = { 'division_teams' : division_teams }
+    context = {
+        'division_teams' : division_teams,
+        'tournament': tournament,
+    }
     return render(request, 'tmdb/team_list.html', context)
 
 seedings_form_re = re.compile('(?P<team_reg_id>[0-9]+)-seed$')
@@ -264,6 +272,7 @@ def seedings(request, tournament_slug, division_slug):
     context = {
             'seed_forms': seed_forms,
             'tournament_division': tournament_division,
+            'tournament': tournament,
             }
     return render(request, 'tmdb/seedings.html', context)
 
@@ -273,7 +282,10 @@ def rings(request, tournament_slug):
     for match in models.TeamMatch.objects.filter(ring_number__isnull=False,
             division__tournament=tournament).order_by('-ring_assignment_time'):
         matches_by_ring[str(match.ring_number)].append(match)
-    context = {'matches_by_ring' : sorted(matches_by_ring.items())}
+    context = {
+        'matches_by_ring' : sorted(matches_by_ring.items()),
+        'tournament': tournament
+    }
     return render(request, 'tmdb/rings.html', context)
 
 def registration_credentials(request):
