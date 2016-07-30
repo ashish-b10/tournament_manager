@@ -20,24 +20,24 @@ This tutorial will provide most instructions in Bash, so Cygwin is recommended f
 
 You can run
 
-```python3 --version```
+    python3 --version
 
 to make sure that you are using Python 3.
 
 #### Creating a Python Virtualenv (Recommended)
 A virtualenv is recommended, but not required, as doing so keeps tmdb development and dependencies separate from the root Python installation. virtualenv is generally not provided with Python by default, but can be installed as follows:
 
-```easy_install virtualenv```
+    easy_install virtualenv
 
 Root privileges may be required for this command to work.
 
 Then to create a virtualenv, run:
 
-```virtualenv -p $(which python3) tmdb_local/```
+    virtualenv -p $(which python3) tmdb_local/
 
 This will create a copy of your Python installation into a directory called tmdb_local/ (you are free to change this to any directory you like, of course). Having a copy of your Python installation will allow you to install Python dependencies into a location that's specific to tmdb development. It is only required to execute this command once. Then every time you wish to start Python development, you must execute:
 
-```source tmdb_local/bin/activate ```
+    source tmdb_local/bin/activate
 
 for all active terminal sessions.
 
@@ -46,7 +46,7 @@ for all active terminal sessions.
 
 On Ubuntu or other Debian-derived installations, one can simply execute
 
-```sudo apt-get install postgresql postgresql-contrib```
+    sudo apt-get install postgresql postgresql-contrib
 
 #### Configuration
 
@@ -54,33 +54,32 @@ Establishing the correct credentials for the PostgreSQL database is fairly compl
 
 First, create the user and database (may require root privileges):
 
-```createuser tmdb -d
-createdb tmdb```
+    createuser tmdb -d
+    createdb tmdb
 
 And then add the following to pg_hba.conf:
 
-```
-# IPv4 local connections:
-host    all             tmdb            127.0.0.1/32            trust
-# IPv6 local connections:
-host    all             tmdb            ::1/128                 trust
-```
+    # IPv4 local connections:
+    host    all             tmdb            127.0.0.1/32            trust
+    # IPv6 local connections:
+    host    all             tmdb            ::1/128                 trust
 
 The location of the pg_hba.conf varies machine to machine, but mine was located at: /etc/postgresql/9.3/main
 
 After doing that, reload the pg_hba. Restart postgres
-```/etc/init.d/postgresql restart```
+
+    /etc/init.d/postgresql restart
 
 #### Python bindings (required if using PostgreSQL)
 If you are using PostgreSQL, then it is recommended to install the latest version (currently 9.5.x). Django's implementation of the PostgreSQL database backend requires pelican and psycopg2, so install them by executing as follows:
 
-```pip3 install psycopg2 pelican```
+    pip3 install psycopg2 pelican
 
 If you have not already done so, be sure to include postgresql-devel (or libpq-dev in Ubuntu)
 
 To install postgres, you should do
 
-```sudo apt-get install postgresql postgresql-contrib```
+    sudo apt-get install postgresql postgresql-contrib
 
 ### Miscellaneous packages to install
 
@@ -90,11 +89,11 @@ It may be necessary to install libffi-dev if there is a version error. You can s
 
 Make sure the virtualenv is already loaded:
 
-```source tmdb_local/bin/activate ```
+    source tmdb_local/bin/activate
 
 Then install Django into your Python environment:
 
-```pip3 install django```
+    pip3 install django
 
 If not using a virtualenv, then root privileges will probably be required.
 
@@ -102,7 +101,7 @@ If not using a virtualenv, then root privileges will probably be required.
 
 #### django-enumfield
 
-```pip3 install --pre django-enumfield==1.3b2```
+    pip3 install --pre django-enumfield==1.3b2
 
 #### ectc-registration
 
@@ -110,17 +109,15 @@ The code for downloading registration information from Google Drive is stored in
 
 Clone it:
 
-```git clone https://github.com/ashish-b10/ectc_registration.git```
+    git clone https://github.com/ashish-b10/ectc_registration.git
 
 Then install it:
 
-```pip install -e ectc_registration/```
+    pip install -e ectc_registration/
 
 The repository can be tested by running the below command:
 
-```
-python -m ectc_registration.gdocs_downloader -c /path/to/credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)
-```
+    python -m ectc_registration.gdocs_downloader -c /path/to/credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)
 
 The `tournament_manager_credentials.json` should be downloaded from the Google account or can be requested by the owners of this repo. This json file should be saved in the same folder as everything else in this repo.
 
@@ -130,11 +127,22 @@ If you get an error of `SignedJwtAssertionCredentials`, you have to `pip install
 
 ## Run the service
 
+If this is the first time running the `tmdb`, the database must be created.
+
 To make model migrations:
-```python manage.py makemigrations tmdb```
+
+    python manage.py makemigrations tmdb
 
 To run the server locally,
-```python manage.py runserver```
+
+    python manage.py runserver
 
 If there are ever any changes to the models.py file, you will have to reset the database. You can do this by doing either:
-```rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data``` or simply run `bash ./reset_db.sh`.
+
+    rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data or simply run `bash ./reset_db.sh`.
+
+## Updating the Database
+
+Django's built in ORM is responsible for interfacing with the database. From time to time, changes on the server will require that the database be updated. Currently, the only way to do this is to delete the database and recreate it. Take care to note that ALL DATA IN THE DATABASE WILL BE LOST. If PostgreSQL is being used as the backend, then this is achieved by performing:
+
+    rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data && python manage.py graph_models -g -o /dev/shm/tmdb.svg tmdb && python manage.py runserver
