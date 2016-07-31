@@ -2,27 +2,35 @@
 
 {% block content %}
   <h1>Current Tournament</h1>
-  <p>
-    <a href="{% url 'tmdb:team_list' tournament %}">All teams</a>
-  </p>
-  <p>
-    <a href="{% url 'tmdb:match_list' tournament %}">All matches</a>
-  </p>
-  {% for tournament_div in tournament_divisions %}
-    <h4>{{tournament_div}}</h4>
-    <p>
-      <a href="{% url 'tmdb:match_list' tournament_div.tournament.slug tournament_div.division.slug %}">Matches</a>
-      <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a>
-      <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a>
-      <a href="{% url 'tmdb:team_points' tournament_div.tournament.slug tournament_div.division.slug %}">Create matches</a>
-    </p>
-  {% endfor %}
-
-  <hr>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th> Division </th>
+          <th> Progress </th>
+          <th> Matches </th>
+          <th> Teams </th>
+          <th> Seedings </th>
+          <th> Create Matches </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tournament_div in tournament_divisions %}
+        <tr>
+        <td>{{tournament_div}}</td>
+        <td> Not started </td>
+        <td> <a href="{% url 'tmdb:match_list' tournament_div.tournament.slug tournament_div.division.slug %}">Matches</a> </td>
+        <td> <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a> </td>
+        <td> <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a> </td>
+        <td> <a href="{% url 'tmdb:team_points' tournament_div.tournament.slug tournament_div.division.slug %}">Create matches</a> </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  <hr/>
   <h3>Matches (based on divisions)</h3>
   {% include "tmdb/match_table_component.html" %}
 
-  <hr>
+  <hr/>
   {% include "tmdb/ring_table_component.html" %}
 
 {% endblock %}
