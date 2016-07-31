@@ -167,9 +167,14 @@ class SlotAssigner:
         while len(seeded_teams) < min_num_seeds and point_vals:
             # get the highest point count that has not yet been assigned
             point_val = point_vals.pop()
+            if point_val == 0:
+                break
 
             # get all teams with this number of points
             point_group = grouped_teams[point_val]
+            logger.info("Seeding %d teams with %d points: %s" %(
+                    len(point_group), point_val, ", ".join(
+                            map(str, point_group))))
             # remove one-person teams because they cannot have a seed
             point_group = list(filter(
                     lambda team: team.num_competitors() >= 2,
