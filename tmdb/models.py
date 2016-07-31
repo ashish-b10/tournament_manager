@@ -5,7 +5,7 @@ import decimal
 from itertools import product
 from django.template.defaultfilters import slugify
 
-from tmdb.util import Bracket, SlotAssigner
+from tmdb.util import BracketGenerator, SlotAssigner
 
 from django_enumfield import enum
 
@@ -543,7 +543,7 @@ class TeamMatch(models.Model):
                 tournament_division=tournament_division, seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
         start_val = tournament_division.division.match_number_start_val()
-        bracket = Bracket(seeds, match_number_start_val=start_val)
+        bracket = BracketGenerator(seeds, match_number_start_val=start_val)
         for bracket_match in bracket.bfs(seeds=False):
             match = TeamMatch(division=tournament_division,
                     number=bracket_match.number,
