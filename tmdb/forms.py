@@ -35,6 +35,15 @@ class MatchForm(forms.ModelForm):
         model = models.TeamMatch
         fields = ['ring_number', 'ring_assignment_time', 'winning_team']
 
+class TeamPointsForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['points'].label = str(self.instance)
+
+    class Meta:
+        model = models.TeamRegistration
+        fields = ['id', 'points']
+
 class SeedingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

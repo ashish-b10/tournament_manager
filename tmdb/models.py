@@ -5,7 +5,7 @@ import decimal
 from itertools import product
 from django.template.defaultfilters import slugify
 
-from tmdb.util import Bracket
+from tmdb.util import Bracket, SlotAssigner
 
 from django_enumfield import enum
 
@@ -425,6 +425,7 @@ class TeamRegistration(models.Model):
     tournament_division = models.ForeignKey(TournamentDivision)
     team = models.ForeignKey(Team)
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
+    points = models.PositiveIntegerField(null=True, blank=True)
     lightweight = models.ForeignKey(Competitor, null=True, blank=True,
             related_name="lightweight")
     middleweight = models.ForeignKey(Competitor, null=True, blank=True,
@@ -445,6 +446,25 @@ class TeamRegistration(models.Model):
     def __repr__(self):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
+
+    def num_competitors(self):
+        return sum(map(lambda x: x is not None,
+                [self.lightweight, self.middleweight, self.heavyweight]))
+
+    @classmethod
+    def get_teams_with_assigned_slots(cls, tournament_division):
+        """
+        Assigns all teams in tournament_division to a slot in the
+        bracket. Returns a dict of {team:seed}.
+        """
+        teams = cls.objects.filter(tournament_division=tournament_division).order_by('team__number').order_by('team__school')
+        get_num_competitors = lambda team: team.num_competitors()
+        slot_assigner = SlotAssigner(list(teams), 4,
+                get_school_name = lambda team: team.team.school.name,
+                get_points = lambda team: team.points if team.points else 0)
+        for team in teams:
+            team.seed = slot_assigner.slots_by_team.get(team)
+        return teams
 
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
@@ -517,7 +537,7 @@ class TeamMatch(models.Model):
         self.update_winning_team()
 
     @staticmethod
-    def create_matches_from_seeds(tournament_division):
+    def create_matches_from_slots(tournament_division):
         TeamMatch.objects.filter(division=tournament_division).delete()
         seeded_teams = TeamRegistration.objects.filter(
                 tournament_division=tournament_division, seed__isnull=False)

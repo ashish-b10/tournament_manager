@@ -14,6 +14,7 @@
       <a href="{% url 'tmdb:match_list' tournament_div.tournament.slug tournament_div.division.slug %}">Matches</a>
       <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a>
       <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a>
+      <a href="{% url 'tmdb:team_points' tournament_div.tournament.slug tournament_div.division.slug %}">Create matches</a>
     </p>
   {% endfor %}
 

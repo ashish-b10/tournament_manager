@@ -1,5 +1,7 @@
 from collections import deque
 
+__all__ = ["Bracket"]
+
 class Team():
     def __init__(self, team_num, team_name = None):
         self.team_num = team_num

@@ -218,7 +218,7 @@ def team_list(request, tournament_slug, division_slug=None):
     context = { 'division_teams' : division_teams }
     return render(request, 'tmdb/team_list.html', context)
 
-seedings_form_re = re.compile('(?P<team_reg_id>[0-9]+)-seed$')
+seeds_re = re.compile('(?P<team_reg_id>[0-9]+)-seed$')
 def seedings(request, tournament_slug, division_slug):
     if request.method == 'POST':
         seed_forms = []
@@ -226,7 +226,7 @@ def seedings(request, tournament_slug, division_slug):
         tournament_division = get_object_or_404(models.TournamentDivision,
                 pk=tournament_division_pk)
         for post_field in request.POST:
-            re_match = seedings_form_re.match(post_field)
+            re_match = seeds_re.match(post_field)
             if not re_match: continue
             team_reg_id = re_match.group('team_reg_id')
             seed_form = forms.SeedingForm(request.POST, prefix=str(team_reg_id),
@@ -245,7 +245,7 @@ def seedings(request, tournament_slug, division_slug):
 
             for form in seed_forms:
                 form.save()
-            models.TeamMatch.create_matches_from_seeds(tournament_division)
+            models.TeamMatch.create_matches_from_slots(tournament_division)
             return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
                     args=(tournament_division.tournament.slug,)))
 
@@ -253,9 +253,10 @@ def seedings(request, tournament_slug, division_slug):
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
         tournament_division = get_object_or_404(models.TournamentDivision,
                 tournament=tournament, division__slug=division_slug)
-        teams = models.TeamRegistration.objects.filter(
-                tournament_division=tournament_division)
+        teams = models.TeamRegistration.get_teams_with_assigned_slots(
+                tournament_division)
         seed_forms = []
+        teams = list(teams)
         for team in teams:
             seed_form = forms.SeedingForm(prefix=str(team.id), instance=team)
             seed_form.name = str(team)
@@ -266,6 +267,39 @@ def seedings(request, tournament_slug, division_slug):
             'tournament_division': tournament_division,
             }
     return render(request, 'tmdb/seedings.html', context)
+
+points_re = re.compile('(?P<team_reg_id>[0-9]+)-points$')
+def team_points(request, tournament_slug, division_slug):
+    if request.method == "POST":
+        for post_field in request.POST:
+            re_match = points_re.match(post_field)
+            if not re_match: continue
+            team_reg_id = int(re_match.group('team_reg_id'))
+            points_form = forms.TeamPointsForm(request.POST,
+                    prefix=str(team_reg_id),
+                    instance=models.TeamRegistration.objects.get(
+                            pk=team_reg_id))
+            points_form.save()
+        return HttpResponseRedirect(reverse('tmdb:seedings', args=(
+                tournament_slug, division_slug)))
+    else:
+        tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+        tournament_division = get_object_or_404(models.TournamentDivision,
+                tournament=tournament, division__slug=division_slug)
+        teams = models.TeamRegistration.objects.filter(
+                tournament_division=tournament_division).order_by('team__number').order_by('team__school')
+        points_forms = []
+        for team in teams:
+            points_form = forms.TeamPointsForm(
+                    prefix=str(team.id), instance=team)
+            points_form.name = str(team)
+            points_forms.append(points_form)
+
+    context = {
+            'points_forms': points_forms,
+            'tournament_division': tournament_division,
+            }
+    return render(request, 'tmdb/points.html', context)
 
 def rings(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
