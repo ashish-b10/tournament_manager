@@ -142,6 +142,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'tmdb': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
         'ectc_registration': {
             'handlers': ['console'],
             'level': 'INFO',
