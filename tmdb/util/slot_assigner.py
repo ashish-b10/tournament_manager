@@ -59,8 +59,8 @@ class SlotAssigner:
         all_teams = self.teams
         filtered_teams = list(filter(
                 lambda team: team.num_competitors() >= 2, self.teams))
-        logger.warn("Ignoring one-person teams: "
-                + str(set(all_teams) - set(filtered_teams)))
+        ignored_teams = map(str, set(all_teams) - set(filtered_teams))
+        logger.warn("Ignoring one-person teams: " + ", ".join(ignored_teams))
         self.teams = filtered_teams
 
     def _compute_bracket(self):
