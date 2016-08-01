@@ -345,3 +345,40 @@ def registration_credentials(request):
             "form": form
     }
     return render(request, 'tmdb/configuration_setting.html', context)
+
+def bracket(request, tournament_slug, division_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament=tournament, division__slug=division_slug)
+    bracket_columns = []
+    matches = {}
+    num_rounds = 0
+    for match in models.TeamMatch.objects.filter(division=tournament_division):
+        matches[(match.round_num, match.round_slot)] = match
+        num_rounds = max(num_rounds, match.round_num)
+    bracket_column_height = str(75 * 2**num_rounds) + "px"
+    for round_num in reversed(range(num_rounds + 1)):
+        round_num_matches = 2**round_num
+        bracket_column = [None] * round_num_matches
+        bracket_columns.append(bracket_column)
+        for round_slot in range(round_num_matches):
+            key = (round_num, round_slot)
+            if key not in matches:
+                match = models.TeamMatch()
+            else:
+                match = matches[key]
+            match.height = str(100 / (round_num_matches)) + "%"
+            if round_slot % 2:
+                match.cell_type = "lower_child_cell"
+            else:
+                match.cell_type = "upper_child_cell"
+            bracket_column[round_slot] = match
+    if (0, 0) in matches:
+        del matches[(0, 0)].cell_type # remove cell_type from final
+    context = {
+            'tournament_division': tournament_division,
+            'tournament': tournament,
+            'bracket_columns': bracket_columns,
+            'bracket_column_height': bracket_column_height,
+    }
+    return render(request, 'tmdb/brackets.html', context)

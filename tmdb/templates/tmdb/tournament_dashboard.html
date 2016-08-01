@@ -11,6 +11,7 @@
           <th> Teams </th>
           <th> Seedings </th>
           <th> Create Matches </th>
+          <th> Bracket </th>
         </tr>
       </thead>
       <tbody>
@@ -22,6 +23,7 @@
         <td> <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a> </td>
         <td> <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a> </td>
         <td> <a href="{% url 'tmdb:team_points' tournament_div.tournament.slug tournament_div.division.slug %}">Create matches</a> </td>
+        <td> <a href="{% url 'tmdb:bracket' tournament_div.tournament.slug tournament_div.division.slug %}">Bracket</a> </td>
         </tr>
         {% endfor %}
       </tbody>

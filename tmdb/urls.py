@@ -19,6 +19,8 @@ urlpatterns = [
             views.team_points, name='team_points'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/seedings/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.seedings, name='seedings'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*$',
+            views.bracket, name='bracket'),
     url(r'^new_tournament/*$', views.tournament_create,
             name='tournament_create'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/edit/*$',
