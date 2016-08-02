@@ -21,18 +21,12 @@
   float: top;
   margin: 0;
   position: relative;
-  border-bottom: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: black;
 }
 
 .lower_team_bracket_cell {
   float: top;
   margin: 0;
   position: relative;
-  border-top: 1px;
-  border-top-style: solid;
-  border-top-color: black;
 }
 
 .upper_team_bracket_cell_text {
@@ -50,8 +44,20 @@
   background-color: #dddddd;
 }
 
-.upper_child_cell > .bottom_quarter_cell , .upper_child_cell > .lower_team_bracket_cell , .lower_child_cell > .top_quarter_cell , .lower_child_cell > .upper_team_bracket_cell {
+.upper_child_cell.bracket_cell_with_match > .bottom_quarter_cell , .upper_child_cell.bracket_cell_with_match > .lower_team_bracket_cell , .lower_child_cell.bracket_cell_with_match > .top_quarter_cell , .lower_child_cell.bracket_cell_with_match > .upper_team_bracket_cell {
   border-right: 2px;
   border-right-style: solid;
   border-right-color: black;
+}
+
+.bracket_cell_with_match > .upper_team_bracket_cell {
+  border-bottom: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: black;
+}
+
+.bracket_cell_with_match > .lower_team_bracket_cell {
+  border-top: 1px;
+  border-top-style: solid;
+  border-top-color: black;
 }

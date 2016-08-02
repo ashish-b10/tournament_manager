@@ -363,16 +363,20 @@ def bracket(request, tournament_slug, division_slug):
         bracket_columns.append(bracket_column)
         for round_slot in range(round_num_matches):
             key = (round_num, round_slot)
+            cell_type = []
             if key not in matches:
                 match = models.TeamMatch()
+                cell_type.append("bracket_cell_without_match")
             else:
                 match = matches[key]
-            match.height = str(100 / (round_num_matches)) + "%"
+                cell_type.append("bracket_cell_with_match")
             if round_slot % 2:
-                match.cell_type = "lower_child_cell"
+                cell_type.append("lower_child_cell")
             else:
-                match.cell_type = "upper_child_cell"
+                cell_type.append("upper_child_cell")
             bracket_column[round_slot] = match
+            match.cell_type = " ".join(cell_type)
+            match.height = str(100 / (round_num_matches)) + "%"
     if (0, 0) in matches:
         del matches[(0, 0)].cell_type # remove cell_type from final
     context = {

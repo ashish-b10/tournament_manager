@@ -8,7 +8,7 @@
   {% for bracket_column in bracket_columns %}
     <div class="bracket_column" style="height: {{bracket_column_height}}">
     {% for bracket_cell in bracket_column %}
-      <div class="bracket_cell {{ bracket_cell.with_match}} {{bracket_cell.cell_type}}" style="height: {{bracket_cell.height}}">
+      <div class="bracket_cell {{bracket_cell.cell_type}}" style="height: {{bracket_cell.height}}">
         <div class="bracket_cell_quarter top_quarter_cell"></div>
         <div class="bracket_cell_quarter upper_team_bracket_cell">
           <div class="upper_team_bracket_cell_text">{{bracket_cell.blue_team|default_if_none:""}}</div>
