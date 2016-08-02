@@ -4,7 +4,7 @@
     {% for division, team_matches in team_matches %}
     <h2>{{division}}</h2>
           {% if team_matches %}
-          <form class="form-horizontal">
+          <div class="form-horizontal">
             <table id="match_table" class="table">
               <tr>
                 <th>Match No.</th>
@@ -39,7 +39,7 @@
               </form>
               {% endfor %}
             </table>
-          </form>
+          </div>
           {% else %}
             <p>No matches are available</p>
           {% endif %}

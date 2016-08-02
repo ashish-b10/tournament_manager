@@ -46,7 +46,7 @@
     {% for division, team_matches in team_matches %}
         <div role="tabpanel" class="tab-pane" id="division-{{division.division.slug}}">
           {% if team_matches %}
-          <form class="form-horizontal">
+          <div class="form-horizontal">
             <table id="match_table" class="table">
               <tr>
                 <th>Match No.</th>
@@ -85,7 +85,7 @@
               </tr>
              {% endfor %}
             </table>
-          </form>
+          </div>
           {% else %}
             <p>No matches are available</p>
           {% endif %}
