@@ -1,11 +1,11 @@
-# Getting Started for Developers
+# Getting Started
 
-This document deals with the requisite knowledge for developing the data layer of `tmdb` (the model layer). Contributors who are simply interested in designing the web-based interface (contributing and designing static HTML/CSS for viewing database contents) however are not required to follow it.
+This document details how to set up and run an instance of the ECTC Tournament Manager. It is not (yet) a user interface guide.
 
-## Requisite Knowledge
-`tmdb` primarily makes use of Django, which is a Python framework for creating web applications (a database which exists on the server and HTML views to interact with the database). It is very simple to get started with Django - the introductory tutorial is a great place to start, and very easy to understand, and it can accessed here: https://docs.djangoproject.com/en/1.10/intro/tutorial01/
+## Recommended Knowledge
+`tmdb` primarily makes use of Django, which is a Python framework for creating web applications (a database which exists on the server and HTML views to interact with the database). Users do not need to have a complete understanding of Django to use the software (though it certainly does not hurt!).
 
-The tutorial teaches how the database is structured using Django's built-in Object-Relational Mapper, how changes to the database can be managed via migrations, how to use the controller interface which Django automatically creates when you develop the ORM, and how to use its built-in templating interface for dynamically generating views.
+For developers, it is very simple to get started with Django - the introductory tutorial is a great place to start, and very easy to understand - it can accessed here: https://docs.djangoproject.com/en/1.10/intro/tutorial01/ The tutorial teaches how the database is structured using Django's built-in Object-Relational Mapper, how changes to the database can be managed via migrations, how to use the controller interface which Django automatically creates when you develop the ORM, and how to use its built-in templating interface for dynamically generating views.
 
 ## Database Backend
 
@@ -17,7 +17,7 @@ More information on Django backends can be found here: https://docs.djangoprojec
 
 ## Using Python 3
 
-The application is written using Python 3.x. Developers should take care to ensure that they are using this version of Python and not 2.x.
+The application is written using Python 3.x. Users and developers should take care to ensure that they are using this version of Python and not 2.x.
 
 # Installing the Requisite Software
 
