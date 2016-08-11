@@ -19,11 +19,9 @@ More information on Django backends can be found here: https://docs.djangoprojec
 
 The application is written using Python 3.x. Developers should take care to ensure that they are using this version of Python and not 2.x.
 
-# First Steps
+# Installing the Requisite Software
 
-## Installing the Requisite Software
-
-### Python (Required)
+## Python (Required)
 
 Most Linux distributions provide Python by default, but not all provide Python 3, so take care to ensure that's the version you're using.
 
@@ -35,7 +33,7 @@ You can run
 
 to make sure that you are using Python 3.
 
-#### Creating a Python Virtualenv (Recommended)
+### Creating a Python Virtualenv (Recommended)
 
 A virtualenv is recommended, but not required, as doing so keeps `tmdb` development and dependencies separate from the root Python installation. virtualenv is generally not provided with Python by default, but can be installed as follows:
 
@@ -53,49 +51,33 @@ This will create a copy of your Python installation into a directory called `tmd
 
 for all active terminal sessions.
 
-### Django (Required)
+## Python dependencies
+
+If the source code has not been cloned already, then clone it:
+
+    git clone https://github.com/ashish-b10/tournament_manager.git
 
 Make sure the virtualenv is already loaded:
 
     source tmdb_local/bin/activate
 
-Then install Django into your Python environment:
+And then install the requirements:
 
-    pip3 install django
+    pip3 install -r tournament_manager/requirements.txt
 
-If not using a virtualenv, then root privileges will probably be required.
+### ectc-registration
 
-### Other Python dependencies
+One of the project dependencies which is also managed by the ECTC is ectc-registration: [https://github.com/ashish-b10/ectc_registration]. This package requires credentials JSON file in order to work properly. This credential file should be saved ouside the code repository so it is not added by accident.
 
-#### django-enumfield
+Once the credentials have been downloaded, they can be tested by running the below command:
 
-    pip3 install --pre django-enumfield==1.3b2
+    python -m ectc_registration.gdocs_downloader -c /path/to/credentials.json -u (INSERT LINK TO A GOOGLE SPREADSHEET)
 
-#### ectc-registration
-
-The code for downloading registration information from Google Drive is stored in a separate repository: [https://github.com/ashish-b10/ectc_registration]
-
-Clone it:
-
-    git clone https://github.com/ashish-b10/ectc_registration.git
-
-Then install it:
-
-    pip install -e ectc_registration/
-
-The repository can be tested by running the below command:
-
-    python -m ectc_registration.gdocs_downloader -c /path/to/credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)
-
-The `tournament_manager_credentials.json` should be downloaded from the Google account or can be requested by the owners of this repo. This json file should be saved ouside the code repository so it is not added by accident. Then it can be installed into `tmdb` by running
-
-    python manage.py update_gdrive_creds -f /path/to/credentials.json
-
-This key wil include the `private_key` as well as various auth tokens that will be necessary for downloading the files directly from the Google spreadsheet.
+If the credentials are valid, this command should download a spreadsheet and report some statistics on it.
 
 If you get an error of `SignedJwtAssertionCredentials`, you have to `pip install ouathclient=1.5.2`.
 
-## Run the service
+# Run the service
 
 If this is the first time running the `tmdb`, the database must be created.
 
@@ -111,7 +93,7 @@ If there are ever any changes to the models.py file, you will have to reset the 
 
     rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data or simply run `bash ./reset_db.sh`.
 
-## Updating the Database
+# Updating the Database
 
 Django's built in ORM is responsible for interfacing with the database. From time to time, changes on the server will require that the database be updated. Currently, the only way to do this is to delete the database and recreate it. Take care to note that ALL DATA IN THE DATABASE WILL BE LOST, though it can be backed up beforehand. Once ready, update the database as follows:
 
