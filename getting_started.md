@@ -11,7 +11,7 @@ The tutorial teaches how the database is structured using Django's built-in Obje
 
 By default, the application is configured to use SQLite as a backend because of its ease of setup - it requires fewer additional dependencies and saves the developer from having to configure access permissions. However, it is intended that the production server will use PostgreSQL as a backend, thus it is helpful to know how to set up PostgreSQL and configure Django (and tmdb) to use it. While using SQLite is easier than PostgreSQL, there is a very small chance that features which work with PostgreSQL do not work with SQLite and an even smaller chance that features working with SQLite do not work with PostgreSQL.
 
-As a result of the above considerations, this tutorial will provide instruction in setting up for SQLite. Setup instructions for PostgreSQL can be found [here]()
+As a result of the above considerations, this tutorial will provide instruction in setting up for SQLite. Setup instructions for PostgreSQL can be found in postgresql.md
 
 More information on Django backends can be found here: https://docs.djangoproject.com/en/1.10/#the-model-layer
 
