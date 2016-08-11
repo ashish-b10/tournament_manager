@@ -42,6 +42,10 @@ Django's implementation of the PostgreSQL backend requires the following package
 
     pip3 install psycopg2 pelican
 
+Alternatively, uncomment the relevant portions of requirements.txt and reinstall it using
+
+    pip3 install -r requirements.txt
+
 If the above installations fail, then it might be necessary to install the following packages:
 
     sudo apt-get install postgresql postgresql-contrib libffi-dev
