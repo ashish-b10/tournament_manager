@@ -1,15 +1,15 @@
 # Getting Started for Developers
 
-This document deals with the requisite knowledge for developing the data layer of tmdb (the model layer). Contributors who are simply interested in designing the web-based interface (contributing and designing static HTML/CSS for viewing database contents) however are not required to follow it.
+This document deals with the requisite knowledge for developing the data layer of `tmdb` (the model layer). Contributors who are simply interested in designing the web-based interface (contributing and designing static HTML/CSS for viewing database contents) however are not required to follow it.
 
 ## Requisite Knowledge
-tmdb primarily makes use of Django, which is a Python framework for creating web applications (a database which exists on the server and HTML views to interact with the database). It is very simple to get started with Django - the introductory tutorial is a great place to start, and very easy to understand, and it can accessed here: https://docs.djangoproject.com/en/1.10/intro/tutorial01/
+`tmdb` primarily makes use of Django, which is a Python framework for creating web applications (a database which exists on the server and HTML views to interact with the database). It is very simple to get started with Django - the introductory tutorial is a great place to start, and very easy to understand, and it can accessed here: https://docs.djangoproject.com/en/1.10/intro/tutorial01/
 
 The tutorial teaches how the database is structured using Django's built-in Object-Relational Mapper, how changes to the database can be managed via migrations, how to use the controller interface which Django automatically creates when you develop the ORM, and how to use its built-in templating interface for dynamically generating views.
 
 ## Database Backend
 
-By default, the application is configured to use SQLite as a backend because of its ease of setup - it requires fewer additional dependencies and saves the developer from having to configure access permissions. However, it is intended that the production server will use PostgreSQL as a backend, thus it is helpful to know how to set up PostgreSQL and configure Django (and tmdb) to use it. While using SQLite is easier than PostgreSQL, there is a very small chance that features which work with PostgreSQL do not work with SQLite and an even smaller chance that features working with SQLite do not work with PostgreSQL.
+By default, the application is configured to use SQLite as a backend because of its ease of setup - it requires fewer additional dependencies and saves the developer from having to configure access permissions. However, it is intended that the production server will use PostgreSQL as a backend, thus it is helpful to know how to set up PostgreSQL and configure Django (and `tmdb`) to use it. While using SQLite is easier than PostgreSQL, there is a very small chance that features which work with PostgreSQL do not work with SQLite and an even smaller chance that features working with SQLite do not work with PostgreSQL.
 
 As a result of the above considerations, this tutorial will provide instruction in setting up for SQLite. Setup instructions for PostgreSQL can be found in postgresql.md
 
@@ -37,7 +37,7 @@ to make sure that you are using Python 3.
 
 #### Creating a Python Virtualenv (Recommended)
 
-A virtualenv is recommended, but not required, as doing so keeps tmdb development and dependencies separate from the root Python installation. virtualenv is generally not provided with Python by default, but can be installed as follows:
+A virtualenv is recommended, but not required, as doing so keeps `tmdb` development and dependencies separate from the root Python installation. virtualenv is generally not provided with Python by default, but can be installed as follows:
 
     easy_install virtualenv
 
@@ -47,7 +47,7 @@ Then to create a virtualenv, run:
 
     virtualenv -p $(which python3) tmdb_local/
 
-This will create a copy of your Python installation into a directory called tmdb_local/ (you are free to change this to any directory you like, of course). Having a copy of your Python installation will allow you to install Python dependencies into a location that's specific to tmdb development. It is only required to execute this command once. Then every time you wish to start Python development, you must execute:
+This will create a copy of your Python installation into a directory called `tmdb_local/` (you are free to change this to any directory you like, of course). Having a copy of your Python installation will allow you to install Python dependencies into a location that's specific to `tmdb` development. It is only required to execute this command once. Then every time you wish to start Python development, you must execute:
 
     source tmdb_local/bin/activate
 
@@ -87,7 +87,7 @@ The repository can be tested by running the below command:
 
     python -m ectc_registration.gdocs_downloader -c /path/to/credentials.json -u (INSERT THE APPROPRIATE spreadsheet link)
 
-The `tournament_manager_credentials.json` should be downloaded from the Google account or can be requested by the owners of this repo. This json file should be saved ouside the code repository so it is not added by accident. Then it can be installed into tmdb by running
+The `tournament_manager_credentials.json` should be downloaded from the Google account or can be requested by the owners of this repo. This json file should be saved ouside the code repository so it is not added by accident. Then it can be installed into `tmdb` by running
 
     python manage.py update_gdrive_creds -f /path/to/credentials.json
 
