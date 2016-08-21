@@ -84,10 +84,8 @@ WSGI_APPLICATION = 'ectc_tm_server.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'tmdb',
-        'USER': 'tmdb',
-        'HOST': 'localhost',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': '/dev/shm/ectc-tmdb',
     }
 }
 
