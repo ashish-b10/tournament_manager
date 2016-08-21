@@ -79,15 +79,33 @@ If you get an error of `SignedJwtAssertionCredentials`, you have to `pip install
 
 # Run the service
 
-If this is the first time running the `tmdb`, the database must be created.
+## Database Setup
 
-To make model migrations:
+If this is the first time running the `tmdb`, the database must be created. The instrutions below should work regardless of which database backend is being used.
+
+First, create the migrations that Django will apply to the database:
 
     python manage.py makemigrations tmdb
+
+Then apply the migrations:
+
+    python manage.py migrate
+
+And last, import the Google Drive credentials:
+
+    python manage.py update_gdrive_creds -f /path/to/credentials.json
+
+## Running the Server
 
 To run the server locally,
 
     python manage.py runserver
+
+This creates runs the server in development mode, which is nice for development and testing but *should never be used in production*. Using the `tmdb` in production requires setting up a real webserver like Apache or Nginx using a Python module such as mod_wsgi or uwsgi or gunicorn. This link has more information: [https://www.digitalocean.com/community/tutorials/django-server-comparison-the-development-server-mod_wsgi-uwsgi-and-gunicorn]
+
+## Updating the database
+
+From time to time, the models.py file gets updated with new records to store in the database. 
 
 If there are ever any changes to the models.py file, you will have to reset the database. You can do this by doing either:
 
