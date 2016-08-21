@@ -67,7 +67,7 @@ And then install the requirements:
 
 ### ectc-registration
 
-One of the project dependencies which is also managed by the ECTC is ectc-registration: [https://github.com/ashish-b10/ectc_registration]. This package requires credentials JSON file in order to work properly. This credential file should be saved ouside the code repository so it is not added by accident.
+One of the project dependencies which is also managed by the ECTC is [ectc-registration](https://github.com/ashish-b10/ectc_registration). This package requires credentials JSON file in order to work properly. This credential file should be saved ouside the code repository so it is not added by accident.
 
 Once the credentials have been downloaded, they can be tested by running the below command:
 
@@ -101,7 +101,7 @@ To run the server locally,
 
     python manage.py runserver
 
-This creates runs the server in development mode, which is nice for development and testing but *should never be used in production*. Using the `tmdb` in production requires setting up a real webserver like Apache or Nginx using a Python module such as mod_wsgi or uwsgi or gunicorn. This link has more information: [https://www.digitalocean.com/community/tutorials/django-server-comparison-the-development-server-mod_wsgi-uwsgi-and-gunicorn]
+This creates runs the server in development mode, which is nice for development and testing but *should never be used in production*. Using the `tmdb` in production requires setting up a real webserver like Apache or Nginx using a Python module such as mod_wsgi or uwsgi or gunicorn. This link has more information: https://www.digitalocean.com/community/tutorials/django-server-comparison-the-development-server-mod_wsgi-uwsgi-and-gunicorn
 
 ## Updating the database
 
