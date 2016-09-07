@@ -372,7 +372,7 @@ class Division(models.Model):
             start_val = 300
         elif self.skill_level == DivisionLevelEnum.C:
             start_val = 500
-        return start_val + (100 if self.sex == SexEnum.F else 0)
+        return start_val + (100 if self.sex == SexEnum.F else 0) + 1
 
 class TournamentDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
