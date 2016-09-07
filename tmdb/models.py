@@ -444,8 +444,19 @@ class TeamRegistration(models.Model):
     class Meta:
         unique_together = (('tournament_division', 'team'),)
 
+    def __get_competitors_str(self):
+        lightweight = "L" if self.lightweight else ""
+        middleweight = "M" if self.middleweight else ""
+        heavyweight = "H" if self.heavyweight else ""
+        if not lightweight and not middleweight and not heavyweight:
+            return ""
+        return "(" + lightweight + middleweight + heavyweight + ")"
+
     def __str__(self):
-        return "%s" %(str(self.team))
+        competitors_str = self.__get_competitors_str()
+        if competitors_str:
+            competitors_str = " " + competitors_str
+        return "%s%s" %(str(self.team), competitors_str)
 
     def __repr__(self):
         return "%s (%s)" %(str(self.team),
