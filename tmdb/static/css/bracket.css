@@ -29,9 +29,12 @@
   position: relative;
 }
 
-.upper_team_bracket_cell_text {
+.upper_team_bracket_cell_data {
   position: absolute;
   bottom: 0;
+}
+
+.upper_team_bracket_cell_text {
   color: blue;
 }
 

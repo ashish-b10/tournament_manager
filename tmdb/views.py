@@ -356,7 +356,7 @@ def bracket(request, tournament_slug, division_slug):
     for match in models.TeamMatch.objects.filter(division=tournament_division):
         matches[(match.round_num, match.round_slot)] = match
         num_rounds = max(num_rounds, match.round_num)
-    bracket_column_height = str(75 * 2**num_rounds) + "px"
+    bracket_column_height = str(100 * 2**num_rounds) + "px"
     for round_num in reversed(range(num_rounds + 1)):
         round_num_matches = 2**round_num
         bracket_column = [None] * round_num_matches
