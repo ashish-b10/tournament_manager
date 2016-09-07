@@ -491,7 +491,7 @@ class TeamMatch(models.Model):
         winning_team    The winner of the TeamMatch
     """
     division = models.ForeignKey(TournamentDivision)
-    number = models.PositiveIntegerField(unique=True)
+    number = models.PositiveIntegerField()
     round_num = models.SmallIntegerField()
     round_slot = models.IntegerField()
     blue_team = models.ForeignKey(TeamRegistration, related_name="blue_team",
