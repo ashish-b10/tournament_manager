@@ -50,7 +50,7 @@
   border-right-color: black;
 }
 
-.bracket_cell_with_match > .upper_team_bracket_cell {
+.bracket_cell_with_match > .upper_team_bracket_cell, .bracket_cell_with_match > .bracket_finals_cell {
   border-bottom: 1px;
   border-bottom-style: solid;
   border-bottom-color: black;

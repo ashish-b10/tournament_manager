@@ -378,7 +378,8 @@ def bracket(request, tournament_slug, division_slug):
             match.cell_type = " ".join(cell_type)
             match.height = str(100 / (round_num_matches)) + "%"
     if (0, 0) in matches:
-        del matches[(0, 0)].cell_type # remove cell_type from final
+        matches[(0, 0)].cell_type = "bracket_cell_with_match" \
+                + " bracket_finals_cell"
     context = {
             'tournament_division': tournament_division,
             'tournament': tournament,
