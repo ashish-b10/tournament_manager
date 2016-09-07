@@ -261,8 +261,9 @@ def seedings(request, tournament_slug, division_slug):
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
         tournament_division = get_object_or_404(models.TournamentDivision,
                 tournament=tournament, division__slug=division_slug)
-        teams = models.TeamRegistration.get_teams_with_assigned_slots(
-                tournament_division)
+        teams = models.TeamRegistration.objects.filter(
+                tournament_division=tournament_division).order_by(
+                        'team__school__name', 'team__number')
         seed_forms = []
         teams = list(teams)
         for team in teams:
