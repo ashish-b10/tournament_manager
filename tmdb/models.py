@@ -118,6 +118,10 @@ class Tournament(models.Model):
             td.save()
 
     def __str__(self):
+        return "%s Tournament (%s)" %(
+                self.location, self.date.strftime("%Y %b %d"))
+
+    def __repr__(self):
         return self.slug if self.slug else self.slugify()
 
     def download_registration(self):
