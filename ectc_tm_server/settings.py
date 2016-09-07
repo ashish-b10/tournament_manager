@@ -82,13 +82,7 @@ WSGI_APPLICATION = 'ectc_tm_server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/dev/shm/ectc-tmdb',
-    }
-}
-
+from .db_settings import DATABASES
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/

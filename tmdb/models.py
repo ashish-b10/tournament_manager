@@ -118,6 +118,10 @@ class Tournament(models.Model):
             td.save()
 
     def __str__(self):
+        return "%s Tournament (%s)" %(
+                self.location, self.date.strftime("%Y %b %d"))
+
+    def __repr__(self):
         return self.slug if self.slug else self.slugify()
 
     def download_registration(self):
@@ -491,7 +495,7 @@ class TeamMatch(models.Model):
         winning_team    The winner of the TeamMatch
     """
     division = models.ForeignKey(TournamentDivision)
-    number = models.PositiveIntegerField(unique=True)
+    number = models.PositiveIntegerField()
     round_num = models.SmallIntegerField()
     round_slot = models.IntegerField()
     blue_team = models.ForeignKey(TeamRegistration, related_name="blue_team",
