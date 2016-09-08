@@ -394,3 +394,9 @@ def bracket(request, tournament_slug, division_slug):
             'bracket_column_height': bracket_column_height,
     }
     return render(request, 'tmdb/brackets.html', context)
+
+def add_match(request, division_id, round_num, round_slot):
+    raise NotImplementedError()
+
+def add_match_by_id(request, match_id):
+    raise NotImplementedError()

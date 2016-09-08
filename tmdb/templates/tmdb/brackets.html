@@ -13,11 +13,19 @@
         <div class="bracket_cell_quarter upper_team_bracket_cell">
           <div class="upper_team_bracket_cell_data">
             <div class="match_num_data">{% if bracket_cell.number %}Match #{{bracket_cell.number}}{% endif %}</div>
-            <div class="upper_team_bracket_cell_text">{{bracket_cell.blue_team|default_if_none:""}}</div>
+            {% if bracket_cell.pk %}
+            <div class="upper_team_bracket_cell_text"><a href="{%url 'tmdb:add_match' bracket_cell.number %}">&lt;</a>{{bracket_cell.blue_team}}</div>
+            {% else %}
+            <div class="upper_team_bracket_cell_text"></div>
+            {% endif %}
           </div>
         </div>
         <div class="bracket_cell_quarter lower_team_bracket_cell">
-          <div class="lower_team_bracket_cell_text">{{bracket_cell.red_team|default_if_none:""}}</div>
+          {% if bracket_cell.pk %}
+          <div class="lower_team_bracket_cell_text"><a href="{%url 'tmdb:add_match' bracket_cell.number %}">&lt;</a>{{bracket_cell.red_team}}</div>
+          {% else %}
+          <div class="lower_team_bracket_cell_text"></div>
+          {% endif %}
         </div>
         <div class="bracket_cell_quarter bottom_quarter_cell"></div>
       </div>
