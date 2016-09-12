@@ -14,7 +14,7 @@
           <div class="upper_team_bracket_cell_data">
             <div class="match_num_data">{% if bracket_cell.number %}Match #{{bracket_cell.number}}{% endif %}</div>
             {% if bracket_cell.pk %}
-            <div class="upper_team_bracket_cell_text"><a href="{%url 'tmdb:add_match' bracket_cell.number %}">&lt;</a>{{bracket_cell.blue_team}}</div>
+            <div class="upper_team_bracket_cell_text"><a href="{%url 'tmdb:add_match' bracket_cell.number %}">&lt;</a>{{bracket_cell.blue_team.bracket_str|default_if_none:""}}</div>
             {% else %}
             <div class="upper_team_bracket_cell_text"></div>
             {% endif %}
@@ -22,7 +22,7 @@
         </div>
         <div class="bracket_cell_quarter lower_team_bracket_cell">
           {% if bracket_cell.pk %}
-          <div class="lower_team_bracket_cell_text"><a href="{%url 'tmdb:add_match' bracket_cell.number %}">&lt;</a>{{bracket_cell.red_team}}</div>
+          <div class="lower_team_bracket_cell_text"><a href="{%url 'tmdb:add_match' bracket_cell.number %}">&lt;</a>{{bracket_cell.red_team.bracket_str|default_if_none:""}}</div>
           {% else %}
           <div class="lower_team_bracket_cell_text"></div>
           {% endif %}

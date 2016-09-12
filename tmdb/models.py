@@ -462,6 +462,9 @@ class TeamRegistration(models.Model):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
 
+    def bracket_str(self):
+        return "[%d] %s" %(self.seed, str(self))
+
     def num_competitors(self):
         return sum(map(lambda x: x is not None,
                 [self.lightweight, self.middleweight, self.heavyweight]))
