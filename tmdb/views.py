@@ -387,7 +387,8 @@ def bracket(request, tournament_slug, division_slug):
     if (0, 0) in matches:
         matches[(0, 0)].cell_type = "bracket_cell_with_match" \
                 + " bracket_finals_cell"
-    unassigned_teams = models.TeamMatch.unassigned_teams(tournament_division)
+    unassigned_teams = models.TeamRegistration.get_teams_without_assigned_slot(
+            tournament_division)
     context = {
             'tournament_division': tournament_division,
             'tournament': tournament,
