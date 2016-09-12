@@ -554,6 +554,17 @@ class TeamMatch(models.Model):
     def clean(self, *args, **kwargs):
         self.update_winning_team()
 
+    @classmethod
+    def unassigned_teams(cls, tournament_division):
+        team_tuples = {(tm.red_team, tm.blue_team)
+                for tm in cls.objects.filter(division=tournament_division)}
+        assigned_teams = {team.id
+                for _tuple in team_tuples
+                for team in _tuple
+                if team}
+        unassigned_teams = TeamRegistration.objects.filter(tournament_division=tournament_division).exclude(id__in=assigned_teams)
+        return unassigned_teams
+
     @staticmethod
     def create_matches_from_slots(tournament_division):
         TeamMatch.objects.filter(division=tournament_division).delete()

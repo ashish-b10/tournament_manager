@@ -387,11 +387,13 @@ def bracket(request, tournament_slug, division_slug):
     if (0, 0) in matches:
         matches[(0, 0)].cell_type = "bracket_cell_with_match" \
                 + " bracket_finals_cell"
+    unassigned_teams = models.TeamMatch.unassigned_teams(tournament_division)
     context = {
             'tournament_division': tournament_division,
             'tournament': tournament,
             'bracket_columns': bracket_columns,
             'bracket_column_height': bracket_column_height,
+            'unassigned_teams': unassigned_teams,
     }
     return render(request, 'tmdb/brackets.html', context)
 
