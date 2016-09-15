@@ -541,9 +541,12 @@ class TeamMatch(models.Model):
     def __str__(self):
         return "Match #" + str(self.number)
 
-    def get_child_matches(self):
-        return TeamMatch.objects.filter(division=self.division,
-                round_num=round_num + 1)
+    def get_previous_round_matches(self):
+        upper_match_query = TeamMatch.objects.filter(division=self.division,
+                round_num=self.round_num + 1, round_slot=2*self.round_slot)
+        lower_match_query = TeamMatch.objects.filter(division=self.division,
+                round_num=self.round_num + 1, round_slot=2*self.round_slot + 1)
+        return [upper_match_query.first(), lower_match_query.first()]
 
     def get_parent_match(self):
         try:
