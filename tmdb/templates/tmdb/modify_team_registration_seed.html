@@ -6,7 +6,7 @@
   <h2>Bracket for {{tournament_division}} at {{tournament_division.tournament}}</h2>
   <form action="{%url 'tmdb:seeding' tournament_division.tournament.slug tournament_division.division.slug%}" method="post">
     {% csrf_token %}
-    {{edit_form.as_p}}
+    {{form.as_p}}
     <input type="submit" value="Update Bracket"/>
   </form>
 {% endblock %}
