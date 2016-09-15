@@ -548,7 +548,7 @@ class TeamMatch(models.Model):
                 round_num=self.round_num + 1, round_slot=2*self.round_slot + 1)
         return [upper_match_query.first(), lower_match_query.first()]
 
-    def get_parent_match(self):
+    def get_next_round_match(self):
         try:
             return TeamMatch.objects.get(division=self.division,
                     round_num=self.round_num-1,
@@ -558,7 +558,7 @@ class TeamMatch(models.Model):
 
     def update_winning_team(self):
         if self.round_num != 0:
-            parent_match = self.get_parent_match()
+            parent_match = self.get_next_round_match()
             if self.round_slot % 2:
                 parent_match.red_team = self.winning_team
             else:
