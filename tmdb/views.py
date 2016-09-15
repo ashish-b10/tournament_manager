@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.forms.models import modelformset_factory
 from django.core.urlresolvers import reverse
+from django.contrib import messages
 
 from . import forms
 from . import models
@@ -389,6 +390,7 @@ def bracket(request, tournament_slug, division_slug):
                 + " bracket_finals_cell"
     unassigned_teams = models.TeamRegistration.get_teams_without_assigned_slot(
             tournament_division)
+
     context = {
             'tournament_division': tournament_division,
             'tournament': tournament,
@@ -398,8 +400,110 @@ def bracket(request, tournament_slug, division_slug):
     }
     return render(request, 'tmdb/brackets.html', context)
 
-def add_match(request, division_id, round_num, round_slot):
-    raise NotImplementedError()
+def seeding(request, tournament_slug, division_slug, seed=None):
+    if request.method == 'POST':
+        form = forms.TeamRegistrationSeedingForm(request.POST)
+        if form.is_valid():
+            team_registration = models.TeamRegistration.objects.get(
+                    pk=request.POST['team_registration'])
+            team_registration.seed = int(request.POST['seed'])
+            team_registration.save()
+            tournament_division = team_registration.tournament_division
+            models.TeamMatch.create_matches_from_slots(tournament_division)
+            return HttpResponseRedirect(reverse("tmdb:bracket", args=(
+                    tournament_division.tournament.slug,
+                    tournament_division.division.slug,)))
 
-def add_match_by_id(request, match_id):
-    raise NotImplementedError()
+def add_upper_match(request, match_id):
+    return add_match(request, match_id, side='upper')
+
+def add_lower_match(request, match_id):
+    return add_match(request, match_id, side='lower')
+
+def add_match(request, match_id, side):
+    next_round_match = models.TeamMatch.objects.get(pk=match_id)
+    tournament_division = next_round_match.division
+    if side == 'upper':
+        existing_team = next_round_match.blue_team
+    else:
+        existing_team = next_round_match.red_team
+    if existing_team is None:
+        messages.add_message(request, messages.ERROR,
+                "Unable to edit match - no team is present in this slot",
+                extra_tags="alert alert-danger")
+        return HttpResponseRedirect(reverse("tmdb:bracket", args=(
+                    tournament_division.tournament.slug,
+                    tournament_division.division.slug,)))
+    new_seed = 2**(next_round_match.round_num + 2) - existing_team.seed + 1
+    edit_form = forms.TeamRegistrationSeedingForm(initial={'seed': new_seed})
+    edit_form.fields['team_registration'].queryset = \
+            models.TeamRegistration.get_teams_without_assigned_slot(
+                    tournament_division)
+    edit_form.fields['seed'].widget.attrs['readonly'] = True
+    context = {
+            'tournament_division': tournament_division,
+            'tournament': next_round_match.division.tournament,
+            'side': side,
+            'existing_team': existing_team,
+            'edit_form': edit_form,
+    }
+    return render(request, 'tmdb/modify_team_registration_seed.html', context)
+
+#def add_match(request, match_id, side):
+#    if side != 'upper' and side != 'lower':
+#        raise IllegalArgumentError("side must be 'upper' or 'lower'")
+#    next_round_match = models.TeamMatch.objects.get(pk=match_id)
+#    round_slot = next_round_match.round_slot * 2
+#    if side == 'lower':
+#        round_slot+= 1
+#
+#    previous_round_matches = next_round_match.get_previous_round_matches()
+#    for match_index,match in enumerate(previous_round_matches):
+#        if match is None:
+#            match = models.TeamMatch()
+#            previous_round_matches[match_index] = match
+#            match.cell_type = "bracket_cell_without_match"
+#        else:
+#            match.cell_type = "bracket_cell_with_match"
+#        match.height = "50%"
+#
+#    editing_match = previous_round_matches[0 if side == 'upper' else 1]
+#    if editing_match is None:
+#        editing_match = models.TeamMatch()
+#    editing_match.division = next_round_match.division
+#
+#    unassigned_teams = models.TeamRegistration.get_teams_without_assigned_slot(
+#            tournament_division)
+#    if next_round_match.blue_team:
+#        editing_match.blue_team = next_round_match.blue_team
+#        editing_match.red_team = unassigned_teams
+#    elif next_round_match.red_team:
+#        editing_match.red_team = next_round_match.red_team
+#        next_round_match.blue_team = unassigned_teams
+#    else:
+#        raise NotImplementedError()
+#
+#    editing_match.blue_team = models.TeamRegistration.objects.first()
+#    editing_match.red_team = models.TeamRegistration.objects.first()
+#    editing_match.cell_type = "bracket_cell_with_match"
+#
+#    previous_round_matches[0].cell_type += " upper_child_cell"
+#    previous_round_matches[1].cell_type += " lower_child_cell"
+#
+#    bracket_column_height = str(100 * 2**2) + "px"
+#
+#    next_round_match.cell_type = "bracket_cell_with_match bracket_finals_cell"
+#    next_round_match.height = "100%"
+#
+#    if request.method == "POST":
+#        raise NotImplementedError()
+#
+#    bracket_columns = [previous_round_matches, [next_round_match]]
+#
+#    context = {
+#            'tournament_division': next_round_match.division,
+#            'tournament': next_round_match.division.tournament,
+#            'bracket_columns': bracket_columns,
+#            'bracket_column_height': bracket_column_height,
+#    }
+#    return render(request, 'tmdb/bracket_match_edit.html', context)
