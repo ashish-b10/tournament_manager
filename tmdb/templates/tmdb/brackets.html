@@ -5,7 +5,7 @@
 {% block content %}
   <h2>Bracket for {{tournament_division}} at {{tournament_division.tournament}}</h2>
   {% if unassigned_teams %}
-  <div>The following teams are registered for this division but have not been added to the bracket:
+  <div class="alert alert-warning">The following teams are registered for this division but have not been added to the bracket:
   <ul>
     {% for team in unassigned_teams %}
     <li>{{team}}</li>
