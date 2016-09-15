@@ -463,6 +463,8 @@ class TeamRegistration(models.Model):
                 str(self.tournament_division.tournament),)
 
     def bracket_str(self):
+        if not self.seed:
+            return str(self)
         return "[%d] %s" %(self.seed, str(self))
 
     def num_competitors(self):
