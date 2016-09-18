@@ -442,7 +442,8 @@ class TeamRegistration(models.Model):
             related_name="alternate2")
 
     class Meta:
-        unique_together = (('tournament_division', 'team'),)
+        unique_together = (('tournament_division', 'team'),
+                ('tournament_division', 'seed'),)
 
     def __get_competitors_str(self):
         lightweight = "L" if self.lightweight else ""
