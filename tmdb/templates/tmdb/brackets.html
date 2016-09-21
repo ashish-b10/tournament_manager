@@ -11,7 +11,10 @@
       <div class="bracket_cell {{bracket_cell.cell_type}}" style="height: {{bracket_cell.height}}">
         <div class="bracket_cell_quarter top_quarter_cell"></div>
         <div class="bracket_cell_quarter upper_team_bracket_cell">
-          <div class="upper_team_bracket_cell_text">{{bracket_cell.blue_team|default_if_none:""}}</div>
+          <div class="upper_team_bracket_cell_data">
+            <div class="match_num_data">{% if bracket_cell.number %}Match #{{bracket_cell.number}}{% endif %}</div>
+            <div class="upper_team_bracket_cell_text">{{bracket_cell.blue_team|default_if_none:""}}</div>
+          </div>
         </div>
         <div class="bracket_cell_quarter lower_team_bracket_cell">
           <div class="lower_team_bracket_cell_text">{{bracket_cell.red_team|default_if_none:""}}</div>

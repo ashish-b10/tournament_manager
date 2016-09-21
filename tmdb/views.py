@@ -261,8 +261,9 @@ def seedings(request, tournament_slug, division_slug):
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
         tournament_division = get_object_or_404(models.TournamentDivision,
                 tournament=tournament, division__slug=division_slug)
-        teams = models.TeamRegistration.get_teams_with_assigned_slots(
-                tournament_division)
+        teams = models.TeamRegistration.objects.filter(
+                tournament_division=tournament_division).order_by(
+                        'team__school__name', 'team__number')
         seed_forms = []
         teams = list(teams)
         for team in teams:
@@ -279,6 +280,9 @@ def seedings(request, tournament_slug, division_slug):
 
 points_re = re.compile('(?P<team_reg_id>[0-9]+)-points$')
 def team_points(request, tournament_slug, division_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament=tournament, division__slug=division_slug)
     if request.method == "POST":
         for post_field in request.POST:
             re_match = points_re.match(post_field)
@@ -289,12 +293,15 @@ def team_points(request, tournament_slug, division_slug):
                     instance=models.TeamRegistration.objects.get(
                             pk=team_reg_id))
             points_form.save()
+
+        teams = models.TeamRegistration.get_teams_with_assigned_slots(
+                tournament_division)
+        for team in teams:
+            team.save()
+
         return HttpResponseRedirect(reverse('tmdb:seedings', args=(
                 tournament_slug, division_slug)))
     else:
-        tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-        tournament_division = get_object_or_404(models.TournamentDivision,
-                tournament=tournament, division__slug=division_slug)
         teams = models.TeamRegistration.objects.filter(
                 tournament_division=tournament_division).order_by('team__number').order_by('team__school')
         points_forms = []
@@ -356,7 +363,7 @@ def bracket(request, tournament_slug, division_slug):
     for match in models.TeamMatch.objects.filter(division=tournament_division):
         matches[(match.round_num, match.round_slot)] = match
         num_rounds = max(num_rounds, match.round_num)
-    bracket_column_height = str(75 * 2**num_rounds) + "px"
+    bracket_column_height = str(100 * 2**num_rounds) + "px"
     for round_num in reversed(range(num_rounds + 1)):
         round_num_matches = 2**round_num
         bracket_column = [None] * round_num_matches
@@ -378,7 +385,8 @@ def bracket(request, tournament_slug, division_slug):
             match.cell_type = " ".join(cell_type)
             match.height = str(100 / (round_num_matches)) + "%"
     if (0, 0) in matches:
-        del matches[(0, 0)].cell_type # remove cell_type from final
+        matches[(0, 0)].cell_type = "bracket_cell_with_match" \
+                + " bracket_finals_cell"
     context = {
             'tournament_division': tournament_division,
             'tournament': tournament,

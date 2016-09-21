@@ -29,9 +29,12 @@
   position: relative;
 }
 
-.upper_team_bracket_cell_text {
+.upper_team_bracket_cell_data {
   position: absolute;
   bottom: 0;
+}
+
+.upper_team_bracket_cell_text {
   color: blue;
 }
 
@@ -41,7 +44,7 @@
 
 .upper_team_bracket_cell_text , .lower_team_bracket_cell_text {
   width: 250px;
-  background-color: #dddddd;
+  background-image: linear-gradient(to right, rgba(200, 200, 200, 1.0), rgba(200, 200, 200, 0.0))
 }
 
 .upper_child_cell.bracket_cell_with_match > .bottom_quarter_cell , .upper_child_cell.bracket_cell_with_match > .lower_team_bracket_cell , .lower_child_cell.bracket_cell_with_match > .top_quarter_cell , .lower_child_cell.bracket_cell_with_match > .upper_team_bracket_cell {
@@ -50,7 +53,7 @@
   border-right-color: black;
 }
 
-.bracket_cell_with_match > .upper_team_bracket_cell {
+.bracket_cell_with_match > .upper_team_bracket_cell, .bracket_cell_with_match > .bracket_finals_cell {
   border-bottom: 1px;
   border-bottom-style: solid;
   border-bottom-color: black;
