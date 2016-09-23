@@ -16,7 +16,12 @@ def index(request, tournament_slug=None):
         delete_form = forms.TournamentDeleteForm()
         context['delete_form'] = delete_form
     else:
-        context = {'tournaments' : models.Tournament.objects.order_by('-date')}
+        today = datetime.date.today()
+        edit_form = forms.TournamentEditForm(initial={'date': today})
+        context = {
+            'edit_form': edit_form,
+            'tournaments': models.Tournament.objects.order_by('-date')
+        }
     return render(request, 'tmdb/index.html', context)
 
 def settings(request):

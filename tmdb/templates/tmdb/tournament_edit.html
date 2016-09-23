@@ -10,7 +10,7 @@
 {% endif %}
     {% csrf_token %}
     {{ edit_form.as_p }}
-    <input type="submit" value="Create/Edit Tournament"/>
+    <button type="submit" class="btn btn-default"> Create/Edit Tournament </button>
 </form>
 
 {% if import_form %}
@@ -30,3 +30,4 @@
 Click <a href="{% url 'tmdb:tournament_delete' edit_form.instance.slug %}">here</a> to delete this tournament.
 {% endif %}
 {% endblock %}
+
