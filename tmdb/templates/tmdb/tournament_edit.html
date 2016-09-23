@@ -1,5 +1,7 @@
 {% extends "tmdb/base.html" %}
 
+{% load bootstrap %}
+
 {% block main-content %}
 <h1>Edit Tournament</h1>
 
@@ -9,7 +11,7 @@
 <form action="{% url 'tmdb:tournament_create' %}" method="post">
 {% endif %}
     {% csrf_token %}
-    {{ edit_form.as_p }}
+    {{ edit_form | bootstrap}}
     <button type="submit" class="btn btn-default"> Create/Edit Tournament </button>
 </form>
 
@@ -19,7 +21,7 @@
     <p>Tournament has not been imported.</p>
     <form action="{% url 'tmdb:tournament_import' import_form.instance.slug %}" method="post">
         {% csrf_token %}
-        {{ import_form.as_p }}
+        {{ import_form | bootstrap }}
         <input type="submit" value="Import"/>
     </form>
     {% endif %}
