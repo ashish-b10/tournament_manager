@@ -62,7 +62,6 @@
 
   <div id="createTournamentModal" class="modal fade" role="dialog" tabindex="-1">
     <div class="modal-dialog">
-
       <!-- Modal content-->
       <div class="modal-content">
         <div class="modal-header">
@@ -70,15 +69,12 @@
           <h3 class="modal-title">Create Tournament</h3>
         </div>
         <div class="modal-body">
-          <p> This will create and import the schools </p>
+          <p> This form will create and import the schools. </p>
           <form class="create-form" action="{% url 'tmdb:tournament_create' %}" method="post">
               {% csrf_token %}
               {{ edit_form |bootstrap }}
+              <button id="submitCreateTournament" formmethod="post" type="submit" class="btn btn-default"> Create Tournament </button>
           </form>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" formmethod="post" class="btn btn-default"> Create Tournament </button>
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
       </div>
 
@@ -92,26 +88,14 @@
 {% block script %}
 
   <script>
-    // $('#createTournamentButton').click(function(ev) {
-    //   ev.preventDefault();
-    //   var url = $(this).data("form");
-    //   console.log($("#createTournamentModal"));
-    //   $("#createTournamentModal").load(url, function() {
-    //     alert('yo');
-    //     $("#createTournamentModal").modal('show');
-    //   });
-    //   return false;
-    // });
-
     $(".create-form").on("submit", function() {
-      alert("test");
       $.ajax({
         type: $(this).attr("method"),
         url: this.action,
         data: $(this).serialize(),
         context: this, 
         success: function(data, status) {
-            alert("yay")
+          $("#createTournamentModal").modal("hide");
         }
       });
       return false;
