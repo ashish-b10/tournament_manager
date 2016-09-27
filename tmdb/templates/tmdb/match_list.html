@@ -1,14 +1,15 @@
 {% extends "tmdb/base_tournament_dashboard.html" %}
 
 {% block content %}
-    {% for division, team_matches in team_matches %}
-    <h2>{{division}}</h2>
-      {% if team_matches %}
-      <div>
-        <p><a href="{%url 'tmdb:match_sheet' division.tournament.slug division.division.slug %}"><input class="btn btn-primary" type="button" value="Print All Match Sheets"></input></a></p>
-      </div>
-      <div class="form-horizontal">
-        <table id="match_table" class="table">
+  {% for division, team_matches in team_matches %}
+  <h2>{{division}}</h2>
+    {% if team_matches %}
+    <div>
+      <p><a href="{%url 'tmdb:match_sheet' division.tournament.slug division.division.slug %}"><input class="btn btn-primary" type="button" value="Print All Match Sheets"></input></a></p>
+    </div>
+    <div class="form-horizontal">
+      <table class="match_table table">
+        <thead>
           <tr>
             <th>Match No.</th>
             <th>Blue Team</th>
@@ -19,6 +20,8 @@
             <th> Modify </th>
             <th>Match Sheet</th>
           </tr>
+        </thead>
+        <tbody>
           {% for team_match in team_matches %}
           <form action="{{request.path}}" method="post">
             {% csrf_token %}
@@ -38,15 +41,16 @@
               <td>{{team_match.form.ring_number}}</td>
               <td>{{team_match.form.winning_team}}</td>
               <td> TO BE MODIFIED </td>
-              <td><input class="btn btn-primary" type="submit" value="Modify"/></input></td>
-              <td><a href="{%url 'tmdb:match_sheet' team_match.division.tournament.slug team_match.division.division.slug team_match.number %}"><input class="btn btn-primary" type="button" value="Print"></input></a></td>
+              <td><input class="btn btn-primary" type="submit" value="Modify"/></td>
+              <td><a href="{%url 'tmdb:match_sheet' team_match.division.tournament.slug team_match.division.division.slug team_match.number %}"><input class="btn btn-primary" type="button" value="Print"/></a></td>
             </tr>
           </form>
           {% endfor %}
-        </table>
-      </div>
-      {% else %}
-        <p>No matches are available</p>
-      {% endif %}
-    {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p>No matches are available</p>
+    {% endif %}
+  {% endfor %}
 {% endblock %}
