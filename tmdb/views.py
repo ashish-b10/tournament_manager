@@ -503,3 +503,6 @@ def add_match(request, match_id, side):
 #            'bracket_column_height': bracket_column_height,
 #    }
 #    return render(request, 'tmdb/bracket_match_edit.html', context)
+
+def match_sheet(request, tournament_slug, division_slug, match_number=None):
+    pass
