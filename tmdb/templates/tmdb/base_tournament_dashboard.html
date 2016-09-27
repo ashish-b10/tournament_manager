@@ -4,11 +4,11 @@
   <div class="row">
     <div class="col-sm-3 col-md-2 sidebar">
       <ul class="nav nav-sidebar">
-      <li><a href="">Current Dashboard</a></li>
+      <li><a href="{% url 'tmdb:tournament_dashboard' tournament.slug %}">Current Dashboard</a></li>
       <li><a href="">Divisions</a></li>
-      <li><a href="">Seedings</a></li>
-      <li><a href="">Teams</a></li>
+      <li><a href="{% url 'tmdb:team_list' tournament.slug %}">All Teams</a></li>
       <li><a href="">Bracket View</a></li>
+      <li><a href="">Standings</a></li>
     </ul>
     </div>
     <div class="col-sm-9 col-md-10">

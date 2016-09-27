@@ -1,11 +1,11 @@
 <div class="division-queue">
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active">
-      <a href="#allDivisions" aria-controls="allDivisions" role="tab" data-toggle="tab">All Rings</a>
+      <a href="#allDivisions" aria-controls="allDivisions" role="tab" data-toggle="tab">All Divisions</a>
     </li>
     {% for division, team_matches in team_matches %}
       <li role="presentation">
-        <a href="#division{{division}}" aria-controls="division{{division}}" role="tab" data-toggle="tab">{{division}}</a>
+        <a href="#division-{{division.division.slug}}" aria-controls="division-{{division.division.slug}}" role="tab" data-toggle="tab">{{division}}</a>
       </li>
     {% endfor %}
   </ul>
@@ -44,46 +44,48 @@
       </table>
     </div>
     {% for division, team_matches in team_matches %}
-        <div role="tabpanel" class="tab-pane" id="division{{division}}">
+        <div role="tabpanel" class="tab-pane" id="division-{{division.division.slug}}">
           {% if team_matches %}
-          <table id="match_table" class="table">
-            <tr>
-              <th>Match No.</th>
-              <th>Blue Team</th>
-              <th>Red Team</th>
-              <th>Ring No.</th>
-              <th>Winning Team</th>
-              <th> Status </th>
-              <th> Modify </th>
-            </tr>
-            {% for team_match in team_matches %}
-            <tr>
-              <td>{{team_match.number}}</td>
-              {% if team_match.blue_team %}
-              <td>{{team_match.blue_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.red_team %}
-              <td>{{team_match.red_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.ring_number %}
-              <td>{{team_match.ring_number}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.winning_team %}
-              <td>{{team_match.winning_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              <td> TO BE MODIFIED </td>
-              <td><a class="btn" href="">Modify</a></td>
-            </tr>
-           {% endfor %}
-          </table>
+          <div class="form-horizontal">
+            <table id="match_table" class="table">
+              <tr>
+                <th>Match No.</th>
+                <th>Blue Team</th>
+                <th>Red Team</th>
+                <th>Ring No.</th>
+                <th>Winning Team</th>
+                <th> Status </th>
+                <th> Modify </th>
+              </tr>
+              {% for team_match in team_matches %}
+              <tr>
+                <td>{{team_match.number}}</td>
+                {% if team_match.blue_team %}
+                <td>{{team_match.blue_team}}</td>
+                {% else %}
+                <td></td>
+                {% endif %}
+                {% if team_match.red_team %}
+                <td>{{team_match.red_team}}</td>
+                {% else %}
+                <td></td>
+                {% endif %}
+                {% if team_match.ring_number %}
+                <td>{{team_match.ring_number}}</td>
+                {% else %}
+                <td></td>
+                {% endif %}
+                {% if team_match.winning_team %}
+                <td>{{team_match.winning_team}}</td>
+                {% else %}
+                <td></td>
+                {% endif %}
+                <td> TO BE MODIFIED </td>
+                <td><a class="button" href="">Modify</a></td>
+              </tr>
+             {% endfor %}
+            </table>
+          </div>
           {% else %}
             <p>No matches are available</p>
           {% endif %}

@@ -1,5 +1,7 @@
 from collections import deque
 
+__all__ = ["BracketGenerator"]
+
 class Team():
     def __init__(self, team_num, team_name = None):
         self.team_num = team_num
@@ -91,7 +93,7 @@ class BracketNode():
         match_str = (num_indent * indent) + "m#" + str(self.number)
         return "\n".join([upper_slot_str, match_str, lower_slot_str])
 
-class Bracket():
+class BracketGenerator():
 
     UPPER_SIDE = 0
     LOWER_SIDE = 1
@@ -123,17 +125,23 @@ class Bracket():
 
     def _evaluate_parents(self):
         self.root.parent = None
-        self.root.parent_side = Bracket.UPPER_SIDE
+        self.root.parent_side = BracketGenerator.UPPER_SIDE
         self.root.is_root = True
+        self.root.round_num = 0
+        self.root.round_slot = self.root.parent_side
         for match in self.root.bfs(seeds=False):
             match.upper_slot.parent = match
-            match.upper_slot.parent_side = Bracket.UPPER_SIDE
+            match.upper_slot.parent_side = BracketGenerator.UPPER_SIDE
             match.upper_slot.is_root = False
+            match.upper_slot.round_num = match.round_num + 1
+            match.upper_slot.round_slot = 2*match.round_slot + match.upper_slot.parent_side
             if not match.upper_slot.is_match():
                 match.blue_team = match.upper_slot
             match.lower_slot.parent = match
-            match.lower_slot.parent_side = Bracket.LOWER_SIDE
+            match.lower_slot.parent_side = BracketGenerator.LOWER_SIDE
             match.lower_slot.is_root = False
+            match.lower_slot.round_num = match.round_num + 1
+            match.lower_slot.round_slot = 2*match.round_slot + match.lower_slot.parent_side
             if not match.lower_slot.is_match():
                 match.red_team = match.lower_slot
 
@@ -154,4 +162,4 @@ class Bracket():
                 team, seed_num = line.split(',')
                 seed_num = int(seed_num)
                 seeds[seed_num] = team
-        return Bracket(seeds)
+        return BracketGenerator(seeds)

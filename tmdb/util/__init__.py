@@ -1,3 +1,2 @@
-from .bracket import Bracket
-
-__all__ = ['Bracket']
+from .bracket_generator import *
+from .slot_assigner import *

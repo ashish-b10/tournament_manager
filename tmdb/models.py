@@ -5,7 +5,7 @@ import decimal
 from itertools import product
 from django.template.defaultfilters import slugify
 
-from tmdb.util import Bracket
+from tmdb.util import BracketGenerator, SlotAssigner
 
 from django_enumfield import enum
 
@@ -118,32 +118,40 @@ class Tournament(models.Model):
             td.save()
 
     def __str__(self):
+        return "%s Tournament (%s)" %(
+                self.location, self.date.strftime("%Y %b %d"))
+
+    def __repr__(self):
         return self.slug if self.slug else self.slugify()
 
     def download_registration(self):
         """Downloads registration spreadsheet from registration_doc_url."""
         from ectc_registration import GoogleDocsDownloader
+        from ectc_registration import GoogleDriveSpreadsheet
         from ectc_registration import RegistrationExtractor
 
-        creds = ConfigurationSetting.objects.filter(
-                key=ConfigurationSetting.REGISTRATION_CREDENTIALS).first()
-        if creds is None:
+        try:
+            creds = ConfigurationSetting.objects.get(
+                    key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
+        except ConfigurationSetting.DoesNotExist:
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
-        downloader = GoogleDocsDownloader(creds.value)
         doc_url = self.registration_doc_url
-        reg_extractor = RegistrationExtractor(doc_url, downloader)
+        doc_key = GoogleDocsDownloader.extract_file_id(doc_url)
+        downloader = GoogleDocsDownloader(creds_json=creds)
+        workbook = GoogleDriveSpreadsheet(downloader, doc_key)
+        reg_extractor = RegistrationExtractor(workbook)
         return reg_extractor.get_registration_workbooks()
 
     def save_downloaded_school(self, school):
-        school_object = Organization.objects.filter(
+        school_object = School.objects.filter(
                 name=school.school_name).first()
         if school_object is None:
-            school_object = Organization(name=school.school_name)
+            school_object = School(name=school.school_name)
             school_object.clean()
             school_object.save()
-        registration = TournamentOrganization(tournament=self,
-                organization=school_object,
+        registration = SchoolRegistration(tournament=self,
+                school=school_object,
                 registration_doc_url=school.registration_doc_url)
         registration.clean()
         registration.save()
@@ -152,8 +160,9 @@ class Tournament(models.Model):
         for school in schools:
             self.save_downloaded_school(school)
 
-    def import_tournament_organizations(self):
-        """Imports organizations from registration_doc_url."""
+    def import_school_registrations(self):
+        """Imports a school's registration information from
+        registration_doc_url."""
         if self.imported:
             raise IntegrityError(("%s is already imported" %(self)
                     + " - and cannot be imported again"))
@@ -163,21 +172,21 @@ class Tournament(models.Model):
         self.imported = True
         self.save()
 
-class Organization(models.Model):
+class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
     tournaments = models.ManyToManyField('Tournament',
-            through='TournamentOrganization')
+            through='SchoolRegistration')
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
-        new_organization = False
+        new_school = False
         if not self.id:
-            new_organization = True
+            new_school = True
             self.slug = self.slugify()
 
-        super(Organization, self).save(*args, **kwargs)
+        super(School, self).save(*args, **kwargs)
 
-        if new_organization:
+        if new_school:
             self.create_teams()
 
     def create_teams(self):
@@ -204,17 +213,17 @@ class Organization(models.Model):
     def __str__(self):
         return self.name
 
-class TournamentOrganization(models.Model):
+class SchoolRegistration(models.Model):
     tournament = models.ForeignKey(Tournament)
-    organization = models.ForeignKey(Organization)
+    school = models.ForeignKey(School)
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = (('tournament', 'organization'),)
+        unique_together = (('tournament', 'school'),)
 
     def __str__(self):
-        return '%s/%s' %(self.tournament, self.organization,)
+        return '%s/%s' %(self.tournament, self.school,)
 
     def download_school_registration(self):
         from ectc_registration import GoogleDocsDownloader
@@ -222,13 +231,13 @@ class TournamentOrganization(models.Model):
         try:
             creds = ConfigurationSetting.objects.get(
                     key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
-        except tmdb.models.DoesNotExist:
+        except ConfigurationSetting.DoesNotExist:
             raise IntegrityError("Registration credentials have not been"
                     + " provided")
-        downloader = GoogleDocsDownloader(creds)
+        downloader = GoogleDocsDownloader(creds_json=creds)
         url = self.registration_doc_url
         registration_extractor = SchoolRegistrationExtractor(
-                school_name=self.organization.name, registration_doc_url=url)
+                school_name=self.school.name, registration_doc_url=url)
         registration_extractor.extract(downloader)
         return registration_extractor
 
@@ -301,7 +310,7 @@ class TournamentOrganization(models.Model):
             for team_num, roster in enumerate(rosters):
                 if not roster:
                     continue
-                team = Team.objects.get_or_create(school=self.organization,
+                team = Team.objects.get_or_create(school=self.school,
                         division=division, number=team_num+1)[0]
                 tournament_division = TournamentDivision.objects.get(
                         tournament=self.tournament, division=division)
@@ -316,7 +325,7 @@ class TournamentOrganization(models.Model):
 
         TeamRegistration.objects.filter(
                 tournament_division__tournament=self.tournament,
-                team__school=self.organization).delete()
+                team__school=self.school).delete()
         Competitor.objects.filter(registration=self).delete()
         self.imported = False
         self.save()
@@ -363,7 +372,7 @@ class Division(models.Model):
             start_val = 300
         elif self.skill_level == DivisionLevelEnum.C:
             start_val = 500
-        return start_val + (100 if self.sex == SexEnum.F else 0)
+        return start_val + (100 if self.sex == SexEnum.F else 0) + 1
 
 class TournamentDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
@@ -373,6 +382,9 @@ class TournamentDivision(models.Model):
         unique_together = (('tournament', 'division'),)
 
     def __str__(self):
+        return "%s" %(self.division)
+
+    def __repr__(self):
         return "%s (%s)" %(self.division, self.tournament)
 
 class TournamentDivisionBeltRanks(models.Model):
@@ -385,7 +397,7 @@ class Competitor(models.Model):
     sex = enum.EnumField(SexEnum)
     belt_rank = enum.EnumField(BeltRankEnum)
     weight = WeightField(null=True, blank=True)
-    registration = models.ForeignKey(TournamentOrganization)
+    registration = models.ForeignKey(SchoolRegistration)
 
     def belt_rank_label(self):
         return BeltRankEnum.label(self.belt_rank)
@@ -394,13 +406,13 @@ class Competitor(models.Model):
         return SexEnum.label(self.sex)
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.registration.organization)
+        return "%s (%s)" % (self.name, self.registration.school)
 
     class Meta:
         unique_together = (("name", "registration"),)
 
 class Team(models.Model):
-    school = models.ForeignKey(Organization)
+    school = models.ForeignKey(School)
     division = models.ForeignKey(Division)
     number = models.SmallIntegerField()
     registrations = models.ManyToManyField(TournamentDivision,
@@ -417,6 +429,7 @@ class TeamRegistration(models.Model):
     tournament_division = models.ForeignKey(TournamentDivision)
     team = models.ForeignKey(Team)
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
+    points = models.PositiveIntegerField(null=True, blank=True)
     lightweight = models.ForeignKey(Competitor, null=True, blank=True,
             related_name="lightweight")
     middleweight = models.ForeignKey(Competitor, null=True, blank=True,
@@ -429,30 +442,80 @@ class TeamRegistration(models.Model):
             related_name="alternate2")
 
     class Meta:
-        unique_together = (('tournament_division', 'team'),)
+        unique_together = (('tournament_division', 'team'),
+                ('tournament_division', 'seed'),)
+
+    def __get_competitors_str(self):
+        lightweight = "L" if self.lightweight else ""
+        middleweight = "M" if self.middleweight else ""
+        heavyweight = "H" if self.heavyweight else ""
+        if not lightweight and not middleweight and not heavyweight:
+            return ""
+        return "(" + lightweight + middleweight + heavyweight + ")"
 
     def __str__(self):
+        competitors_str = self.__get_competitors_str()
+        if competitors_str:
+            competitors_str = " " + competitors_str
+        return "%s%s" %(str(self.team), competitors_str)
+
+    def __repr__(self):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
+
+    def bracket_str(self):
+        if not self.seed:
+            return str(self)
+        return "[%d] %s" %(self.seed, str(self))
+
+    def num_competitors(self):
+        return sum(map(lambda x: x is not None,
+                [self.lightweight, self.middleweight, self.heavyweight]))
+
+    @classmethod
+    def get_teams_with_assigned_slots(cls, tournament_division):
+        """
+        Assigns all teams in tournament_division to a slot in the
+        bracket. Returns a dict of {team:seed}.
+        """
+        teams = cls.objects.filter(tournament_division=tournament_division).order_by('team__number').order_by('team__school')
+        get_num_competitors = lambda team: team.num_competitors()
+        slot_assigner = SlotAssigner(list(teams), 4,
+                get_school_name = lambda team: team.team.school.name,
+                get_points = lambda team: team.points if team.points else 0)
+        for team in teams:
+            team.seed = slot_assigner.slots_by_team.get(team)
+        return teams
+
+    @classmethod
+    def get_teams_without_assigned_slot(cls, tournament_division):
+        """
+        Returns a list of teams that do not have a slot in the bracket.
+
+        Currently, the condition for this is TeamRegistration.seed is
+        empty.
+        """
+        return cls.objects.filter(
+                tournament_division=tournament_division, seed__isnull=True) \
+                .order_by('team__school__name', 'team__number')
 
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
     can have multiple CompetitorMatches.
 
-    There is a uniqueness constraint on parent and parent_side. If the
-    match is the root match of the division, then parent must be null,
-    parent_side must be set to 0, and root_match must be set to true.
-    Otherwise, parent_side and parent should be non-null and root_match
-    must be set to false. There should only be one match for each
-    division for which root_match is True.
-
     Attributes:
         division        The TournamentDivision that the match belongs to
         number          The match number (unique amongst all
                         TeamMatches)
-        parent          The TeamMatch the winner will advance to
-        parent_side     The side of the parent the winner will play on
-        root_match      Whether this is the root_match of the division
+        round_num       Which round is this match in terms of distance
+                        from the final? (0 means this match is the
+                        final, 1 means this match is the semi-final,
+                        etc.). The number of matches in a given round is
+                        (2**round_num)
+        round_slot      Which slot (from top to bottom) does this match
+                        belong to in its round? 0 means top of the
+                        bracket, 1 = second from the top of the round,
+                        and (2**round_num - 1) = bottom of the round.
         blue_team       The Team fighting in blue for this match
         red_team        The Team fighting in red for this match
         ring_number     The number of the assigned ring
@@ -461,10 +524,9 @@ class TeamMatch(models.Model):
         winning_team    The winner of the TeamMatch
     """
     division = models.ForeignKey(TournamentDivision)
-    number = models.PositiveIntegerField(unique=True)
-    parent = models.ForeignKey('self', blank=True, null=True)
-    parent_side = models.IntegerField()
-    root_match = models.BooleanField()
+    number = models.PositiveIntegerField()
+    round_num = models.SmallIntegerField()
+    round_slot = models.IntegerField()
     blue_team = models.ForeignKey(TeamRegistration, related_name="blue_team",
             blank=True, null=True)
     red_team = models.ForeignKey(TeamRegistration, related_name="red_team",
@@ -474,42 +536,55 @@ class TeamMatch(models.Model):
     winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
             related_name="winning_team")
     class Meta:
-        unique_together = (("parent", "parent_side"), ("division", "number",),)
+        unique_together = (
+                ("division", "round_num", "round_slot"),
+                ("division", "number",),
+        )
 
     def __str__(self):
         return "Match #" + str(self.number)
 
-    def get_root_match(self):
-        """ Return the root match of this match's division. """
-        root_matches = TeamMatch.objects.filter(
-                division=self.division).filter(root_match=True)
-        if not root_matches:
-            return None
-        return root_matches.get()
+    def get_previous_round_matches(self):
+        upper_match_query = TeamMatch.objects.filter(division=self.division,
+                round_num=self.round_num + 1, round_slot=2*self.round_slot)
+        lower_match_query = TeamMatch.objects.filter(division=self.division,
+                round_num=self.round_num + 1, round_slot=2*self.round_slot + 1)
+        return [upper_match_query.first(), lower_match_query.first()]
 
-    def get_child_match(self, slot_side):
+    def get_next_round_match(self):
         try:
-            return TeamMatch.objects.get(parent=self, parent_side=slot_side)
+            return TeamMatch.objects.get(division=self.division,
+                    round_num=self.round_num-1,
+                    round_slot = self.round_slot / 2)
         except TeamMatch.DoesNotExist:
             return None
 
+    def update_winning_team(self):
+        if self.round_num != 0:
+            parent_match = self.get_next_round_match()
+            if self.round_slot % 2:
+                parent_match.red_team = self.winning_team
+            else:
+                parent_match.blue_team = self.winning_team
+            parent_match.clean()
+            parent_match.save()
+
+    def clean(self, *args, **kwargs):
+        self.update_winning_team()
+
     @staticmethod
-    def create_matches_from_seeds(tournament_division):
+    def create_matches_from_slots(tournament_division):
         TeamMatch.objects.filter(division=tournament_division).delete()
         seeded_teams = TeamRegistration.objects.filter(
                 tournament_division=tournament_division, seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
         start_val = tournament_division.division.match_number_start_val()
-        bracket = Bracket(seeds, match_number_start_val=start_val)
+        bracket = BracketGenerator(seeds, match_number_start_val=start_val)
         for bracket_match in bracket.bfs(seeds=False):
             match = TeamMatch(division=tournament_division,
                     number=bracket_match.number,
-                    parent_side=bracket_match.parent_side,
-                    root_match=bracket_match.is_root)
-
-            if not bracket_match.is_root:
-                match.parent = TeamMatch.objects.get(
-                        number=bracket_match.parent.number)
+                    round_num = bracket_match.round_num,
+                    round_slot = bracket_match.round_slot)
 
             try:
                 match.blue_team = bracket_match.blue_team.team
@@ -525,35 +600,6 @@ class TeamMatch(models.Model):
 
             match.clean()
             match.save()
-
-    def validate_single_root_match(self):
-        """ Validate that only one match in a division is the root. """
-        if not self.root_match: return
-        root_match = self.get_root_match()
-        if root_match is not None and root_match != self:
-            raise ValidationError("Division %s already has a root match"
-                    %(self.division))
-        if self.parent is not None:
-            raise ValidationError("Root match must have null parent")
-        if self.parent_side != 0:
-            raise ValidationError("parent_side must be 0 for root match")
-
-    def validate_team_match(self):
-        self.update_parent_match()
-
-    def update_parent_match(self):
-        # set winning_team as blue_team or red_team in parent_match
-        if not self.parent:
-            return
-        if self.parent_side == 0:
-            self.parent.blue_team = self.winning_team
-        elif self.parent_side == 1:
-            self.parent.red_team = self.winning_team
-        #self.parent.clean() #cannot call clean because child is not saved yet
-        self.parent.save()
-
-    def clean(self, *args, **kwargs):
-        self.validate_team_match()
 
 class ConfigurationSetting(models.Model):
     key = models.TextField(unique=True)
