@@ -10,6 +10,8 @@ from collections import defaultdict
 import re
 import datetime
 
+from .util.match_sheet import create_match_sheets
+
 def index(request, tournament_slug=None):
     if request.method == 'POST':
         instance = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -505,4 +507,19 @@ def add_match(request, match_id, side):
 #    return render(request, 'tmdb/bracket_match_edit.html', context)
 
 def match_sheet(request, tournament_slug, division_slug, match_number=None):
-    pass
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    filename = "%s-%s" %(tournament_slug, division_slug)
+    if match_number:
+        matches = [models.TeamMatch.objects.get(division=tournament_division,
+                number=match_number)]
+        filename += "-match_%d.pdf" %(match_number,)
+    else:
+        matches = models.TeamMatch.objects.filter(
+                division=tournament_division).order_by('number')
+        filename += "-matches.pdf"
+    sheet = create_match_sheets(matches)
+
+    response = HttpResponse(sheet, content_type="application/pdf")
+    response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
+    return response

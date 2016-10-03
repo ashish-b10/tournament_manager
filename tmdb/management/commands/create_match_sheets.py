@@ -51,7 +51,6 @@ def create_match_sheet(match_num, blue_team=None, red_team=None, male=False,
     match_sheet_fn = '/home/user/dev/match_sheet/match_sheet.pdf'
     teams_fn = 'teams.pdf'
     output_fn = os.path.join(match_sheet_dir, 'match_%d.pdf' %(match_num))
-    print("Writing " + output_fn)
     output_canvas = PageMerge().add(PdfReader(match_sheet_fn).pages[0])[0]
     trailer = PdfReader(teams_fn)
 
@@ -67,7 +66,6 @@ def combine_match_sheets(match_sheets):
         writer.addpages(PdfReader(match_sheet).pages)
 
     writer.write(output_fn)
-    print("Writing " + output_fn)
     return output_fn
 
 match_sheet_dir = '/dev/shm/match_sheets'

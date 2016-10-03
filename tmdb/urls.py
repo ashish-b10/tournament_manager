@@ -11,7 +11,7 @@ urlpatterns = [
             views.match_sheet, name='match_sheet'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<division_slug>[a-z0-9_-]+)/*'
-            + r'/match_sheet/*',
+            + r'/match_sheets/*',
             views.match_sheet, name='match_sheet'),
     url(r'^add_match/*/(?P<match_id>[0-9]+)/*/upper/*$',
             views.add_upper_match, name='add_upper_match'),
