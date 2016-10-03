@@ -296,6 +296,8 @@ def team_points(request, tournament_slug, division_slug):
                             pk=team_reg_id))
             points_form.save()
 
+        models.TeamRegistration.objects.filter(
+                tournament_division=tournament_division).update(seed=None)
         teams = models.TeamRegistration.get_teams_with_assigned_slots(
                 tournament_division)
         for team in teams:

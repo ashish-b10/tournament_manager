@@ -1,155 +1,179 @@
-from collections import deque
+#!/usr/bin/env python3
 
 __all__ = ["BracketGenerator"]
 
 class Team():
-    def __init__(self, team_num, team_name = None):
-        self.team_num = team_num
-        if team_name is not None:
-            self.team_name = team_name
-
-    def team_name(self):
-        try:
-            return self.team_name
-        except AttributeError:
-            return str(self.team_num)
-
-class BracketNode():
-    def __init__(self, bracket):
-        self.bracket = bracket
-
-    @staticmethod
-    def _split_bracket(seeds, lower_bracket=False):
-        lower_seeds = []
-        upper_seeds = []
-        for seed_num, seed in enumerate(seeds):
-            if seed is None: continue
-            if (seed_num + 1) & 2:
-                lower_seeds.append(seed)
-            else:
-                upper_seeds.append(seed)
-        if lower_bracket:
-            upper_seeds, lower_seeds = lower_seeds, upper_seeds
-        return upper_seeds, lower_seeds
-
-    @staticmethod
-    def _create_from_seeds(bracket, seeds, lower_bracket=False):
-        b = BracketNode(bracket)
-
-        if not seeds:
-            return b
-
-        # if len(seeds) == 1:
-        try:
-            seeds[1]
-        except IndexError:
-            b.seed = seeds[0]
-            return b
-
-        upper_seeds, lower_seeds = BracketNode._split_bracket(seeds,
-                lower_bracket)
-        b.upper_slot = BracketNode._create_from_seeds(bracket, upper_seeds,
-                False)
-        b.lower_slot = BracketNode._create_from_seeds(bracket, lower_seeds,
-                True)
-        return b
-
-    def bfs(self, seeds=True, matches=True):
-        bracket_queue = deque([self])
-        while True:
-            try:
-                bracket_node = bracket_queue.popleft()
-            except IndexError:
-                break
-            if bracket_node.is_match():
-                bracket_queue.append(bracket_node.lower_slot)
-                bracket_queue.append(bracket_node.upper_slot)
-                if matches:
-                    yield bracket_node
-            elif seeds:
-                yield bracket_node
-
-    def is_match(self):
-        return not hasattr(self, 'seed')
-
-    def seed_name(self):
-        if hasattr(self, 'team'):
-            return self.team.team_name()
-        return "bye"
+    def __init__(self, team_name = None):
+        if isinstance(team_name, str):
+            self.team_name = lambda: team_name
 
     def __str__(self):
-        if self.is_match():
-            return str(self.number)
-        else:
-            return '[%d] %s' %(self.seed, self.seed_name())
+        return self.team_name()
 
-    def pprint(self, num_indent=0, indent=' ' * 8):
-        if not self.is_match():
-            return (num_indent * indent) + str(self)
-
-        upper_slot_str = self.upper_slot.pprint(num_indent + 1)
-        lower_slot_str = self.lower_slot.pprint(num_indent + 1)
-
-        match_str = (num_indent * indent) + "m#" + str(self.number)
-        return "\n".join([upper_slot_str, match_str, lower_slot_str])
-
-class BracketGenerator():
+class BracketNode():
 
     UPPER_SIDE = 0
     LOWER_SIDE = 1
 
-    def __init__(self, seeds, match_number_start_val=100):
-        try:
-            num_seeds = max(seeds.keys())
-        except ValueError:
-            num_seeds = 1
-        self.root = BracketNode._create_from_seeds(self,
-                list(range(1, 1 + num_seeds)))
-        self.matches = self._create_matches_index(match_number_start_val)
-        self.seeds = self._seeds_index()
-        self._evaluate_parents()
+    def __init__(self, bracket, round_num, round_slot):
+        self.bracket = bracket
+        self.round_num = round_num
+        self.round_slot = round_slot
+        self.blue_team = self.red_team = None
+
+    def _set_teams(self, seeds):
+        upper_seeds = {}
+        lower_seeds = {}
         for seed_num, team in seeds.items():
-            self.seeds[seed_num].team = team
+            match_side = self._get_side_of_match(seed_num - 1, self.round_num)
+            if match_side == BracketNode.UPPER_SIDE:
+                upper_seeds[seed_num] = team
+                continue
+            if match_side == BracketNode.LOWER_SIDE:
+                lower_seeds[seed_num] = team
+                continue
+            raise Exception("Unexpected result from"
+                    " BracketNode._get_side_of_match: %d" %(match_side))
 
-    def _seeds_index(self):
-        seeds = {}
-        for match_seed in self.root.bfs(matches=False):
-            seeds[match_seed.seed] = match_seed
-        return seeds
+        if len(upper_seeds) > 1:
+            upper_predecessor = BracketNode(
+                    self.bracket, self.round_num + 1, self.round_slot * 2)
+            self.bracket._add_bracket_node(upper_predecessor)
+            upper_predecessor._set_teams(upper_seeds)
+        elif len(upper_seeds) == 1:
+            self.blue_team = next(iter(upper_seeds.values()))
 
-    def _create_matches_index(self, match_number_start_val):
-        match_number = match_number_start_val
-        for match in list(self.root.bfs(seeds=False))[::-1]:
-            match.number = match_number
-            match_number += 1
+        if len(lower_seeds) > 1:
+            lower_predecessor = BracketNode(
+                    self.bracket, self.round_num + 1, self.round_slot * 2 + 1)
+            self.bracket._add_bracket_node(lower_predecessor)
+            lower_predecessor._set_teams(lower_seeds)
+        elif len(lower_seeds) == 1:
+            self.red_team = next(iter(lower_seeds.values()))
 
-    def _evaluate_parents(self):
-        self.root.parent = None
-        self.root.parent_side = BracketGenerator.UPPER_SIDE
-        self.root.is_root = True
-        self.root.round_num = 0
-        self.root.round_slot = self.root.parent_side
-        for match in self.root.bfs(seeds=False):
-            match.upper_slot.parent = match
-            match.upper_slot.parent_side = BracketGenerator.UPPER_SIDE
-            match.upper_slot.is_root = False
-            match.upper_slot.round_num = match.round_num + 1
-            match.upper_slot.round_slot = 2*match.round_slot + match.upper_slot.parent_side
-            if not match.upper_slot.is_match():
-                match.blue_team = match.upper_slot
-            match.lower_slot.parent = match
-            match.lower_slot.parent_side = BracketGenerator.LOWER_SIDE
-            match.lower_slot.is_root = False
-            match.lower_slot.round_num = match.round_num + 1
-            match.lower_slot.round_slot = 2*match.round_slot + match.lower_slot.parent_side
-            if not match.lower_slot.is_match():
-                match.red_team = match.lower_slot
+    def _get_previous_round_match(self, match_side):
+        upper_side, lower_side = self._get_previous_round_matches()
+        if match_side == BracketNode.UPPER_SIDE:
+            return upper_side
+        if match_side == BracketNode.LOWER_SIDE:
+            return lower_side
+        raise AttributeError("Invalid value for match_side: %d" %(match_side))
 
-    def bfs(self, *args, **kwargs):
-        return self.root.bfs(*args, **kwargs)
+    def _get_previous_round_matches(self):
+        return (self.bracket._get_bracket_node(
+                self.round_num + 1, self.round_slot * 2),
+                self.bracket._get_bracket_node(
+                self.round_num + 1, self.round_slot * 2 + 1),)
+
+    _cached_match_side_values = {(0, 0,): False, (1, 0,): True, (2, 0,): True,
+                (3, 0,): False}
+    @staticmethod
+    def _get_side_of_match(seed, round_num):
+
+        pivot = 2 ** (round_num + 2)
+        seed %= pivot
+        cached_value = BracketNode._cached_match_side_values.get(
+                (seed, round_num,))
+        if cached_value is not None: return cached_value
+
+        result = BracketNode._get_side_of_match(seed, round_num - 1)
+        if seed >= pivot // 4 and seed < pivot * 3 // 4:
+            result = not result
+        BracketNode._cached_match_side_values[(seed, round_num,)] = result
+        return result
+
+    def is_bye(self):
+        upper_pred, lower_pred = self._get_previous_round_matches()
+        if upper_pred:
+            upper_match_is_bye = upper_pred.is_bye()
+        else:
+            upper_match_is_bye = not bool(self.blue_team)
+
+        if upper_match_is_bye:
+            return True
+
+        if lower_pred:
+            lower_match_is_bye = lower_pred.is_bye()
+        else:
+            lower_match_is_bye = not bool(self.red_team)
+
+        if lower_match_is_bye:
+            return True
+
+        return False
+
+    def _render_pprint(self):
+        indent = " " * 8
+        if self.blue_team:
+            blue_team_name = self.blue_team.team_name()
+        else:
+            upper_pred = self._get_previous_round_match(BracketNode.UPPER_SIDE)
+            if not upper_pred or upper_pred.is_bye():
+                blue_team_name = "bye"
+            else:
+                blue_team_name = "|"
+
+        if self.red_team:
+            red_team_name = self.red_team.team_name()
+        else:
+            lower_pred = self._get_previous_round_match(BracketNode.LOWER_SIDE)
+            if not lower_pred or lower_pred.is_bye():
+                red_team_name = "bye"
+            else:
+                red_team_name = "|"
+
+        print((indent * (self.round_num + 1)) + blue_team_name)
+        if self.number:
+            print((indent * self.round_num) + "m#" + str(self.number))
+        print((indent * (self.round_num + 1)) + red_team_name)
 
     def pprint(self):
-        return self.root.pprint()
+        upper_pred, lower_pred = self._get_previous_round_matches()
+        if upper_pred:
+            upper_pred.pprint()
+
+        self._render_pprint()
+
+        if lower_pred:
+            lower_pred.pprint()
+
+class BracketGenerator():
+
+    def __init__(self, seeds, match_number_start_val):
+        self.matches = {}
+        self.seeds = seeds
+        self._add_bracket_node(BracketNode(self, 0, 0))
+        self._set_seeds(self.seeds)
+        self._assign_match_numbers(match_number_start_val)
+
+    def _set_seeds(self, seeds):
+        self._get_bracket_node(0, 0)._set_teams(seeds)
+
+    def _get_bracket_node(self, round_num, round_slot):
+        return self.matches.get((round_num, round_slot,))
+
+    def _add_bracket_node(self, bracket_node):
+        round_num = bracket_node.round_num
+        round_slot = bracket_node.round_slot
+        self.matches[(round_num, round_slot,)] = bracket_node
+
+    def _assign_match_numbers(self, match_number_start_val):
+        match_keys = self._sorted_match_keys()
+        for match_key in match_keys:
+            match = self.matches[match_key]
+            if match.is_bye():
+                match.number = None
+                continue
+            match.number = match_number_start_val
+            match_number_start_val+= 1
+
+    def _sorted_match_keys(self):
+        match_keys = list(self.matches.keys())
+        match_keys.sort(reverse=True, key = lambda x: (x[0], -x[1]))
+        return match_keys
+
+    def __iter__(self):
+        return BracketIterator(self)
 
     @staticmethod
     def create_from_teams_file(filename):
@@ -159,7 +183,27 @@ class BracketGenerator():
                 line = line.rstrip()
                 if not line:
                     continue
-                team, seed_num = line.split(',')
+                team_name, seed_num = line.split(',')
                 seed_num = int(seed_num)
-                seeds[seed_num] = team
-        return BracketGenerator(seeds)
+                seeds[seed_num] = Team(team_name)
+        return BracketGenerator(seeds, match_number_start_val=101)
+
+    def pprint(self):
+        return self._get_bracket_node(0,0).pprint()
+
+class BracketIterator():
+
+    def __init__(self, bracket_generator):
+        self.bracket_generator = bracket_generator
+        self.match_keys_iterator = iter(
+                self.bracket_generator._sorted_match_keys())
+
+    def __next__(self):
+        match_key = next(self.match_keys_iterator)
+        return self.bracket_generator._get_bracket_node(*match_key)
+
+if __name__ == "__main__":
+    bracket = BracketGenerator.create_from_teams_file('seeds.txt')
+    for match in bracket:
+        print("%d: %s vs. %s" %(match.number, match.blue_team, match.red_team,))
+    bracket.pprint()

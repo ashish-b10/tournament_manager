@@ -560,14 +560,15 @@ class TeamMatch(models.Model):
             return None
 
     def update_winning_team(self):
-        if self.round_num != 0:
-            parent_match = self.get_next_round_match()
-            if self.round_slot % 2:
-                parent_match.red_team = self.winning_team
-            else:
-                parent_match.blue_team = self.winning_team
-            parent_match.clean()
-            parent_match.save()
+        parent_match = self.get_next_round_match()
+        if not parent_match:
+            return
+        if self.round_slot % 2:
+            parent_match.red_team = self.winning_team
+        else:
+            parent_match.blue_team = self.winning_team
+        parent_match.clean()
+        parent_match.save()
 
     def clean(self, *args, **kwargs):
         self.update_winning_team()
@@ -580,21 +581,21 @@ class TeamMatch(models.Model):
         seeds = {team.seed:team for team in seeded_teams}
         start_val = tournament_division.division.match_number_start_val()
         bracket = BracketGenerator(seeds, match_number_start_val=start_val)
-        for bracket_match in bracket.bfs(seeds=False):
+        for bracket_match in bracket:
             match = TeamMatch(division=tournament_division,
                     number=bracket_match.number,
                     round_num = bracket_match.round_num,
                     round_slot = bracket_match.round_slot)
 
             try:
-                match.blue_team = bracket_match.blue_team.team
+                match.blue_team = bracket_match.blue_team
             except AttributeError:
                 pass
             try:
                 bracket_match.red_team
             except: pass
             try:
-                match.red_team = bracket_match.red_team.team
+                match.red_team = bracket_match.red_team
             except AttributeError:
                 pass
 
