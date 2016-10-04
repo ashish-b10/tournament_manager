@@ -35,7 +35,9 @@ def tournament_create(request):
         context = {}
         if edit_form.is_valid():
             edit_form.save()
-            return HttpResponseRedirect(reverse('tmdb:index'))
+            edit_form.instance.import_school_registrations()
+            return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
+                    args=(edit_form.instance.slug,)))
     else:
         today = datetime.date.today()
         edit_form = forms.TournamentEditForm(initial={'date': today})
