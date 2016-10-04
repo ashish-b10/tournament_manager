@@ -442,7 +442,8 @@ class TeamRegistration(models.Model):
             related_name="alternate2")
 
     class Meta:
-        unique_together = (('tournament_division', 'team'),)
+        unique_together = (('tournament_division', 'team'),
+                ('tournament_division', 'seed'),)
 
     def __get_competitors_str(self):
         lightweight = "L" if self.lightweight else ""
@@ -462,6 +463,11 @@ class TeamRegistration(models.Model):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
 
+    def bracket_str(self):
+        if not self.seed:
+            return str(self)
+        return "[%d] %s" %(self.seed, str(self))
+
     def num_competitors(self):
         return sum(map(lambda x: x is not None,
                 [self.lightweight, self.middleweight, self.heavyweight]))
@@ -480,6 +486,18 @@ class TeamRegistration(models.Model):
         for team in teams:
             team.seed = slot_assigner.slots_by_team.get(team)
         return teams
+
+    @classmethod
+    def get_teams_without_assigned_slot(cls, tournament_division):
+        """
+        Returns a list of teams that do not have a slot in the bracket.
+
+        Currently, the condition for this is TeamRegistration.seed is
+        empty.
+        """
+        return cls.objects.filter(
+                tournament_division=tournament_division, seed__isnull=True) \
+                .order_by('team__school__name', 'team__number')
 
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
@@ -526,11 +544,14 @@ class TeamMatch(models.Model):
     def __str__(self):
         return "Match #" + str(self.number)
 
-    def get_child_matches(self):
-        return TeamMatch.objects.filter(division=self.division,
-                round_num=round_num + 1)
+    def get_previous_round_matches(self):
+        upper_match_query = TeamMatch.objects.filter(division=self.division,
+                round_num=self.round_num + 1, round_slot=2*self.round_slot)
+        lower_match_query = TeamMatch.objects.filter(division=self.division,
+                round_num=self.round_num + 1, round_slot=2*self.round_slot + 1)
+        return [upper_match_query.first(), lower_match_query.first()]
 
-    def get_parent_match(self):
+    def get_next_round_match(self):
         try:
             return TeamMatch.objects.get(division=self.division,
                     round_num=self.round_num-1,
@@ -539,14 +560,15 @@ class TeamMatch(models.Model):
             return None
 
     def update_winning_team(self):
-        if self.round_num != 0:
-            parent_match = self.get_parent_match()
-            if self.round_slot % 2:
-                parent_match.red_team = self.winning_team
-            else:
-                parent_match.blue_team = self.winning_team
-            parent_match.clean()
-            parent_match.save()
+        parent_match = self.get_next_round_match()
+        if not parent_match:
+            return
+        if self.round_slot % 2:
+            parent_match.red_team = self.winning_team
+        else:
+            parent_match.blue_team = self.winning_team
+        parent_match.clean()
+        parent_match.save()
 
     def clean(self, *args, **kwargs):
         self.update_winning_team()
@@ -559,21 +581,21 @@ class TeamMatch(models.Model):
         seeds = {team.seed:team for team in seeded_teams}
         start_val = tournament_division.division.match_number_start_val()
         bracket = BracketGenerator(seeds, match_number_start_val=start_val)
-        for bracket_match in bracket.bfs(seeds=False):
+        for bracket_match in bracket:
             match = TeamMatch(division=tournament_division,
                     number=bracket_match.number,
                     round_num = bracket_match.round_num,
                     round_slot = bracket_match.round_slot)
 
             try:
-                match.blue_team = bracket_match.blue_team.team
+                match.blue_team = bracket_match.blue_team
             except AttributeError:
                 pass
             try:
                 bracket_match.red_team
             except: pass
             try:
-                match.red_team = bracket_match.red_team.team
+                match.red_team = bracket_match.red_team
             except AttributeError:
                 pass
 

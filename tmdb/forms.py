@@ -103,3 +103,9 @@ class ConfigurationSetting(forms.ModelForm):
         labels = {
             'value': ''
         }
+
+class TeamRegistrationSeedingForm(forms.Form):
+    seed = forms.IntegerField()
+    team_registration = forms.ModelChoiceField(
+            queryset=models.TeamRegistration.objects.all())
+    readonly_fields = ('seed',)

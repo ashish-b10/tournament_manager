@@ -3,6 +3,23 @@
 {% block title %} List of Teams {% endblock %}
 
 {% block content %}
+  <h2>Bracket for {{tournament_division}} at {{tournament_division.tournament}}</h2>
+  {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+        <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if unassigned_teams %}
+  <div class="alert alert-warning">The following teams are registered for this division but have not been added to the bracket:
+  <ul>
+    {% for team in unassigned_teams %}
+    <li>{{team}}</li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
   <div id="bracket_container">
   {% spaceless %}
   {% for bracket_column in bracket_columns %}
@@ -13,11 +30,29 @@
         <div class="bracket_cell_quarter upper_team_bracket_cell">
           <div class="upper_team_bracket_cell_data">
             <div class="match_num_data">{% if bracket_cell.number %}Match #{{bracket_cell.number}}{% endif %}</div>
-            <div class="upper_team_bracket_cell_text">{{bracket_cell.blue_team|default_if_none:""}}</div>
+            {% if bracket_cell.pk %}
+            <div class="upper_team_bracket_cell_text">
+              {% if bracket_cell.blue_team %}
+              <a class="add_match_link" title="Add match" href="{%url 'tmdb:add_upper_match' bracket_cell.pk %}">&#x21e6</a>{{bracket_cell.blue_team.bracket_str|default_if_none:""}}
+              {% else %}<br/>
+              {% endif %}
+              </div>
+            {% else %}
+            <div class="upper_team_bracket_cell_text"></div>
+            {% endif %}
           </div>
         </div>
         <div class="bracket_cell_quarter lower_team_bracket_cell">
-          <div class="lower_team_bracket_cell_text">{{bracket_cell.red_team|default_if_none:""}}</div>
+          {% if bracket_cell.pk %}
+          <div class="lower_team_bracket_cell_text">
+              {% if bracket_cell.red_team %}
+              <a class="add_match_link" title="Add match" href="{%url 'tmdb:add_lower_match' bracket_cell.pk %}">&#x21e6</a>{{bracket_cell.red_team.bracket_str|default_if_none:""}}
+              {% else %}<br/>
+              {% endif %}
+</div>
+          {% else %}
+          <div class="lower_team_bracket_cell_text"></div>
+          {% endif %}
         </div>
         <div class="bracket_cell_quarter bottom_quarter_cell"></div>
       </div>

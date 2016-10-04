@@ -4,6 +4,23 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from . import views
 
 urlpatterns = [
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<match_number>[0-9]+)/*'
+            + r'/match_sheet/*',
+            views.match_sheet, name='match_sheet'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/match_sheets/*',
+            views.match_sheet, name='match_sheet'),
+    url(r'^add_match/*/(?P<match_id>[0-9]+)/*/upper/*$',
+            views.add_upper_match, name='add_upper_match'),
+    url(r'^add_match/*/(?P<match_id>[0-9]+)/*/lower/*$',
+            views.add_lower_match, name='add_lower_match'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<division_slug>)[a-z0-9_-]+/*'
+            + r'/seeding/*$',
+            views.seeding, name='seeding'),
     url(r'^registration_credentials/*$', views.registration_credentials,
             name='registration_credentials'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/teams/*$',
