@@ -1,6 +1,7 @@
 cffi==1.7.0
 cryptography==1.4
 Django==1.10
+django-bootstrap-form==3.2.1
 django-enumfield==1.3b2
 django-extensions==1.6.1
 -e git+http://github.com/ashish-b10/ectc_registration.git@bcfd6bc5b38dd7c0d6b03b833c133947b3571025#egg=ectc_registration_exporter
