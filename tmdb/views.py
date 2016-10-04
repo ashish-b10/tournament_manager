@@ -35,13 +35,6 @@ def tournament_create(request):
         context = {}
         if edit_form.is_valid():
             edit_form.save()
-            tournament_slug = 'TEST'
-            instance = get_object_or_404(models.Tournament, slug=tournament_slug)
-            edit_form = forms.TournamentEditForm(instance=instance)
-            import_form = forms.TournamentImportForm(instance=instance)
-            context['import_form'] = import_form
-            delete_form = forms.TournamentDeleteForm(instance=instance)
-            context['delete_form'] = delete_form
             return HttpResponseRedirect(reverse('tmdb:index'))
     else:
         today = datetime.date.today()
