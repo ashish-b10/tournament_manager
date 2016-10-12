@@ -528,7 +528,7 @@ def match_sheet(request, tournament_slug, division_slug, match_number=None):
     if match_number:
         matches = [models.TeamMatch.objects.get(division=tournament_division,
                 number=match_number)]
-        filename += "-match_%d.pdf" %(match_number,)
+        filename += "-match_%s.pdf" %(match_number,)
     else:
         matches = models.TeamMatch.objects.filter(
                 division=tournament_division).order_by('number')
