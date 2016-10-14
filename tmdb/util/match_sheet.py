@@ -10,6 +10,15 @@ from tmdb import models
 
 __all__ = ["create_match_sheets"]
 
+def _get_round_str(round_num):
+    if round_num == 0:
+        return "Finals"
+    if round_num == 1:
+        return "Semi-Finals"
+    if round_num == 2:
+        return "Quarter-Finals"
+    return "Round of %d" %(2**(round_num+1),)
+
 def _get_match_sheet_template_fn():
     this_directory = os.path.dirname(__file__)
     return os.path.join(this_directory, 'match_sheet.pdf')
@@ -45,6 +54,8 @@ def _draw_match_sheet(match, female=False, a_team=False, b_team=False, c_team=Fa
                 2.4*inch + xoffset, 9.1*inch + yoffset)
     drawing_canvas.setFont('Helvetica', 24)
     drawing_canvas.drawString(1.7*inch, 7.8*inch, str(match.number))
+    drawing_canvas.drawString(1.0*inch, 10.7*inch,
+            _get_round_str(match.round_num))
     drawing_canvas.setFont('Helvetica', 18)
     if match.blue_team:
         drawing_canvas.drawString(.65*inch, 6.65*inch,
