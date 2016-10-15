@@ -408,8 +408,27 @@ def bracket(request, tournament_slug, division_slug):
             'bracket_columns': bracket_columns,
             'bracket_column_height': bracket_column_height,
             'unassigned_teams': unassigned_teams,
+            'lowest_bye_seed': get_lowest_bye_seed(tournament_division),
     }
     return render(request, 'tmdb/brackets.html', context)
+
+def get_lowest_bye_seed(tournament_division):
+    team_registrations = models.TeamRegistration.objects.filter(
+            tournament_division=tournament_division)
+    team_matches = models.TeamMatch.objects.filter(
+            division=tournament_division).order_by('-round_num')
+    if not team_matches:
+        return 1
+    max_round_num = team_matches[0].round_num
+    seeds = {tr.seed for tr in team_registrations if tr.seed}
+    for team_match in team_matches:
+        if team_match.round_num != max_round_num:
+            break
+        if team_match.blue_team:
+            seeds.remove(team_match.blue_team.seed)
+        if team_match.red_team:
+            seeds.remove(team_match.red_team.seed)
+    return max(seeds)
 
 def seeding(request, tournament_slug, division_slug, seed=None):
     if request.method == 'POST':
