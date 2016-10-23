@@ -421,6 +421,7 @@ def get_lowest_bye_seed(tournament_division):
         return 1
     max_round_num = team_matches[0].round_num
     seeds = {tr.seed for tr in team_registrations if tr.seed}
+    max_seed = max(seeds)
     for team_match in team_matches:
         if team_match.round_num != max_round_num:
             break
@@ -428,6 +429,8 @@ def get_lowest_bye_seed(tournament_division):
             seeds.remove(team_match.blue_team.seed)
         if team_match.red_team:
             seeds.remove(team_match.red_team.seed)
+    if not seeds:
+        return max_seed
     return max(seeds)
 
 def seeding(request, tournament_slug, division_slug, seed=None):
