@@ -1,5 +1,7 @@
 {% extends "tmdb/base.html" %}
 
+{% load bootstrap %}
+
 {% block main-content %}
 <h1>Edit Tournament</h1>
 
@@ -9,8 +11,8 @@
 <form action="{% url 'tmdb:tournament_create' %}" method="post">
 {% endif %}
     {% csrf_token %}
-    {{ edit_form.as_p }}
-    <input type="submit" value="Create/Edit Tournament"/>
+    {{ edit_form | bootstrap}}
+    <button type="submit" class="btn btn-default"> Create/Edit Tournament </button>
 </form>
 
 {% if import_form %}
@@ -19,8 +21,8 @@
     <p>Tournament has not been imported.</p>
     <form action="{% url 'tmdb:tournament_import' import_form.instance.slug %}" method="post">
         {% csrf_token %}
-        {{ import_form.as_p }}
-        <input type="submit" value="Import"/>
+        {{ import_form | bootstrap }}
+        <button type="submit" class="btn btn-default"> Import </button>
     </form>
     {% endif %}
 {% endif %}
@@ -30,3 +32,4 @@
 Click <a href="{% url 'tmdb:tournament_delete' edit_form.instance.slug %}">here</a> to delete this tournament.
 {% endif %}
 {% endblock %}
+

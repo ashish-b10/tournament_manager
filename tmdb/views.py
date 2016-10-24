@@ -18,7 +18,12 @@ def index(request, tournament_slug=None):
         delete_form = forms.TournamentDeleteForm()
         context['delete_form'] = delete_form
     else:
-        context = {'tournaments' : models.Tournament.objects.order_by('-date')}
+        today = datetime.date.today()
+        edit_form = forms.TournamentEditForm(initial={'date': today})
+        context = {
+            'edit_form': edit_form,
+            'tournaments': models.Tournament.objects.order_by('-date')
+        }
     return render(request, 'tmdb/index.html', context)
 
 def settings(request):
@@ -27,9 +32,12 @@ def settings(request):
 def tournament_create(request):
     if request.method == 'POST':
         edit_form = forms.TournamentEditForm(request.POST)
+        context = {}
         if edit_form.is_valid():
             edit_form.save()
-            return HttpResponseRedirect(reverse('tmdb:index'))
+            edit_form.instance.import_school_registrations()
+            return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
+                    args=(edit_form.instance.slug,)))
     else:
         today = datetime.date.today()
         edit_form = forms.TournamentEditForm(initial={'date': today})
@@ -401,8 +409,30 @@ def bracket(request, tournament_slug, division_slug):
             'bracket_columns': bracket_columns,
             'bracket_column_height': bracket_column_height,
             'unassigned_teams': unassigned_teams,
+            'lowest_bye_seed': get_lowest_bye_seed(tournament_division),
     }
     return render(request, 'tmdb/brackets.html', context)
+
+def get_lowest_bye_seed(tournament_division):
+    team_registrations = models.TeamRegistration.objects.filter(
+            tournament_division=tournament_division)
+    team_matches = models.TeamMatch.objects.filter(
+            division=tournament_division).order_by('-round_num')
+    if not team_matches:
+        return 1
+    max_round_num = team_matches[0].round_num
+    seeds = {tr.seed for tr in team_registrations if tr.seed}
+    max_seed = max(seeds)
+    for team_match in team_matches:
+        if team_match.round_num != max_round_num:
+            break
+        if team_match.blue_team:
+            seeds.remove(team_match.blue_team.seed)
+        if team_match.red_team:
+            seeds.remove(team_match.red_team.seed)
+    if not seeds:
+        return max_seed
+    return max(seeds)
 
 def seeding(request, tournament_slug, division_slug, seed=None):
     if request.method == 'POST':
@@ -584,7 +614,7 @@ def match_sheet(request, tournament_slug, division_slug, match_number=None):
     if match_number:
         matches = [models.TeamMatch.objects.get(division=tournament_division,
                 number=match_number)]
-        filename += "-match_%d.pdf" %(match_number,)
+        filename += "-match_%s.pdf" %(match_number,)
     else:
         matches = models.TeamMatch.objects.filter(
                 division=tournament_division).order_by('number')

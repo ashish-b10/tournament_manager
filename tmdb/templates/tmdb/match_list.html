@@ -40,7 +40,21 @@
               {% endif %}
               <td>{{team_match.form.ring_number}}</td>
               <td>{{team_match.form.winning_team}}</td>
-              <td> TO BE MODIFIED </td>
+              <td>
+                <div class="dropdown">
+                  <button class="btn dropdown-toggle" type="button" data-toggle="dropdown"> Unassigned
+                    <span class="caret"></span> 
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li> <a href="#"> In Holding </a></li>
+                    <li> <a href="#"> At Ring </a></li>
+                    <li> <a href="#"> Competing </a></li>
+                    <li> <a href="#"> Done </a></li>
+                    <li> <a href="#"> Warning </a></li>
+                    <li> <a href="#"> Ring Down </a></li>
+                  </ul>
+                </div> 
+              </td>
               <td><input class="btn btn-primary" type="submit" value="Modify"/></td>
               <td><a href="{%url 'tmdb:match_sheet' team_match.division.tournament.slug team_match.division.division.slug team_match.number %}"><input class="btn btn-primary" type="button" value="Print"/></a></td>
             </tr>
@@ -53,4 +67,5 @@
       <p>No matches are available</p>
     {% endif %}
   {% endfor %}
+
 {% endblock %}

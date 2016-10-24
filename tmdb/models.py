@@ -310,6 +310,7 @@ class SchoolRegistration(models.Model):
             for team_num, roster in enumerate(rosters):
                 if not roster:
                     continue
+                roster = [r.strip() for r in roster]
                 team = Team.objects.get_or_create(school=self.school,
                         division=division, number=team_num+1)[0]
                 tournament_division = TournamentDivision.objects.get(
