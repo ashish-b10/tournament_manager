@@ -1,0 +1,19 @@
+{% block content %}
+ <h2>Adding competitor to {{school}}</h2>
+ <form action="{% url 'tmdb:add_competitor' tournament.slug school_registration.school.slug %}" method="post">
+ {% csrf_token %}
+ <li>
+ Name: {{edit_form.name}}
+ </li>
+ <li>
+ Sex: {{edit_form.sex}}
+ </li>
+ <li>
+ Belt Rank: {{edit_form.belt_rank}}
+ </li>
+ <li>
+ Weight: {{edit_form.weight}}
+ </li>
+ <input class="btn btn-primary" type="submit" value="Add competitor"/>
+
+  {% endblock %}

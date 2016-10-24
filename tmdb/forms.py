@@ -25,6 +25,11 @@ class SchoolRegistrationImportForm(forms.Form):
             widget=forms.HiddenInput())
     reimport = forms.BooleanField(required=False, widget=forms.HiddenInput())
 
+class SchoolCompetitorForm(forms.ModelForm):
+    class Meta:
+        model = models.Competitor
+        fields = ['name', 'sex', 'belt_rank', 'weight']
+
 class MatchForm(forms.ModelForm):
     def clean(self):
         if 'ring_number' in self.changed_data:

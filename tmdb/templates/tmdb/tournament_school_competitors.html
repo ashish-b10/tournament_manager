@@ -2,6 +2,9 @@
 
 {% block main-content %}
 <h1>Competitor information for {{school_registration.school}} at {{school_registration.tournament.location}} on {{school_registration.tournament.date}}</h1>
+  <a href="{% url 'tmdb:add_competitor' tournament.slug school_registration.school.slug %}">
+  Add competitor</a>
+
   <h2>Competitors</h2>
   <table class="table table-striped">
     <thead>
@@ -16,6 +19,7 @@
       <td> {{competitor.sex_label}} </td>
       <td> {{competitor.belt_rank_label}} </td>
       <td> {{competitor.weight|default:"-"}} </td>
+      <td><a class="btn btn-primary" href="{% url 'tmdb:edit_competitor' tournament.slug school_registration.school.slug competitor.id %}">Edit</a>
     </tr>
   {% endfor %}
   </table>
