@@ -30,6 +30,11 @@ class SchoolCompetitorForm(forms.ModelForm):
         model = models.Competitor
         fields = ['name', 'sex', 'belt_rank', 'weight']
 
+class SchoolCompetitorDeleteForm(forms.ModelForm):
+    class Meta:
+        model = models.Competitor
+        fields = []
+
 class MatchForm(forms.ModelForm):
     def clean(self):
         if 'ring_number' in self.changed_data:

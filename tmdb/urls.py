@@ -13,6 +13,10 @@ urlpatterns = [
             + r'/edit_competitor/*/(?P<competitor_id>[0-9]+)',
             views.edit_competitor, name='edit_competitor'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/delete_competitor/*/(?P<competitor_id>[0-9]+)',
+            views.delete_competitor, name='delete_competitor'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<division_slug>[a-z0-9_-]+)/*'
             + r'/(?P<match_number>[0-9]+)/*'
             + r'/match_sheet/*',

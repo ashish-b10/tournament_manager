@@ -476,10 +476,9 @@ def add_competitor(request, tournament_slug, school_slug):
     if request.method == 'POST':
         edit_form = forms.SchoolCompetitorForm(request.POST)
         if edit_form.is_valid():
-            if request.POST['weight'] is not int:
+            weight = request.POST['weight']
+            if len(weight) == 0:
                 weight = None
-            else:
-                weight = request.POST['weight']
             Competitor = models.Competitor.objects.get_or_create(name=request.POST['name'], registration=school_registration, defaults={ 'sex': request.POST['sex'],'belt_rank': request.POST['belt_rank'], 'weight': weight})
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug,
                     school_slug,)))
@@ -489,23 +488,26 @@ def add_competitor(request, tournament_slug, school_slug):
         context['edit_form'] = edit_form
     return render(request, 'tmdb/add_competitor.html', context)
 
-    # def tournament_edit(request, tournament_slug):
-    # instance = get_object_or_404(models.Tournament, slug=tournament_slug)
-    # context = {}
-    # if request.method == 'POST':
-    #     edit_form = forms.TournamentEditForm(request.POST, instance=instance)
-    #     if edit_form.is_valid():
-    #         tournament = edit_form.save()
-    #         return HttpResponseRedirect(reverse('tmdb:index'))
-    # else:
-    #     edit_form = forms.TournamentEditForm(instance=instance)
-    #     import_form = forms.TournamentImportForm(instance=instance)
-    #     context['import_form'] = import_form
-    #     delete_form = forms.TournamentDeleteForm(instance=instance)
-    #     context['delete_form'] = delete_form
-    # context['edit_form'] = edit_form
-    # return render(request, 'tmdb/tournament_edit.html', context)
-
+def delete_competitor(request, tournament_slug, school_slug, competitor_id):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    school = get_object_or_404(models.School, slug=school_slug)
+    school_registration = get_object_or_404(models.SchoolRegistration,
+            tournament=tournament, school=school)
+    instance = models.Competitor.objects.get(pk = competitor_id)
+    context = {}
+    context['tournament'] = tournament
+    context['school'] = school
+    context['school_registration'] = school_registration
+    context['competitor'] = instance
+    if request.method == 'POST':
+        delete_form = forms.SchoolCompetitorDeleteForm(request.POST, instance=instance)
+        if delete_form.is_valid():
+            instance.delete()
+            return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug,
+                    school_slug,)))
+    else:
+        delete_form = forms.SchoolCompetitorDeleteForm(instance = instance)
+    context['delete_form'] = delete_form
 
 def edit_competitor(request, tournament_slug, school_slug, competitor_id):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
