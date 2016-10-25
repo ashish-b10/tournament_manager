@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'ectc_tm_server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-from .db_settings_sqlite import DATABASES
+from .db_settings import DATABASES
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
