@@ -20,6 +20,33 @@ class TournamentImportForm(forms.ModelForm):
         model = models.Tournament
         fields = []
 
+class TeamRegistrationDeleteForm(forms.ModelForm):
+    class Meta:
+        model = models.TeamRegistration
+        fields = []
+
+class TeamRegistrationForm(forms.ModelForm):
+    def __init__(self, school, school_registration, used_competitors, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        lst = ['lightweight', 'middleweight', 'heavyweight', 'alternate1', 'alternate2']
+
+        for key in self.fields:
+            if key in lst:
+                self.fields[key].required = False
+
+
+        self.fields['team'].queryset = models.Team.objects.filter(school=school, registrations=None) #division= tournament_division.division)
+        self.fields['lightweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
+        self.fields['middleweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
+        self.fields['heavyweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
+        self.fields['alternate1'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
+        self.fields['alternate2'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
+
+    class Meta:
+        model = models.TeamRegistration
+        exclude = ['seed', 'points']
+
 class SchoolRegistrationImportForm(forms.Form):
     school_registrations = forms.CharField(required=True,
             widget=forms.HiddenInput())

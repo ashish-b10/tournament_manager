@@ -454,6 +454,16 @@ class TeamRegistration(models.Model):
             return ""
         return "(" + lightweight + middleweight + heavyweight + ")"
 
+    def get_competitors_ids(self):
+        competitors = []
+        if self.lightweight:
+            competitors.append(self.lightweight.id)
+        if self.middleweight:
+            competitors.append(self.middleweight.id)
+        if self.heavyweight:
+            competitors.append(self.heavyweight.id)
+        return competitors
+
     def __str__(self):
         competitors_str = self.__get_competitors_str()
         if competitors_str:

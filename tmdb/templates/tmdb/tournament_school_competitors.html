@@ -5,10 +5,12 @@
 {% block main-content %}
 <h1>Competitor information for {{school_registration.school}} at {{school_registration.tournament.location}} on {{school_registration.tournament.date}}</h1>
 
-  <a href="{% url 'tmdb:add_competitor' tournament.slug school_registration.school.slug %}">
+  <h2>Competitors</h2>
+  <h1></h1>
+
+   <a class="btn btn-primary" href="{% url 'tmdb:add_competitor' tournament.slug school_registration.school.slug %}">
   Add competitor</a>
 
-  <h2>Competitors</h2>
   <table class="table table-striped">
     <thead>
     <th> Name </th>
@@ -22,30 +24,8 @@
       <td> {{competitor.sex_label}} </td>
       <td> {{competitor.belt_rank_label}} </td>
       <td> {{competitor.weight|default:"-"}} </td>
-      <td><a class="btn btn-primary" href="{% url 'tmdb:edit_competitor' tournament.slug school_registration.school.slug competitor.id %}">Edit</a></td>
-
-      <td><button type='button' class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteCompetitorModal{{competitor.id}}"%}">Delete</button>
-
-      <!-- <div class="modal" id="confirmDeleteCompetitortModal{{competitor.name}}" role="dialog" tabindex="-1"> -->
-        <!-- <div class="modal-dialog" role="document"> -->
-          <!-- <div class="modal-content"> -->
-            <!-- <div class="modal-header"> -->
-              <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> -->
-              <!-- <h4 class="modal-title" id="deleteCompetitorModalLabel">Delete Competitor</h4> -->
-            <!-- </div> -->
-            <!-- <div class="modal-body"> -->
-              <!-- <p> Are you sure you want to delete the competitor ({{competitor.name}} from {{school_registration.school}})? </p> -->
-            <!-- </div> -->
-            <!-- <div class="modal-footer">
-              <form action="{% url 'tmdb:delete_competitor' tournament.slug school_registration.school.slug competitor.id %}" method="post">
-                  {% csrf_token %}
-                  {{ delete_form }}
-                  <button type="submit" class="btn btn-danger">Delete Competitor</button>
-              <!-- </form> -->
-            <!-- </div>  -->
-          <!-- </div> -->
-        <!-- </div> -->
-      <td>
+      <td><a class="btn btn-primary" href="{% url 'tmdb:edit_competitor' tournament.slug school_registration.school.slug competitor.id %}">Edit</a>
+      <button type='button' class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteCompetitorModal{{competitor.id}}"%}">Delete</button>
         <!-- Modal to confirm that you want to delete -->
         <div class="modal" id="confirmDeleteCompetitorModal{{competitor.id}}" role="dialog" tabindex="-1">
           <div class="modal-dialog" role="document">
@@ -67,7 +47,6 @@
             </div>
           </div>
         </div>
-      </td>
 
       </div>
       </td>
@@ -76,6 +55,9 @@
   {% endfor %}
   </table>
   <h2>Teams</h2>
+    <h1></h1>
+   <a class="btn btn-primary" href="{% url 'tmdb:team_add' tournament.slug school_registration.school.slug %}">
+  Add team</a>
   <table class="table table-striped">
     <thead>
     <th> Team Name </th>
@@ -93,6 +75,31 @@
       <td> {{team_registration.heavyweight.name|default:"-"}} </td>
       <td> {{team_registration.alternate1.name|default:"-"}} </td>
       <td> {{team_registration.alternate2.name|default:"-"}} </td>
+      <td> <a class="btn btn-primary" href="{% url }">Edit</a>
+      <button type='button' class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteTeamModal{{team_registration.id}}"%}">Delete</button></td>
+      <!-- Modal to confirm that you want to delete -->
+        <div class="modal" id="confirmDeleteTeamModal{{team_registration.id}}" role="dialog" tabindex="-1">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deleteTeamModalLabel">Delete Team</h4>
+              </div>
+              <div class="modal-body">
+                <p> Are you sure you want to delete team {{team_registration}}? </p>
+              </div>
+              <div class="modal-footer">
+                <form action="{% url 'tmdb:team_delete' tournament.slug school_registration.school.slug team_registration.team.division.slug team_registration.team.number %}" method="post">
+                    {% csrf_token %}
+                    {{ delete_form }}
+                    <button type="submit" class="btn btn-danger">Delete Team</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
     </tr>
   {% endfor %}
   </table>

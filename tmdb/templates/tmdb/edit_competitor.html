@@ -1,4 +1,6 @@
-{% block content %}
+{% extends "tmdb/base.html" %}
+
+{% block main-content %}
  <h2>Editing competitor {{name}} from {{school}}</h2>
   <form action="{% url 'tmdb:edit_competitor' tournament.slug school_registration.school.slug competitor.id %}" method="post">
   <input type="hidden" name="competitor_id" value="{{instance.pk}}"/>
