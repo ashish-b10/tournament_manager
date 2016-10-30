@@ -1,4 +1,6 @@
+{% if school_registration %}
 <a class="btn btn-primary" href="{% url 'tmdb:team_add' tournament.slug school_registration.school.slug %}">Add team</a>
+{% endif %}
 <table class="table table-striped">
   <thead>
   <th> Team Name </th>
@@ -16,8 +18,9 @@
     <td> {{team_registration.heavyweight.name|default:"-"}} </td>
     <td> {{team_registration.alternate1.name|default:"-"}} </td>
     <td> {{team_registration.alternate2.name|default:"-"}} </td>
-    <td> <a class="btn btn-primary" href="{% url }">Edit</a>
-    <button type='button' class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteTeamModal{{team_registration.id}}"%}">Delete</button></td>
+    <td> <a class="btn btn-primary" href="{% url }">Edit</a></td>
+    <td>
+    <button type='button' class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteTeamModal{{team_registration.id}}">Delete</button></td>
     <!-- Modal to confirm that you want to delete -->
       <div class="modal" id="confirmDeleteTeamModal{{team_registration.id}}" role="dialog" tabindex="-1">
         <div class="modal-dialog" role="document">
@@ -30,7 +33,7 @@
               <p> Are you sure you want to delete team {{team_registration}}? </p>
             </div>
             <div class="modal-footer">
-              <form action="{% url 'tmdb:team_delete' tournament.slug school_registration.school.slug team_registration.team.division.slug team_registration.team.number %}" method="post">
+              <form action="{% url 'tmdb:team_delete' tournament.slug team_registration.team.school.slug team_registration.team.division.slug team_registration.team.number %}" method="post">
                   {% csrf_token %}
                   {{ delete_form }}
                   <button type="submit" class="btn btn-danger">Delete Team</button>

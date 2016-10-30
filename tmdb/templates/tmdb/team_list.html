@@ -3,70 +3,11 @@
 {% block title %} List of Teams {% endblock %}
 
 {% block content %}
-    {% for division, teams in division_teams %}
+  {% for division, teams in division_teams %}
 
     <h2>{{division}}</h2>
-    <div class="content">
-      <div id="main_table">
-          {% if teams %}
-          <table class="table team_table table-striped">
-            <tr>
-              <th>Team Name</th>
-              <th>Lightweight</th>
-              <th>Middleweight</th>
-              <th>Heavyweight</th>
-              <th>Alternate 1</th>
-              <th>Alternate 2</th>
-            </tr>
-            {% for team in teams %}
-            <tr>
-              <td>
-                {{team}}
-              </td>
-              <td>
-                {% if team.lightweight %}
-                {{ team.lightweight }}
-                {% else %}
-                -
-                {% endif %}
-              </td>
-              <td>
-                {% if team.middleweight %}
-                {{ team.middleweight }}
-                {% else %}
-                -
-                {% endif %}
-              </td>
-              <td>
-                {% if team.heavyweight %}
-                {{ team.heavyweight }}
-                {% else %}
-                -
-                {% endif %}
-              </td>
-              <td>
-                {% if team.alternate1 %}
-                {{ team.alternate1 }}
-                {% else %}
-                -
-                {% endif %}
-              </td>
-              <td>
-                {% if team.alternate2 %}
-                {{ team.alternate2 }}
-                {% else %}
-                -
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </table>
-          {% else %}
-          <p>No teams in this division</p>
-          {% endif %}
-      </div>
-      {% endfor %}
-    </div>
+    {% include "tmdb/snippets/team_list.html" with tournament=tournament team_registrations=teams %}
+  {% endfor %}
 
 {% endblock %}
 
