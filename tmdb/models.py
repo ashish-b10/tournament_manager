@@ -510,6 +510,11 @@ class TeamRegistration(models.Model):
                 tournament_division=tournament_division, seed__isnull=True) \
                 .order_by('team__school__name', 'team__number')
 
+    @staticmethod
+    def order_queryset(query_set):
+        return query_set.order_by('team__school__name',
+                'tournament_division__division', 'team__number')
+
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
     can have multiple CompetitorMatches.

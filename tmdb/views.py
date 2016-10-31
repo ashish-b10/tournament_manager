@@ -126,10 +126,10 @@ def tournament_school(request, tournament_slug, school_slug):
             tournament=tournament, school=school)
     competitors = models.Competitor.objects.filter(
             registration=school_registration).order_by('name')
-    team_registrations = models.TeamRegistration.objects.filter(
-            tournament_division__tournament=tournament,
-            team__school=school).order_by(
-                    'tournament_division__division', 'team__number')
+    team_registrations = models.TeamRegistration.order_queryset(
+            models.TeamRegistration.objects.filter(
+                    tournament_division__tournament=tournament,
+                    team__school=school))
     context = {
         'tournament': tournament,
         'school_registration': school_registration,
@@ -279,14 +279,14 @@ def team_list(request, tournament_slug, division_slug=None):
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament__slug=tournament_slug)
     if division_slug is not None:
-        tournament_divisions = tournament_divisions.filter(
-                division__slug=division_slug)
+        division = get_object_or_404(models.Division, slug=division_slug)
+        tournament_divisions = tournament_divisions.filter(division=division)
 
     division_teams = []
     for tournament_division in tournament_divisions:
-        teams = models.TeamRegistration.objects.filter(
-                tournament_division=tournament_division).order_by(
-                        'school').order_by('team__number')
+        teams = models.TeamRegistration.order_queryset(
+                models.TeamRegistration.objects.filter(
+                        tournament_division=tournament_division))
         division_teams.append((tournament_division, teams))
 
     context = {
@@ -330,9 +330,9 @@ def seedings(request, tournament_slug, division_slug):
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
         tournament_division = get_object_or_404(models.TournamentDivision,
                 tournament=tournament, division__slug=division_slug)
-        teams = models.TeamRegistration.objects.filter(
-                tournament_division=tournament_division).order_by(
-                        'team__school__name', 'team__number')
+        teams = models.TeamRegistration.order_queryset(
+                models.TeamRegistration.objects.filter(
+                        tournament_division=tournament_division))
         seed_forms = []
         teams = list(teams)
         for team in teams:
@@ -373,8 +373,9 @@ def team_points(request, tournament_slug, division_slug):
         return HttpResponseRedirect(reverse('tmdb:seedings', args=(
                 tournament_slug, division_slug)))
     else:
-        teams = models.TeamRegistration.objects.filter(
-                tournament_division=tournament_division).order_by('team__number').order_by('team__school')
+        teams = models.TeamRegistration.order_queryset(
+                models.TeamRegistration.objects.filter(
+                    tournament_division=tournament_division))
         points_forms = []
         for team in teams:
             points_form = forms.TeamPointsForm(
