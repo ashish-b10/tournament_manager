@@ -10,5 +10,5 @@
   {% include "tmdb/snippets/competitor_list.html" with competitors=competitors tournament=tournament school_registration=school_registration only %}
   <h2>Teams</h2>
   <h1></h1>
-  {% include "tmdb/snippets/team_list.html" with team_registrations=team_registrations tournament=tournament only %}
+  {% include "tmdb/snippets/team_list.html" with team_registrations=team_registrations tournament=tournament school_registration=school_registration only %}
 {% endblock %}
