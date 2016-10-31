@@ -6,7 +6,7 @@
   {% for division, teams in division_teams %}
 
     <h2>{{division}}</h2>
-    {% include "tmdb/snippets/team_list.html" with tournament=tournament team_registrations=teams %}
+    {% include "tmdb/snippets/team_list.html" with tournament=tournament team_registrations=teams csrf_token=csrf_token %}
   {% endfor %}
 
 {% endblock %}
