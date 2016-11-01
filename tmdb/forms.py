@@ -35,8 +35,7 @@ class TeamRegistrationForm(forms.ModelForm):
             if key in lst:
                 self.fields[key].required = False
 
-
-        self.fields['team'].queryset = models.Team.objects.filter(school=school, registrations=None) #division= tournament_division.division)
+        self.fields['team'].queryset = models.Team.objects.filter(school=school, registrations__in=[None, kwargs['instance'].tournament_division]) 
         self.fields['lightweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
         self.fields['middleweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
         self.fields['heavyweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)

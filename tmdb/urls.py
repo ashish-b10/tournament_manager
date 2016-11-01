@@ -21,15 +21,15 @@ urlpatterns = [
 
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<school_slug>[a-z0-9_-]+)/*'
-            + r'/delete_team/*/(?P<division_slug>[a-z0-9_-]+)'
+            + r'/delete_team/*/(?P<division_slug>[a-z0-9_-]+)/*'
             + r'/(?P<team_number>[0-9]+)',
             views.team_delete, name='team_delete'),
 
-    # url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-    #         + r'/(?P<school_slug>[a-z0-9_-]+)/*'
-    #         + r'/edit_team/*/(?P<division_slug>[a-z0-9_-]+)'
-    #         + r'/(?P<team_number>[0-9]+)',
-    #         views.edit_team, name='team_edit'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/edit_team/*/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<team_number>[0-9]+)',
+            views.team_edit, name='team_edit'),
 
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<school_slug>[a-z0-9_-]+)/*'
