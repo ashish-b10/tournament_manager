@@ -551,6 +551,8 @@ class TeamMatch(models.Model):
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
     winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
             related_name="winning_team")
+    in_holding = models.BooleanField(default=False)
+    
     class Meta:
         unique_together = (
                 ("division", "round_num", "round_slot"),
@@ -559,6 +561,15 @@ class TeamMatch(models.Model):
 
     def __str__(self):
         return "Match #" + str(self.number)
+
+    def status(self):
+    	if self.winning_team:
+    		return "Complete"
+    	elif self.ring_number:
+    		return "At ring " + str(self.ring_number)
+    	elif self.in_holding:
+    		return "Report to holding"
+    	return "----"
 
     def get_previous_round_matches(self):
         upper_match_query = TeamMatch.objects.filter(division=self.division,

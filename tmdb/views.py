@@ -231,6 +231,33 @@ def team_delete(request, tournament_slug, school_slug, division_slug, team_numbe
             instance.delete()
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
 
+def team_edit(request, tournament_slug, school_slug, division_slug, team_number):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    school = get_object_or_404(models.School, slug=school_slug)
+    school_registration = models.SchoolRegistration.objects.get(school=school, tournament=tournament)
+    division = get_object_or_404(models.Division, slug=division_slug)
+    tournament_div = models.TournamentDivision.objects.get(tournament=tournament, division=division)
+    team = models.Team.objects.get(school= school, division=division, number=team_number)
+    instance = models.TeamRegistration.objects.get(tournament_division=tournament_div, team=team)
+    context = {}
+    context['school'] = school
+    context['school_registration'] = school_registration
+    context['tournament'] = tournament
+    context['instance'] = instance
+    used_competitors = []
+    if request.method == 'POST':
+        edit_form = forms.TeamRegistrationForm(school, school_registration, used_competitors, request.POST, instance=instance)
+        if edit_form.is_valid():
+            edit_form.save()
+            return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
+    else:
+        for i in models.TeamRegistration.objects.all().exclude(pk=instance.id):
+            used_competitors.extend(i.get_competitors_ids())
+        edit_form = forms.TeamRegistrationForm(school, school_registration, used_competitors, instance=instance)
+        context['edit_form'] = edit_form
+
+    return render(request, 'tmdb/team_edit.html', context)
+
 ## DOESNT WORK YET
 def team_add(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -585,8 +612,8 @@ def edit_competitor(request, tournament_slug, school_slug, competitor_id):
         edit_form = forms.SchoolCompetitorForm(request.POST, instance=instance)
         if edit_form.is_valid():
             competitor = edit_form.save()
-            import pdb
-            pdb.set_trace()
+            # import pdb
+            # pdb.set_trace()
             return HttpResponseRedirect(reverse('tmdb:tournament_school', args = (tournament_slug, school_slug)))
     else:
         edit_form = forms.SchoolCompetitorForm(instance = instance)

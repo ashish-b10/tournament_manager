@@ -35,8 +35,10 @@ class TeamRegistrationForm(forms.ModelForm):
             if key in lst:
                 self.fields[key].required = False
 
-
-        self.fields['team'].queryset = models.Team.objects.filter(school=school, registrations=None) #division= tournament_division.division)
+        if len(kwargs) != 0:
+            self.fields['team'].queryset = models.Team.objects.filter(school=school, registrations__in=[None, kwargs['instance'].tournament_division])
+        else:
+            self.fields['team'].queryset = models.Team.objects.filter(school=school, registrations=None)
         self.fields['lightweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
         self.fields['middleweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
         self.fields['heavyweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
@@ -70,7 +72,7 @@ class MatchForm(forms.ModelForm):
 
     class Meta:
         model = models.TeamMatch
-        fields = ['ring_number', 'ring_assignment_time', 'winning_team']
+        fields = ['ring_number', 'ring_assignment_time', 'winning_team', 'in_holding']
 
 class TeamPointsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

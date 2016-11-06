@@ -17,8 +17,10 @@
             <th>Ring No.</th>
             <th>Winning Team</th>
             <th> Status </th>
+            <th> Holding Status </th>
             <th> Modify </th>
             <th>Match Sheet</th>
+
           </tr>
         </thead>
         <tbody>
@@ -40,7 +42,9 @@
               {% endif %}
               <td>{{team_match.form.ring_number}}</td>
               <td>{{team_match.form.winning_team}}</td>
-              <td>
+              <td>{{team_match.status}}</td>
+              <td>{{team_match.form.in_holding}}</td>
+<!--               <td>
                 <div class="dropdown">
                   <button class="btn dropdown-toggle" type="button" data-toggle="dropdown"> Unassigned
                     <span class="caret"></span> 
@@ -54,7 +58,7 @@
                     <li> <a href="#"> Ring Down </a></li>
                   </ul>
                 </div> 
-              </td>
+              </td> -->
               <td><input class="btn btn-primary" type="submit" value="Modify"/></td>
               <td><a href="{%url 'tmdb:match_sheet' team_match.division.tournament.slug team_match.division.division.slug team_match.number %}"><input class="btn btn-primary" type="button" value="Print"/></a></td>
             </tr>
