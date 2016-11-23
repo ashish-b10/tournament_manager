@@ -432,15 +432,15 @@ class TeamRegistration(models.Model):
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
     points = models.PositiveIntegerField(null=True, blank=True)
     lightweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="lightweight")
+            related_name="lightweight", on_delete=models.deletion.SET_NULL)
     middleweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="middleweight")
+            related_name="middleweight", on_delete=models.deletion.SET_NULL)
     heavyweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="heavyweight")
+            related_name="heavyweight", on_delete=models.deletion.SET_NULL)
     alternate1 = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="alternate1")
+            related_name="alternate1", on_delete=models.deletion.SET_NULL)
     alternate2 = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="alternate2")
+            related_name="alternate2", on_delete=models.deletion.SET_NULL)
 
     class Meta:
         unique_together = (('tournament_division', 'team'),
