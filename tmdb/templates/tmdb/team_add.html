@@ -1,0 +1,11 @@
+{% extends "tmdb/base.html" %}
+
+{% block main-content %}
+<h2>Adding team to {{school}}</h2>
+<form action="{% url 'tmdb:team_add' tournament.slug school.slug %}" method="post">
+  {% csrf_token %}
+  {{form.as_p}}
+  <input class="btn btn-primary" type="submit" value="Add team"/>
+</form>
+
+{% endblock %}

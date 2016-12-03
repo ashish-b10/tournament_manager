@@ -1,20 +1,12 @@
-{% block content %}
- <h2>Editing competitor {{name}} from {{school}}</h2>
+{% extends "tmdb/base.html" %}
+
+{% block main-content %}
+<h2>Editing competitor {{name}} from {{school}}</h2>
   <form action="{% url 'tmdb:edit_competitor' tournament.slug school_registration.school.slug competitor.id %}" method="post">
   <input type="hidden" name="competitor_id" value="{{instance.pk}}"/>
- {% csrf_token %}
- <li>
- Name: {{edit_form.name}}
- </li>
- <li>
- Sex: {{edit_form.sex}}
- </li>
- <li>
- Belt Rank: {{edit_form.belt_rank}}
- </li>
- <li>
- Weight: {{edit_form.weight}}
- </li>
- <input class="btn btn-primary" type="submit" value="Save changes"/>
+  {% csrf_token %}
+  {{edit_form.as_p}}
+  <input class="btn btn-primary" type="submit" value="Save changes"/>
+</form>
 
-  {% endblock %}
+{% endblock %}

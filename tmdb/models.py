@@ -432,15 +432,15 @@ class TeamRegistration(models.Model):
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
     points = models.PositiveIntegerField(null=True, blank=True)
     lightweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="lightweight")
+            related_name="lightweight", on_delete=models.deletion.SET_NULL)
     middleweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="middleweight")
+            related_name="middleweight", on_delete=models.deletion.SET_NULL)
     heavyweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="heavyweight")
+            related_name="heavyweight", on_delete=models.deletion.SET_NULL)
     alternate1 = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="alternate1")
+            related_name="alternate1", on_delete=models.deletion.SET_NULL)
     alternate2 = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="alternate2")
+            related_name="alternate2", on_delete=models.deletion.SET_NULL)
 
     class Meta:
         unique_together = (('tournament_division', 'team'),
@@ -453,6 +453,16 @@ class TeamRegistration(models.Model):
         if not lightweight and not middleweight and not heavyweight:
             return ""
         return "(" + lightweight + middleweight + heavyweight + ")"
+
+    def get_competitors_ids(self):
+        competitors = []
+        if self.lightweight:
+            competitors.append(self.lightweight.id)
+        if self.middleweight:
+            competitors.append(self.middleweight.id)
+        if self.heavyweight:
+            competitors.append(self.heavyweight.id)
+        return competitors
 
     def __str__(self):
         competitors_str = self.__get_competitors_str()
@@ -500,6 +510,11 @@ class TeamRegistration(models.Model):
                 tournament_division=tournament_division, seed__isnull=True) \
                 .order_by('team__school__name', 'team__number')
 
+    @staticmethod
+    def order_queryset(query_set):
+        return query_set.order_by('team__school__name',
+                'tournament_division__division', 'team__number')
+
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
     can have multiple CompetitorMatches.
@@ -536,6 +551,8 @@ class TeamMatch(models.Model):
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
     winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
             related_name="winning_team")
+    in_holding = models.BooleanField(default=False)
+    
     class Meta:
         unique_together = (
                 ("division", "round_num", "round_slot"),
@@ -544,6 +561,15 @@ class TeamMatch(models.Model):
 
     def __str__(self):
         return "Match #" + str(self.number)
+
+    def status(self):
+    	if self.winning_team:
+    		return "Complete"
+    	elif self.ring_number:
+    		return "At ring " + str(self.ring_number)
+    	elif self.in_holding:
+    		return "Report to holding"
+    	return "----"
 
     def get_previous_round_matches(self):
         upper_match_query = TeamMatch.objects.filter(division=self.division,

@@ -1,0 +1,12 @@
+{% extends "tmdb/base.html" %}
+
+{% block main-content %}
+<h2>Editing team {{instance.tournament_division}}{{instance.team.number}} from {{school}}</h2>
+<form action="{% url 'tmdb:team_edit' tournament.slug school_registration.school.slug instance.tournament_division.division.slug instance.team.number %}" method="post">
+  <input type="hidden" name="team_registration.id" value="{{instance.pk}}"/>
+  {% csrf_token %}
+  {{edit_form.as_p}}
+  <input class="btn btn-primary" type="submit" value="Save changes"/>
+</form>
+
+{% endblock %}

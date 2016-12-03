@@ -126,10 +126,10 @@ def tournament_school(request, tournament_slug, school_slug):
             tournament=tournament, school=school)
     competitors = models.Competitor.objects.filter(
             registration=school_registration).order_by('name')
-    team_registrations = models.TeamRegistration.objects.filter(
-            tournament_division__tournament=tournament,
-            team__school=school).order_by(
-                    'tournament_division__division', 'team__number')
+    team_registrations = models.TeamRegistration.order_queryset(
+            models.TeamRegistration.objects.filter(
+                    tournament_division__tournament=tournament,
+                    team__school=school))
     context = {
         'tournament': tournament,
         'school_registration': school_registration,
@@ -207,7 +207,7 @@ def match_list(request, tournament_slug, division_slug=None):
                 match_teams.append(team_match.blue_team.pk)
             if team_match.red_team is not None:
                 match_teams.append(team_match.red_team.pk)
-            team_match.form.fields['winning_team'].queryset = \
+            team_match.form.fields['winning_team'].queryset =  \
                     models.TeamRegistration.objects.filter(pk__in=match_teams)
         matches.append((division, team_matches))
     context = {
@@ -216,19 +216,104 @@ def match_list(request, tournament_slug, division_slug=None):
     }
     return render(request, 'tmdb/match_list.html', context)
 
+def team_delete(request, tournament_slug, school_slug, division_slug, team_number):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    school = get_object_or_404(models.School, slug=school_slug)
+    division = get_object_or_404(models.Division, slug=division_slug)
+    tournament_div = models.TournamentDivision.objects.get(tournament=tournament, division=division)
+    team = models.Team.objects.get(school= school, division=division, number=team_number)
+    instance = models.TeamRegistration.objects.get(tournament_division=tournament_div, team=team)
+    context = {}
+    context['team'] = instance
+    if request.method == 'POST':
+        delete_form = forms.TeamRegistrationDeleteForm(request.POST, instance=instance)
+        if delete_form.is_valid():
+            instance.delete()
+            return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
+
+def team_edit(request, tournament_slug, school_slug, division_slug, team_number):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    school = get_object_or_404(models.School, slug=school_slug)
+    school_registration = models.SchoolRegistration.objects.get(school=school, tournament=tournament)
+    division = get_object_or_404(models.Division, slug=division_slug)
+    tournament_div = models.TournamentDivision.objects.get(tournament=tournament, division=division)
+    team = models.Team.objects.get(school= school, division=division, number=team_number)
+    instance = models.TeamRegistration.objects.get(tournament_division=tournament_div, team=team)
+    context = {}
+    context['school'] = school
+    context['school_registration'] = school_registration
+    context['tournament'] = tournament
+    context['instance'] = instance
+    used_competitors = []
+    if request.method == 'POST':
+        edit_form = forms.TeamRegistrationForm(school, school_registration, used_competitors, request.POST, instance=instance)
+        if edit_form.is_valid():
+            edit_form.save()
+            return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
+    else:
+        for i in models.TeamRegistration.objects.all().exclude(pk=instance.id):
+            used_competitors.extend(i.get_competitors_ids())
+        edit_form = forms.TeamRegistrationForm(school, school_registration, used_competitors, instance=instance)
+        context['edit_form'] = edit_form
+
+    return render(request, 'tmdb/team_edit.html', context)
+
+## DOESNT WORK YET
+def team_add(request, tournament_slug, school_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    school = get_object_or_404(models.School, slug=school_slug)
+    school_registration = models.SchoolRegistration.objects.get(school=school, tournament=tournament)
+    context = {}
+    context['school'] = school
+    context['school_registration'] = school_registration
+    context['tournament'] = tournament
+    used_competitors = []
+    if request.method == 'POST':
+        form = forms.TeamRegistrationForm(school, school_registration, used_competitors, request.POST)
+        if form.is_valid():
+            tournament_division = models.TournamentDivision.objects.get(pk=request.POST['tournament_division'])
+            team = models.Team.objects.get(pk=request.POST['team'])
+            light = request.POST['lightweight']
+            middle = request.POST['middleweight']
+            heavy = request.POST['heavyweight']
+            a1 = request.POST['alternate1']
+            a2 = request.POST['alternate2']
+
+            if light: light = models.Competitor.objects.get(pk= int(light))
+            else: light = None
+            if middle: middle = models.Competitor.objects.get(pk= int(middle))
+            else: middle = None
+            if heavy: heavy = models.Competitor.objects.get(pk= int(heavy))
+            else: heavy = None
+            if a1: a1 = models.Competitor.objects.get(pk= int(a1))
+            else: a1 = None
+            if a2 : a2 = models.Competitor.objects.get(pk= int(a2))
+            else: a2 = None
+
+            TeamReg = models.TeamRegistration.objects.create(tournament_division=tournament_division, team=team,lightweight=light, middleweight=middle, heavyweight=heavy, alternate1=a1, alternate2=a2)
+            return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug,school_slug,)))
+    else:
+        for i in models.TeamRegistration.objects.all():
+            used_competitors.extend(i.get_competitors_ids())
+
+        form = forms.TeamRegistrationForm(school, school_registration, used_competitors) #tournament_division)
+        context['form'] = form
+
+    return render(request, 'tmdb/team_add.html', context)
+
 def team_list(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament__slug=tournament_slug)
     if division_slug is not None:
-        tournament_divisions = tournament_divisions.filter(
-                division__slug=division_slug)
+        division = get_object_or_404(models.Division, slug=division_slug)
+        tournament_divisions = tournament_divisions.filter(division=division)
 
     division_teams = []
     for tournament_division in tournament_divisions:
-        teams = models.TeamRegistration.objects.filter(
-                tournament_division=tournament_division).order_by(
-                        'school').order_by('team__number')
+        teams = models.TeamRegistration.order_queryset(
+                models.TeamRegistration.objects.filter(
+                        tournament_division=tournament_division))
         division_teams.append((tournament_division, teams))
 
     context = {
@@ -272,9 +357,9 @@ def seedings(request, tournament_slug, division_slug):
         tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
         tournament_division = get_object_or_404(models.TournamentDivision,
                 tournament=tournament, division__slug=division_slug)
-        teams = models.TeamRegistration.objects.filter(
-                tournament_division=tournament_division).order_by(
-                        'team__school__name', 'team__number')
+        teams = models.TeamRegistration.order_queryset(
+                models.TeamRegistration.objects.filter(
+                        tournament_division=tournament_division))
         seed_forms = []
         teams = list(teams)
         for team in teams:
@@ -315,8 +400,9 @@ def team_points(request, tournament_slug, division_slug):
         return HttpResponseRedirect(reverse('tmdb:seedings', args=(
                 tournament_slug, division_slug)))
     else:
-        teams = models.TeamRegistration.objects.filter(
-                tournament_division=tournament_division).order_by('team__number').order_by('team__school')
+        teams = models.TeamRegistration.order_queryset(
+                models.TeamRegistration.objects.filter(
+                    tournament_division=tournament_division))
         points_forms = []
         for team in teams:
             points_form = forms.TeamPointsForm(
@@ -376,7 +462,7 @@ def bracket(request, tournament_slug, division_slug):
     for match in models.TeamMatch.objects.filter(division=tournament_division):
         matches[(match.round_num, match.round_slot)] = match
         num_rounds = max(num_rounds, match.round_num)
-    bracket_column_height = str(100 * 2**num_rounds) + "px"
+    bracket_column_height = str(64 * 2**num_rounds) + "px"
     for round_num in reversed(range(num_rounds + 1)):
         round_num_matches = 2**round_num
         bracket_column = [None] * round_num_matches
@@ -509,6 +595,7 @@ def delete_competitor(request, tournament_slug, school_slug, competitor_id):
         delete_form = forms.SchoolCompetitorDeleteForm(instance = instance)
     context['delete_form'] = delete_form
 
+## Belt rank and sex need to be fixed
 def edit_competitor(request, tournament_slug, school_slug, competitor_id):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
@@ -525,6 +612,8 @@ def edit_competitor(request, tournament_slug, school_slug, competitor_id):
         edit_form = forms.SchoolCompetitorForm(request.POST, instance=instance)
         if edit_form.is_valid():
             competitor = edit_form.save()
+            # import pdb
+            # pdb.set_trace()
             return HttpResponseRedirect(reverse('tmdb:tournament_school', args = (tournament_slug, school_slug)))
     else:
         edit_form = forms.SchoolCompetitorForm(instance = instance)
