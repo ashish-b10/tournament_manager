@@ -7,74 +7,110 @@ from django.template.defaultfilters import slugify
 
 from tmdb.util import BracketGenerator, SlotAssigner
 
-from django_enumfield import enum
+class SexField(models.CharField):
+    FEMALE = 'F'
+    MALE = 'M'
+    SEX_CHOICES = (
+        (FEMALE, 'Female'),
+        (MALE, 'Male'),
+    )
 
-class SexEnum(enum.Enum):
-    F = 0
-    M = 1
+    SEX_LABELS = dict(SEX_CHOICES)
+    SEX_VALUES = {v.lower():k for k,v in SEX_LABELS.items()}
 
-    labels = {
-        F: 'Female',
-        M: 'Male',
-    }
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 1
+        kwargs['choices'] = SexField.SEX_CHOICES
+        super().__init__(*args, **kwargs)
 
-class DivisionLevelEnum(enum.Enum):
-    A = 0
-    B = 1
-    C = 2
+    def to_python(self, value):
+        if not value in SexField.SEX_LABELS:
+            raise(ValidationError("Invalid SexField value: " + value))
+        return value
 
-    labels = {
-        A: 'A',
-        B: 'B',
-        C: 'C',
-    }
+    @staticmethod
+    def label(l):
+        return SexField.SEX_LABELS[l]
 
-class BeltRankEnum(enum.Enum):
-    WHITE = 0
-    YELLOW = 1
-    ORANGE = 2
-    GREEN = 3
-    BLUE = 4
-    PURPLE = 5
-    BROWN = 6
-    RED = 7
-    BLACK = 8
+    @staticmethod
+    def value(v):
+        return SexField.SEX_VALUES[v.lower()]
 
-    labels = {
-        WHITE: 'White',
-        YELLOW: 'Yellow',
-        ORANGE: 'Orange',
-        GREEN: 'Green',
-        BLUE: 'Blue',
-        PURPLE: 'Purple',
-        BROWN: 'Brown',
-        RED: 'Red',
-        BLACK: 'Black',
-    }
-
-class DivisionSkillField(models.CharField):
+class DivisionLevelField(models.CharField):
     A_TEAM_VAL = 'A'
     B_TEAM_VAL = 'B'
     C_TEAM_VAL = 'C'
-    choices = (
+    DIVISION_LEVEL_CHOICES = (
         (A_TEAM_VAL, 'A-team'),
         (B_TEAM_VAL, 'B-team'),
         (C_TEAM_VAL, 'C-team'),
     )
-    _division_skills_names = dict(choices)
+
+    DIVISION_LEVEL_LABELS = dict(DIVISION_LEVEL_CHOICES)
+    DIVISION_LEVEL_VALUES = {v.lower():k for k,v in DIVISION_LEVEL_LABELS.items()}
 
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 1
-        super(DivisionSkillField, self).__init__(*args, **kwargs)
+        kwargs['choices'] = DivisionLevelField.DIVISION_LEVEL_CHOICES
+        super().__init__(*args, **kwargs)
 
     def to_python(self, value):
-        if not value in DivisionSkillField._division_skills_names.keys():
-            raise(ValidationError("Invalid DivisionSkillField value: "
+        if not value in DivisionLevelField.DIVISION_LEVEL_LABELS:
+            raise(ValidationError("Invalid DivisionLevelField value: "
                     + value))
         return value
 
-    def __str__(self):
-        return self._division_skills_names[self.division_skill]
+    @staticmethod
+    def label(l):
+        return DivisionLevelField.DIVISION_LEVEL_LABELS[l]
+
+    @staticmethod
+    def value(v):
+        return DivisionLevelField.DIVISION_LEVEL_VALUES[v.lower()]
+
+class BeltRankField(models.CharField):
+    WHITE = 'WH'
+    YELLOW = 'YL'
+    ORANGE = 'OR'
+    GREEN = 'GR'
+    BLUE = 'BL'
+    PURPLE = 'PL'
+    BROWN = 'BR'
+    RED = 'RD'
+    BLACK = 'BK'
+    BELT_RANK_CHOICES = (
+        (WHITE, 'White'),
+        (YELLOW, 'Yellow'),
+        (ORANGE, 'Orange'),
+        (GREEN, 'Green'),
+        (BLUE, 'Blue'),
+        (PURPLE, 'Purple'),
+        (BROWN, 'Brown'),
+        (RED, 'Red'),
+        (BLACK, 'Black'),
+    )
+
+    BELT_RANK_LABELS = dict(BELT_RANK_CHOICES)
+    BELT_RANK_VALUES = {v.lower():k for k,v in BELT_RANK_LABELS.items()}
+
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 2
+        kwargs['choices'] = BeltRankField.BELT_RANK_CHOICES
+        return super().__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        if not value in BeltRankField.BELT_RANK_LABELS:
+            raise(ValidationError("Invalid BeltRankField value: "
+                    + value))
+        return value
+
+    @staticmethod
+    def label(l):
+        return BeltRankField.BELT_RANK_LABELS[l]
+
+    @staticmethod
+    def value(v):
+        return BeltRankField.BELT_RANK_VALUES[v.lower()]
 
 class WeightField(models.DecimalField):
     def __init__(self, *args, **kwargs):
@@ -104,9 +140,9 @@ class Tournament(models.Model):
         return slugify(self.location) + '-' + slugify(self.date)
 
     def create_divisions(self):
-        for sex, skill_level in product(('M', 'F'),('A', 'B', 'C',),):
-            sex = SexEnum.get(sex).value
-            skill_level = DivisionLevelEnum.get(skill_level).value
+        sex_labels = SexField.SEX_LABELS
+        skill_labels = DivisionLevelField.DIVISION_LEVEL_LABELS
+        for sex, skill_level in product(sex_labels, skill_labels):
             division = Division.objects.filter(sex=sex,
                     skill_level=skill_level).first()
             if division is None:
@@ -190,9 +226,9 @@ class School(models.Model):
             self.create_teams()
 
     def create_teams(self):
-        for sex, skill_level in product(('M', 'F'),('A', 'B', 'C',),):
-            sex = SexEnum.get(sex).value
-            skill_level = DivisionLevelEnum.get(skill_level).value
+        sex_labels = SexField.SEX_LABELS
+        skill_labels = DivisionLevelField.DIVISION_LEVEL_LABELS
+        for sex, skill_level in product(sex_labels, skill_labels):
             division = Division.objects.filter(sex=sex,
                     skill_level=skill_level).first()
             if division is None:
@@ -247,10 +283,15 @@ class SchoolRegistration(models.Model):
             weight = None
             if 'weight' in c:
                 weight = float(c['weight'])
+            try:
+                belt_rank = BeltRankField.value(c['rank'])
+            except IndexError:
+                raise ValidationError("Unexpected belt rank value: "
+                        + c['rank'])
             competitor = Competitor.objects.get_or_create(name=c['name'],
                     registration=self, defaults={
-                            'sex': SexEnum.get(c['sex']).value,
-                            'belt_rank': BeltRankEnum.get(c['rank']).value,
+                            'sex': c['sex'],
+                            'belt_rank': belt_rank,
                             'weight': weight,
                     })[0]
             model_competitors[competitor.name] = competitor
@@ -260,23 +301,23 @@ class SchoolRegistration(models.Model):
     def _parse_division(division_name):
         sex = skill = None
         if division_name == "Mens_A":
-            sex = SexEnum.get('M').value
-            skill = DivisionLevelEnum.get('A').value
+            sex = SexField.MALE
+            skill = DivisionLevelField.A_TEAM_VAL
         elif division_name == "Mens_B":
-            sex = SexEnum.get('M').value
-            skill = DivisionLevelEnum.get('B').value
+            sex = SexField.MALE
+            skill = DivisionLevelField.B_TEAM_VAL
         elif division_name == "Mens_C":
-            sex = SexEnum.get('M').value
-            skill = DivisionLevelEnum.get('C').value
+            sex = SexField.MALE
+            skill = DivisionLevelField.C_TEAM_VAL
         elif division_name == "Womens_A":
-            sex = SexEnum.get('F').value
-            skill = DivisionLevelEnum.get('A').value
+            sex = SexField.FEMALE
+            skill = DivisionLevelField.A_TEAM_VAL
         elif division_name == "Womens_B":
-            skill = DivisionLevelEnum.get('B').value
-            sex = SexEnum.get('F').value
+            sex = SexField.FEMALE
+            skill = DivisionLevelField.B_TEAM_VAL
         elif division_name == "Womens_C":
-            sex = SexEnum.get('F').value
-            skill = DivisionLevelEnum.get('C').value
+            sex = SexField.FEMALE
+            skill = DivisionLevelField.C_TEAM_VAL
         if sex is None or skill is None:
             raise ValueError("Invalid division supplied: %s" %(division_name,))
         return Division.objects.get(sex=sex, skill_level = skill)
@@ -344,8 +385,8 @@ class SchoolRegistration(models.Model):
         self.save()
 
 class Division(models.Model):
-    sex = enum.EnumField(SexEnum)
-    skill_level = enum.EnumField(DivisionLevelEnum)
+    sex = SexField()
+    skill_level = DivisionLevelField()
     slug = models.SlugField(unique=True)
     tournaments = models.ManyToManyField('Tournament',
             through='TournamentDivision')
@@ -362,18 +403,18 @@ class Division(models.Model):
         return slugify(str(self))
 
     def __str__(self):
-        if self.sex == SexEnum.F: sex_name = "Women's"
-        if self.sex == SexEnum.M: sex_name = "Men's"
-        return sex_name + " " + DivisionLevelEnum.label(self.skill_level)
+        if self.sex == SexField.FEMALE: sex_name = "Women's"
+        if self.sex == SexField.MALE: sex_name = "Men's"
+        return sex_name + " " + DivisionLevelField.label(self.skill_level)
 
     def match_number_start_val(self):
-        if self.skill_level == DivisionLevelEnum.A:
+        if self.skill_level == DivisionLevelField.A_TEAM_VAL:
             start_val = 100
-        elif self.skill_level == DivisionLevelEnum.B:
+        elif self.skill_level == DivisionLevelField.B_TEAM_VAL:
             start_val = 300
-        elif self.skill_level == DivisionLevelEnum.C:
+        elif self.skill_level == DivisionLevelField.C_TEAM_VAL:
             start_val = 500
-        return start_val + (100 if self.sex == SexEnum.F else 0) + 1
+        return start_val + (100 if self.sex == SexField.FEMALE else 0) + 1
 
 class TournamentDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
@@ -389,22 +430,22 @@ class TournamentDivision(models.Model):
         return "%s (%s)" %(self.division, self.tournament)
 
 class TournamentDivisionBeltRanks(models.Model):
-    belt_rank = enum.EnumField(BeltRankEnum)
+    belt_rank = BeltRankField()
     tournament_division = models.ForeignKey(TournamentDivision)
 
 class Competitor(models.Model):
     """ A person who may compete in a tournament. """
     name = models.CharField(max_length=127)
-    sex = enum.EnumField(SexEnum)
-    belt_rank = enum.EnumField(BeltRankEnum)
+    sex = SexField()
+    belt_rank = BeltRankField()
     weight = WeightField(null=True, blank=True)
     registration = models.ForeignKey(SchoolRegistration)
 
     def belt_rank_label(self):
-        return BeltRankEnum.label(self.belt_rank)
+        return BeltRankField.label(self.belt_rank)
 
     def sex_label(self):
-        return SexEnum.label(self.sex)
+        return SexField.label(self.sex)
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.registration.school)
@@ -432,15 +473,15 @@ class TeamRegistration(models.Model):
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
     points = models.PositiveIntegerField(null=True, blank=True)
     lightweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="lightweight")
+            related_name="lightweight", on_delete=models.deletion.SET_NULL)
     middleweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="middleweight")
+            related_name="middleweight", on_delete=models.deletion.SET_NULL)
     heavyweight = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="heavyweight")
+            related_name="heavyweight", on_delete=models.deletion.SET_NULL)
     alternate1 = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="alternate1")
+            related_name="alternate1", on_delete=models.deletion.SET_NULL)
     alternate2 = models.ForeignKey(Competitor, null=True, blank=True,
-            related_name="alternate2")
+            related_name="alternate2", on_delete=models.deletion.SET_NULL)
 
     class Meta:
         unique_together = (('tournament_division', 'team'),

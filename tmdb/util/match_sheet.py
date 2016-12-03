@@ -28,27 +28,28 @@ def _draw_match_sheet(match, female=False, a_team=False, b_team=False, c_team=Fa
     drawing_canvas = canvas.Canvas(drawing_layer, pagesize=letter)
     drawing_canvas.setLineWidth(3)
     xoffset, yoffset = 0, 0
-    if match.division.division.sex == models.SexEnum.M:
+    if match.division.division.sex == models.SexField.MALE:
         drawing_canvas.ellipse(
                 3.2*inch + xoffset, 9.5*inch + yoffset,
                 2.4*inch + xoffset, 9.1*inch + yoffset)
     xoffset = 4.23 * inch
-    if match.division.division.sex == models.SexEnum.F:
+    if match.division.division.sex == models.SexField.FEMALE:
         drawing_canvas.ellipse(
                 3.2*inch + xoffset, 9.5*inch + yoffset,
                 2.4*inch + xoffset, 9.1*inch + yoffset)
     yoffset = -.3 * inch
-    if match.division.division.skill_level == models.DivisionLevelEnum.C:
+    skill_level = match.division.division.skill_level
+    if skill_level == models.DivisionLevelField.C_TEAM_VAL:
         drawing_canvas.ellipse(
                 3.2*inch + xoffset, 9.5*inch + yoffset,
                 2.4*inch + xoffset, 9.1*inch + yoffset)
     xoffset = 0
-    if match.division.division.skill_level == models.DivisionLevelEnum.A:
+    if skill_level == models.DivisionLevelField.A_TEAM_VAL:
         drawing_canvas.ellipse(
                 3.2*inch + xoffset, 9.5*inch + yoffset,
                 2.4*inch + xoffset, 9.1*inch + yoffset)
     xoffset = 4.23/ 2 * inch
-    if match.division.division.skill_level == models.DivisionLevelEnum.B:
+    if skill_level == models.DivisionLevelField.B_TEAM_VAL:
         drawing_canvas.ellipse(
                 3.2*inch + xoffset, 9.5*inch + yoffset,
                 2.4*inch + xoffset, 9.1*inch + yoffset)
