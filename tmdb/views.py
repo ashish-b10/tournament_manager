@@ -13,17 +13,12 @@ import datetime
 from .util.match_sheet import create_match_sheets
 
 def index(request, tournament_slug=None):
-    if request.method == 'POST':
-        instance = get_object_or_404(models.Tournament, slug=tournament_slug)
-        delete_form = forms.TournamentDeleteForm()
-        context['delete_form'] = delete_form
-    else:
-        today = datetime.date.today()
-        edit_form = forms.TournamentEditForm(initial={'date': today})
-        context = {
-            'edit_form': edit_form,
-            'tournaments': models.Tournament.objects.order_by('-date')
-        }
+    today = datetime.date.today()
+    edit_form = forms.TournamentEditForm(initial={'date': today})
+    context = {
+        'edit_form': edit_form,
+        'tournaments': models.Tournament.objects.order_by('-date')
+    }
     return render(request, 'tmdb/index.html', context)
 
 def settings(request):
@@ -77,6 +72,11 @@ def tournament_delete(request, tournament_slug):
 def tournament_import(request, tournament_slug):
     instance = models.Tournament.objects.filter(slug=tournament_slug).first()
     if request.method == "POST":
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        raise Exception("permission_check")
+        raise Exception("CSRF check")
         instance.import_school_registrations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
@@ -110,11 +110,10 @@ def tournament_dashboard(request, tournament_slug, division_slug=None):
             division__tournament=tournament).order_by('ring_assignment_time'):
         matches_by_ring[str(match.ring_number)].append(match)
 
-    # Add all to the context.
     context = {
         'tournament': tournament,
         'tournament_divisions': tournament_divisions,
-        'matches_by_ring':sorted(matches_by_ring.items()),
+        'matches_by_ring': sorted(matches_by_ring.items()),
         'team_matches': matches
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
@@ -258,7 +257,6 @@ def team_edit(request, tournament_slug, school_slug, division_slug, team_number)
 
     return render(request, 'tmdb/team_edit.html', context)
 
-## DOESNT WORK YET
 def team_add(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
@@ -296,7 +294,7 @@ def team_add(request, tournament_slug, school_slug):
         for i in models.TeamRegistration.objects.all():
             used_competitors.extend(i.get_competitors_ids())
 
-        form = forms.TeamRegistrationForm(school, school_registration, used_competitors) #tournament_division)
+        form = forms.TeamRegistrationForm(school, school_registration, used_competitors)
         context['form'] = form
 
     return render(request, 'tmdb/team_add.html', context)
@@ -595,7 +593,6 @@ def delete_competitor(request, tournament_slug, school_slug, competitor_id):
         delete_form = forms.SchoolCompetitorDeleteForm(instance = instance)
     context['delete_form'] = delete_form
 
-## Belt rank and sex need to be fixed
 def edit_competitor(request, tournament_slug, school_slug, competitor_id):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
@@ -612,8 +609,6 @@ def edit_competitor(request, tournament_slug, school_slug, competitor_id):
         edit_form = forms.SchoolCompetitorForm(request.POST, instance=instance)
         if edit_form.is_valid():
             competitor = edit_form.save()
-            # import pdb
-            # pdb.set_trace()
             return HttpResponseRedirect(reverse('tmdb:tournament_school', args = (tournament_slug, school_slug)))
     else:
         edit_form = forms.SchoolCompetitorForm(instance = instance)
