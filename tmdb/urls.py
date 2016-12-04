@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 from . import views
@@ -88,6 +88,7 @@ urlpatterns = [
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/*$',
             views.tournament_dashboard, name='tournament_dashboard'),
     url(r'^settings/*$', views.settings, name='settings'),
+    url(r'^auth/*/', include('django.contrib.auth.urls')),
     url(r'^$', views.index, name='index'),
 ]
 
