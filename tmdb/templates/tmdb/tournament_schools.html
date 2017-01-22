@@ -2,6 +2,11 @@
 
 {% block main-content %}
 <div class="row page-header">
+    {% if err_msg %}
+    <div class="alert alert-danger">
+    {{err_msg}}
+    </div>
+    {% endif %}
     {% if error_form %}
     <div class="alert alert-danger">
     {{error_form.as_p}}
@@ -14,7 +19,6 @@
         </div>
     {% else %}
     <form action="{% url 'tmdb:tournament_schools' tournament.slug %}" method="post">
-        <input type="hidden" name="tournament_slug" value="{{tournament.slug}}"/>
         {% csrf_token %}
         {{import_all_form.school_registrations}}
         {{import_all_form.reimport}}

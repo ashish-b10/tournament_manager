@@ -1,0 +1,13 @@
+{% extends "tmdb/base.html" %}
+
+{% block main-content %}
+{% if err_msg %}
+<div class="alert alert-danger">{{err_msg}}</div>
+{% endif %}
+<form action="{{form_action}}" method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="submit" value="Create user"/>
+</form>
+{% endblock %}
+

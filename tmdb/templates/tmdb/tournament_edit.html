@@ -5,6 +5,9 @@
 {% block main-content %}
 <h1>Edit Tournament</h1>
 
+{% if err_msg %}
+<div class="alert alert-danger">{{err_msg}}</div>
+{% endif %}
 {% if edit_form.instance.slug %}
 <form action="{% url 'tmdb:tournament_edit' edit_form.instance.slug %}" method="post">
 {% else %}

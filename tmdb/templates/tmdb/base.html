@@ -29,11 +29,11 @@
               {% if user.is_authenticated %}
               <li class="navbar-text">Logged in as {{user.username}}</li>
               <li><a href="{%url 'tmdb:logout'%}?next={{request.path}}">Logout</a></li>
+              <li> <a href="{% url 'tmdb:settings' %}">Settings</a></li>
               {% else %}
-              <li>Viewing as anonymous guest.</li>
+              <li class="navbar-text">Viewing as anonymous guest.</li>
               <li><a href="{%url 'tmdb:login'%}?next={{request.path}}">Login</a></li>
               {% endif %}
-              <li> <a href="{% url 'tmdb:settings' %}">Settings</a></li>
             </ul>
           <ul class="nav navbar-nav pull-left">
               <li class="active"><a href="{% url 'tmdb:index' %}">Overview <span class="sr-only">(current)</span></a></li>

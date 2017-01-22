@@ -1,7 +1,11 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import redirect, render, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.forms.models import modelformset_factory
 from django.core.urlresolvers import reverse
+from django.conf import settings as config
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import models as auth_models
+from django.core.exceptions import PermissionDenied
 
 from . import forms
 from . import models
@@ -12,6 +16,20 @@ import datetime
 
 from .util.match_sheet import create_match_sheets
 
+def permission_error_string(user, perm_type):
+    return "Username `%s` does not have permission to %s." %(
+            user.username, perm_type)
+
+def can_import_school_registration(user):
+    return user.has_perms([
+        "tmdb.add_competitor",
+        "tmdb.add_teamregistration",
+        "tmdb.change_competitor",
+        "tmdb.change_teamregistration",
+        "tmdb.delete_competitor",
+        "tmdb.delete_teamregistration",
+    ])
+
 def index(request, tournament_slug=None):
     today = datetime.date.today()
     edit_form = forms.TournamentEditForm(initial={'date': today})
@@ -21,13 +39,23 @@ def index(request, tournament_slug=None):
     }
     return render(request, 'tmdb/index.html', context)
 
+@login_required
 def settings(request):
     return render(request, 'tmdb/settings.html')
 
 def tournament_create(request):
+    template_name = 'tmdb/tournament_edit.html'
+    context = {}
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
         edit_form = forms.TournamentEditForm(request.POST)
-        context = {}
+        context['edit_form'] = edit_form
+        if not request.user.has_perm('tmdb.add_tournament'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "create tournaments")
+            return render(request, template_name, context, status=403)
         if edit_form.is_valid():
             edit_form.save()
             edit_form.instance.import_school_registrations()
@@ -36,17 +64,27 @@ def tournament_create(request):
     else:
         today = datetime.date.today()
         edit_form = forms.TournamentEditForm(initial={'date': today})
-    context = {'edit_form': edit_form}
+    context['edit_form'] = edit_form
     return render(request, 'tmdb/tournament_edit.html', context)
 
 def tournament_edit(request, tournament_slug):
     instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+    template_name = 'tmdb/tournament_edit.html'
     context = {}
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
         edit_form = forms.TournamentEditForm(request.POST, instance=instance)
+        context['edit_form'] = edit_form
+        if not request.user.has_perm('tmdb.change_tournament'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "change tournaments")
+            return render(request, template_name, context, status=403)
         if edit_form.is_valid():
             tournament = edit_form.save()
-            return HttpResponseRedirect(reverse('tmdb:index'))
+            return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
+                    args=(edit_form.instance.slug,)))
     else:
         edit_form = forms.TournamentEditForm(instance=instance)
         import_form = forms.TournamentImportForm(instance=instance)
@@ -58,15 +96,25 @@ def tournament_edit(request, tournament_slug):
 
 def tournament_delete(request, tournament_slug):
     instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+    template_name = 'tmdb/tournament_delete.html'
+    context = {'tournament': instance}
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
         delete_form = forms.TournamentDeleteForm(request.POST,
                 instance=instance)
+        context['delete_form'] = delete_form
+        if not request.user.has_perm('tmdb.delete_tournament'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "delete tournaments")
+            return render(request, template_name, context, status=403)
         if delete_form.is_valid():
             instance.delete()
             return HttpResponseRedirect(reverse('tmdb:index'))
     else:
         delete_form = forms.TournamentDeleteForm(instance=instance)
-    context = {'delete_form': delete_form, 'tournament': instance}
+    context['delete_form'] = delete_form
     return render(request, 'tmdb/tournament_delete.html', context)
 
 def tournament_import(request, tournament_slug):
@@ -75,16 +123,17 @@ def tournament_import(request, tournament_slug):
         if not request.user.is_authenticated:
             return redirect('%s?next=%s' %(
                     reverse('tmdb:login'), request.path,))
-        raise Exception("permission_check")
-        raise Exception("CSRF check")
+        if not request.user.has_perm('tmdb.add_tournament'):
+            return HttpResponseForbidden(permission_error_string(request.user,
+                    "import tournaments"))
         instance.import_school_registrations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
 def tournament_dashboard(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament=tournament)
+
     if division_slug is not None:
         tournament_divisions = tournament_divisions.filter(
                 division__slug=division_slug)
@@ -137,11 +186,42 @@ def tournament_school(request, tournament_slug, school_slug):
     }
     return render(request, 'tmdb/tournament_school_competitors.html', context)
 
+def build_tournament_schools(request, tournament, context=None, status=None):
+    if context is None:
+        context = {}
+    context['tournament'] = tournament
+    template_name = 'tmdb/tournament_schools.html'
+    school_registrations = models.SchoolRegistration.objects.filter(
+        tournament=tournament).order_by('school__name')
+    school_pks = []
+    all_schools_imported = True
+    for school_reg in school_registrations:
+        initial = {'school_registrations': school_reg.pk, 'reimport': True}
+        school_reg.import_form = forms.SchoolRegistrationImportForm(
+                initial=initial)
+        school_pks.append(school_reg.pk)
+        all_schools_imported = all_schools_imported and school_reg.imported
+    context['school_registrations'] = school_registrations
+    context['all_schools_imported'] = all_schools_imported
+    context['import_all_form'] = forms.SchoolRegistrationImportForm(
+            initial={
+                'reimport': False,
+                'school_registrations': ','.join(map(str, school_pks))
+            })
+    return render(request, 'tmdb/tournament_schools.html', context)
+
 def tournament_schools(request, tournament_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     context = {}
     if request.method == "POST":
-        tournament_slug = request.POST['tournament_slug']
-        tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        if not can_import_school_registration(request.user):
+            context['err_msg'] = permission_error_string(request.user,
+                    "import school registration")
+            return build_tournament_schools(request, tournament, context,
+                    status=403)
         form = forms.SchoolRegistrationImportForm(request.POST)
         if form.is_valid():
             school_reg_pks = list(map(int,
@@ -157,30 +237,17 @@ def tournament_schools(request, tournament_slug):
             return HttpResponseRedirect(reverse('tmdb:tournament_schools',
                     args=(tournament.slug,)))
         context['error_form'] = form
-    else:
-        tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    school_registrations = models.SchoolRegistration.objects.filter(
-        tournament=tournament).order_by('school__name')
-    school_pks = []
-    all_schools_imported = True
-    for school_reg in school_registrations:
-        initial = {'school_registrations': school_reg.pk, 'reimport': True}
-        school_reg.import_form = forms.SchoolRegistrationImportForm(
-                initial=initial)
-        school_pks.append(school_reg.pk)
-        all_schools_imported = all_schools_imported and school_reg.imported
-    context['school_registrations'] = school_registrations
-    context['tournament'] = tournament
-    context['all_schools_imported'] = all_schools_imported
-    context['import_all_form'] = forms.SchoolRegistrationImportForm(
-            initial={
-                'reimport': False,
-                'school_registrations': ','.join(map(str, school_pks))
-            })
-    return render(request, 'tmdb/tournament_schools.html', context)
+
+    return build_tournament_schools(request, tournament, context)
 
 def match_list(request, tournament_slug, division_slug=None):
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        if not request.user.has_perm('tmdb.change_teammatch'):
+            return HttpResponseForbidden(permission_error_string(request.user,
+                    "change matches"))
         match = models.TeamMatch.objects.get(pk=request.POST['team_match_id'])
         form = forms.MatchForm(request.POST, instance=match)
 
@@ -215,29 +282,47 @@ def match_list(request, tournament_slug, division_slug=None):
     }
     return render(request, 'tmdb/match_list.html', context)
 
-def team_delete(request, tournament_slug, school_slug, division_slug, team_number):
+def team_delete(request, tournament_slug, school_slug, division_slug,
+        team_number):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
     division = get_object_or_404(models.Division, slug=division_slug)
-    tournament_div = models.TournamentDivision.objects.get(tournament=tournament, division=division)
-    team = models.Team.objects.get(school= school, division=division, number=team_number)
-    instance = models.TeamRegistration.objects.get(tournament_division=tournament_div, team=team)
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament=tournament, division=division)
+    team = get_object_or_404(models.Team, school=school, division=division,
+            number=team_number)
+    team_registration = get_object_or_404(models.TeamRegistration,
+            tournament_division=tournament_division, team=team)
     context = {}
-    context['team'] = instance
+    context['team'] = team_registration
     if request.method == 'POST':
-        delete_form = forms.TeamRegistrationDeleteForm(request.POST, instance=instance)
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        delete_form = forms.TeamRegistrationDeleteForm(request.POST,
+                instance=team_registration)
+        context['delete_form'] = delete_form
+        if not request.user.has_perm('tmdb.delete_teamregistration'):
+            return HttpResponseForbidden(permission_error_string(request.user,
+                    "delete a team registration"))
         if delete_form.is_valid():
-            instance.delete()
-            return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
+            team_registration.delete()
+            return HttpResponseRedirect(reverse("tmdb:tournament_school",
+                    args=(tournament_slug, school_slug,)))
 
 def team_edit(request, tournament_slug, school_slug, division_slug, team_number):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = models.SchoolRegistration.objects.get(school=school, tournament=tournament)
+    school_registration = get_object_or_404(models.SchoolRegistration,
+            tournament=tournament, school=school)
     division = get_object_or_404(models.Division, slug=division_slug)
-    tournament_div = models.TournamentDivision.objects.get(tournament=tournament, division=division)
-    team = models.Team.objects.get(school= school, division=division, number=team_number)
-    instance = models.TeamRegistration.objects.get(tournament_division=tournament_div, team=team)
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament=tournament, division=division)
+    team = get_object_or_404(models.Team, school=school, division=division,
+            number=team_number)
+    instance = get_object_or_404(models.TeamRegistration,
+            tournament_division=tournament_division, team=team)
+    template_name = 'tmdb/team_edit.html'
     context = {}
     context['school'] = school
     context['school_registration'] = school_registration
@@ -245,7 +330,17 @@ def team_edit(request, tournament_slug, school_slug, division_slug, team_number)
     context['instance'] = instance
     used_competitors = []
     if request.method == 'POST':
-        edit_form = forms.TeamRegistrationForm(school, school_registration, used_competitors, request.POST, instance=instance)
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        edit_form = forms.TeamRegistrationForm(school,
+                school_registration, used_competitors, request.POST,
+                instance=instance)
+        context['edit_form'] = edit_form
+        if not request.user.has_perm('tmdb.change_teamregistration'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "change teams")
+            return render(request, template_name, context, status=403)
         if edit_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
@@ -265,9 +360,18 @@ def team_add(request, tournament_slug, school_slug):
     context['school'] = school
     context['school_registration'] = school_registration
     context['tournament'] = tournament
+    template_name = 'tmdb/team_add.html'
     used_competitors = []
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
         form = forms.TeamRegistrationForm(school, school_registration, used_competitors, request.POST)
+        context['form'] = form
+        if not request.user.has_perm('tmdb.add_teamregistration'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "add teams")
+            return render(request, template_name, context, status=403)
         if form.is_valid():
             tournament_division = models.TournamentDivision.objects.get(pk=request.POST['tournament_division'])
             team = models.Team.objects.get(pk=request.POST['team'])
@@ -322,7 +426,16 @@ def team_list(request, tournament_slug, division_slug=None):
 
 seeds_re = re.compile('(?P<team_reg_id>[0-9]+)-seed$')
 def seedings(request, tournament_slug, division_slug):
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    tournament = tournament_division.tournament
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        if not request.user.has_perm('tmdb.change_teamregistration'):
+            return HttpResponseForbidden(permission_error_string(request.user,
+                "change team seedings"))
         seed_forms = []
         tournament_division_pk = request.POST["tournament_division_pk"]
         tournament_division = get_object_or_404(models.TournamentDivision,
@@ -352,9 +465,6 @@ def seedings(request, tournament_slug, division_slug):
                     args=(tournament_division.tournament.slug,)))
 
     else:
-        tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-        tournament_division = get_object_or_404(models.TournamentDivision,
-                tournament=tournament, division__slug=division_slug)
         teams = models.TeamRegistration.order_queryset(
                 models.TeamRegistration.objects.filter(
                         tournament_division=tournament_division))
@@ -372,48 +482,63 @@ def seedings(request, tournament_slug, division_slug):
             }
     return render(request, 'tmdb/seedings.html', context)
 
+def build_team_points(request, tournament_division, context=None, status=None):
+    if context is None:
+        context = {}
+    template_name = 'tmdb/points.html'
+    tournament = tournament_division.tournament
+    teams = models.TeamRegistration.order_queryset(
+            models.TeamRegistration.objects.filter(
+                tournament_division=tournament_division))
+    tournament_divisions = models.TournamentDivision.objects.filter(
+            tournament=tournament)
+    points_forms = []
+    for team in teams:
+        points_form = forms.TeamPointsForm(
+                prefix=str(team.id), instance=team)
+        points_form.name = str(team)
+        points_forms.append(points_form)
+
+    context['tournament'] = tournament
+    context['points_forms'] = points_forms
+    context['tournament_divisions'] = tournament_divisions
+    context['tournament_division'] = tournament_division
+    return render(request, template_name, context, status)
+
 points_re = re.compile('(?P<team_reg_id>[0-9]+)-points$')
 def team_points(request, tournament_slug, division_slug):
-    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_division = get_object_or_404(models.TournamentDivision,
-            tournament=tournament, division__slug=division_slug)
-    if request.method == "POST":
-        for post_field in request.POST:
-            re_match = points_re.match(post_field)
-            if not re_match: continue
-            team_reg_id = int(re_match.group('team_reg_id'))
-            points_form = forms.TeamPointsForm(request.POST,
-                    prefix=str(team_reg_id),
-                    instance=models.TeamRegistration.objects.get(
-                            pk=team_reg_id))
-            points_form.save()
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    if not request.method == "POST":
+        return build_team_points(request, tournament_division)
 
-        models.TeamRegistration.objects.filter(
-                tournament_division=tournament_division).update(seed=None)
-        teams = models.TeamRegistration.get_teams_with_assigned_slots(
-                tournament_division)
-        for team in teams:
-            team.save()
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' %(
+                reverse('tmdb:login'), request.path,))
+    if not request.user.has_perm('tmdb.change_teamregistration'):
+        context = {'err_msg': permission_error_string(request.user,
+                "change team registration")}
+        return build_team_points(request, tournament_division, context,
+                status=403)
+    for post_field in request.POST:
+        re_match = points_re.match(post_field)
+        if not re_match: continue
+        team_reg_id = int(re_match.group('team_reg_id'))
+        points_form = forms.TeamPointsForm(request.POST,
+                prefix=str(team_reg_id),
+                instance=models.TeamRegistration.objects.get(
+                        pk=team_reg_id))
+        points_form.save()
 
-        return HttpResponseRedirect(reverse('tmdb:seedings', args=(
-                tournament_slug, division_slug)))
-    else:
-        teams = models.TeamRegistration.order_queryset(
-                models.TeamRegistration.objects.filter(
-                    tournament_division=tournament_division))
-        points_forms = []
-        for team in teams:
-            points_form = forms.TeamPointsForm(
-                    prefix=str(team.id), instance=team)
-            points_form.name = str(team)
-            points_forms.append(points_form)
+    models.TeamRegistration.objects.filter(
+            tournament_division=tournament_division).update(seed=None)
+    teams = models.TeamRegistration.get_teams_with_assigned_slots(
+            tournament_division)
+    for team in teams:
+        team.save()
 
-    context = {
-            'tournament': tournament,
-            'points_forms': points_forms,
-            'tournament_division': tournament_division,
-            }
-    return render(request, 'tmdb/points.html', context)
+    return HttpResponseRedirect(reverse('tmdb:seedings', args=(
+            tournament_slug, division_slug)))
 
 def rings(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -428,12 +553,22 @@ def rings(request, tournament_slug):
     return render(request, 'tmdb/rings.html', context)
 
 def registration_credentials(request):
+    template_name = 'tmdb/configuration_setting.html'
+    context = {"setting_name": "Registration Import Credentials"}
     setting_key = models.ConfigurationSetting.REGISTRATION_CREDENTIALS
     existing_value = models.ConfigurationSetting.objects.filter(
             key=setting_key).first()
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
         form = forms.ConfigurationSetting(request.POST,
                 instance=existing_value)
+        context['form'] = form
+        if not request.user.has_perm('tmdb.change_configurationsetting'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "change settings")
+            return render(request, template_name, context, status=403)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('tmdb:index'))
@@ -444,10 +579,7 @@ def registration_credentials(request):
             value = None
         form = forms.ConfigurationSetting(initial={'key': setting_key,
                 'value': value})
-    context = {
-            "setting_name": "Registration Import Credentials",
-            "form": form
-    }
+        context['form'] = form
     return render(request, 'tmdb/configuration_setting.html', context)
 
 def bracket(request, tournament_slug, division_slug):
@@ -520,6 +652,12 @@ def get_lowest_bye_seed(tournament_division):
 
 def seeding(request, tournament_slug, division_slug, seed=None):
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        if not request.user.has_perm('tmdb.change_teamregistration'):
+            return HttpResponseForbidden(permission_error_string(request.user,
+                    "change team seeding"))
         form = forms.TeamRegistrationSeedingForm(request.POST)
         if form.is_valid():
             team_registration = models.TeamRegistration.objects.get(
@@ -552,23 +690,29 @@ def add_competitor(request, tournament_slug, school_slug):
     school_registration = get_object_or_404(models.SchoolRegistration,
             tournament=tournament, school=school)
     competitors = models.Competitor.objects.filter(registration=school_registration)
+    template_name = 'tmdb/add_competitor.html'
     context = {}
     context['tournament'] = tournament
     context['school'] = school
     context['school_registration'] = school_registration
     context['competitors'] = competitors
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
         edit_form = forms.SchoolCompetitorForm(request.POST)
+        context['edit_form'] = edit_form
+        if not request.user.has_perm('tmdb.add_competitor'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "create competitors")
+            return render(request, template_name, context, status=403)
         if edit_form.is_valid():
-            weight = request.POST['weight']
-            if len(weight) == 0:
-                weight = None
-            Competitor = models.Competitor.objects.get_or_create(name=request.POST['name'], registration=school_registration, defaults={ 'sex': request.POST['sex'],'belt_rank': request.POST['belt_rank'], 'weight': weight})
-            return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug,
-                    school_slug,)))
+            edit_form.save()
+            return HttpResponseRedirect(reverse("tmdb:tournament_school",
+                    args=(tournament_slug, school_slug,)))
     else:
-        edit_form = forms.SchoolCompetitorForm()
-        edit_form.registration = school_registration
+        edit_form = forms.SchoolCompetitorForm(
+                initial={'registration': school_registration})
         context['edit_form'] = edit_form
     return render(request, 'tmdb/add_competitor.html', context)
 
@@ -578,20 +722,31 @@ def delete_competitor(request, tournament_slug, school_slug, competitor_id):
     school_registration = get_object_or_404(models.SchoolRegistration,
             tournament=tournament, school=school)
     instance = models.Competitor.objects.get(pk = competitor_id)
+    template_name = 'tmdb/delete_competitor.html'
     context = {}
     context['tournament'] = tournament
     context['school'] = school
     context['school_registration'] = school_registration
     context['competitor'] = instance
     if request.method == 'POST':
-        delete_form = forms.SchoolCompetitorDeleteForm(request.POST, instance=instance)
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        delete_form = forms.SchoolCompetitorDeleteForm(request.POST,
+                instance=instance)
+        context['delete_form'] = delete_form
+        if not request.user.has_perm('tmdb.delete_competitor'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "delete competitors")
+            return render(request, template_name, context, status=403)
         if delete_form.is_valid():
             instance.delete()
-            return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug,
-                    school_slug,)))
+            return HttpResponseRedirect(reverse("tmdb:tournament_school",
+                    args=(tournament_slug, school_slug,)))
     else:
         delete_form = forms.SchoolCompetitorDeleteForm(instance = instance)
     context['delete_form'] = delete_form
+    return render(request, template_name, context)
 
 def edit_competitor(request, tournament_slug, school_slug, competitor_id):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -599,6 +754,7 @@ def edit_competitor(request, tournament_slug, school_slug, competitor_id):
     school_registration = get_object_or_404(models.SchoolRegistration,
             tournament=tournament, school=school)
     instance = models.Competitor.objects.get(pk = competitor_id)
+    template_name = 'tmdb/edit_competitor.html'
     context = {}
     context['tournament'] = tournament
     context['school'] = school
@@ -606,7 +762,15 @@ def edit_competitor(request, tournament_slug, school_slug, competitor_id):
     context['competitor'] = instance
     context['name'] = instance.name
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
         edit_form = forms.SchoolCompetitorForm(request.POST, instance=instance)
+        context['edit_form'] = edit_form
+        if not request.user.has_perm('tmdb.change_competitor'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "change competitors")
+            return render(request, template_name, context, status=403)
         if edit_form.is_valid():
             competitor = edit_form.save()
             return HttpResponseRedirect(reverse('tmdb:tournament_school', args = (tournament_slug, school_slug)))
@@ -681,6 +845,10 @@ def add_match(request, match_id, side):
 #    next_round_match.height = "100%"
 #
 #    if request.method == "POST":
+#         if not request.user.is_authenticated:
+#             return redirect('%s?next=%s' %(
+#                     reverse('tmdb:login'), request.path,))
+#         raise Exception("permission_check")
 #        raise NotImplementedError()
 #
 #    bracket_columns = [previous_round_matches, [next_round_match]]
@@ -711,3 +879,77 @@ def match_sheet(request, tournament_slug, division_slug, match_number=None):
     response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
     return response
 
+def create_headtable_user(request):
+    template_name = 'tmdb/add_user.html'
+    context = {}
+    context['form_action'] = reverse('tmdb:create_headtable_user')
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        form = forms.UserForm(request.POST)
+        context['form'] = form
+        if not request.user.has_perm('auth.add_user'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "create users")
+            return render(request, template_name, context, status=403)
+        if form.is_valid():
+            user = auth_models.User.objects.create_user(**form.cleaned_data)
+            user.groups.set([get_headtable_permission_group()])
+            return HttpResponseRedirect(reverse('tmdb:settings'))
+    else:
+        form = forms.UserForm()
+
+    context['form'] = form
+    return render(request, 'tmdb/add_user.html', context)
+
+def create_ringtable_user(request):
+    template_name = 'tmdb/add_user.html'
+    context = {}
+    context['form_action'] = reverse('tmdb:create_ringtable_user')
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' %(
+                    reverse('tmdb:login'), request.path,))
+        form = forms.UserForm(request.POST)
+        context['form'] = form
+        if not request.user.has_perm('auth.add_user'):
+            context['err_msg'] = permission_error_string(request.user,
+                    "create users")
+            return render(request, template_name, context, status=403)
+        if form.is_valid():
+            user = auth_models.User.objects.create_user(**form.cleaned_data)
+            user.groups.set([get_ringtable_permission_group()])
+            return HttpResponseRedirect(reverse('tmdb:settings'))
+    else:
+        form = forms.UserForm()
+
+    context['form'] = form
+    return render(request, 'tmdb/add_user.html', context)
+
+def get_ringtable_permission_group():
+    group = auth_models.Group.objects.filter(name = "Ring Table").first()
+    if not group:
+        group = create_ringtable_permission_group()
+    return group
+
+def create_ringtable_permission_group():
+    group = auth_models.Group.objects.create(name="Ring Table")
+    group.permissions.set([auth_models.Permission.objects.get(
+            name='Can change team match')])
+    return group
+
+def get_headtable_permission_group():
+    group = auth_models.Group.objects.filter(name = "Head Table").first()
+    if not group:
+        group = create_headtable_permission_group()
+    return group
+
+def create_headtable_permission_group():
+    group = auth_models.Group.objects.create(name="Head Table")
+    group.permissions.set(auth_models.Permission.objects.filter(
+            content_type__in=auth_models.ContentType.objects.filter(
+                    app_label="tmdb")))
+    group.permissions.add(auth_models.Permission.objects.get(
+            name="Can add user"))
+    return group
