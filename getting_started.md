@@ -95,6 +95,10 @@ And last, import the Google Drive credentials:
 
     python manage.py update_gdrive_creds -f /path/to/credentials.json
 
+## Installation for the front-end components
+
+This project uses React.js. In order to get the components running, you will need to install Node.js v7+ and npm. 
+
 ## Running the Server
 
 To run the server locally,

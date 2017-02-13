@@ -3,6 +3,7 @@ cryptography==1.4
 Django==1.10
 django-bootstrap-form==3.2.1
 django-extensions==1.6.1
+django-webpack-loader==0.4.1
 -e git+http://github.com/ashish-b10/ectc_registration.git@b99529668b17691a2f85ae010a797a88d54d516d#egg=ectc_registration_exporter
 google-api-python-client==1.5.1
 httplib2==0.9.2

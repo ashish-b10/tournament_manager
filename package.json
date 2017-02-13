@@ -1,0 +1,26 @@
+{
+  "name": "tournament_manager",
+  "version": "0.0.0",
+  "description": "ECTC Tournament Manager",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ashish-b10/tournament_manager.git"
+  },
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/ashish-b10/tournament_manager/issues"
+  },
+  "dependencies": {
+    "react": "~15.4.2",
+    "react-dom": "~15.4.2",
+    "babel": "~6.5.2",
+    "webpack": "~2.2.1"
+  }
+}

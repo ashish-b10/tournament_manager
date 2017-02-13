@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tmdb',
+    'webpack_loader'
 )
 try:
     import django_extensions
