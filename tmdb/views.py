@@ -15,6 +15,7 @@ import re
 import datetime
 
 from .util.match_sheet import create_match_sheets
+from .util.bracket_svg import SvgBracket
 
 def permission_error_string(user, perm_type):
     return "Username `%s` does not have permission to %s." %(
@@ -582,16 +583,45 @@ def registration_credentials(request):
         context['form'] = form
     return render(request, 'tmdb/configuration_setting.html', context)
 
+def blue_team_text(team_match):
+    if team_match.blue_team is None:
+        return None
+    return team_match.blue_team.bracket_str()
+
+def red_team_text(team_match):
+    if team_match.red_team is None:
+        return None
+    return team_match.red_team.bracket_str()
+
+def bracket_printable(request, tournament_slug, division_slug):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament=tournament, division__slug=division_slug)
+    matches, num_rounds = models.TeamMatch.get_matches_by_round(
+            tournament_division)
+    bracket_columns = []
+    for round_num in reversed(range(num_rounds + 1)):
+        round_num_matches = 2**round_num
+        bracket_column = [None] * round_num_matches
+        bracket_columns.append(bracket_column)
+        for round_slot in range(round_num_matches):
+            key = (round_num, round_slot)
+            if key not in matches:
+                continue
+            bracket_column[round_slot] = matches[key]
+    bracket = SvgBracket.create(bracket_columns,
+            blue_team_text=blue_team_text, red_team_text=red_team_text)
+    response = '<html><body>%s</body></html>' %(bracket.tostring(
+            encoding="unicode"),)
+    return HttpResponse(response, content_type="image/svg+xml")
+
 def bracket(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament=tournament, division__slug=division_slug)
     bracket_columns = []
-    matches = {}
-    num_rounds = 0
-    for match in models.TeamMatch.objects.filter(division=tournament_division):
-        matches[(match.round_num, match.round_slot)] = match
-        num_rounds = max(num_rounds, match.round_num)
+    matches, num_rounds = models.TeamMatch.get_matches_by_round(
+            tournament_division)
     bracket_column_height = str(64 * 2**num_rounds) + "px"
     for round_num in reversed(range(num_rounds + 1)):
         round_num_matches = 2**round_num

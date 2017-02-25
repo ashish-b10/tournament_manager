@@ -77,6 +77,8 @@ urlpatterns = [
             views.team_points, name='team_points'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/seedings/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.seedings, name='seedings'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*/printable/*$',
+            views.bracket_printable, name='bracket_printable'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.bracket, name='bracket'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/edit/*$',
