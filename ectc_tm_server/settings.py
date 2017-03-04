@@ -147,3 +147,5 @@ LOGGING = {
         },
     },
 }
+
+LOGIN_REDIRECT_URL = '/tmdb/'

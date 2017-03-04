@@ -1,6 +1,11 @@
 {% extends "tmdb/base.html" %}
 
 {% block main-content %}
+  {% if perms.auth.add_user %}
   <h1>Administrative Operations</h1>
-  <a href="{% url 'tmdb:registration_credentials' %}">Set import registration credentials</a>
+  <p><a href="{% url 'tmdb:create_headtable_user'%}">Create head table user</a></p>
+  <p><a href="{% url 'tmdb:create_ringtable_user'%}">Create ring table user</a></p>
+  {% endif %}
+  <h1>Administrative Settings</h1>
+  </p><a href="{% url 'tmdb:registration_credentials' %}">Set import registration credentials</a></p>
 {% endblock %}

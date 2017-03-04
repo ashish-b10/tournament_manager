@@ -516,9 +516,13 @@ class TeamRegistration(models.Model):
                 str(self.tournament_division.tournament),)
 
     def bracket_str(self):
-        if not self.seed:
-            return str(self)
-        return "[%d] %s" %(self.seed, str(self))
+        team_str = "%s %s%d %s" %(self.team.school,
+                self.team.division.skill_level,
+                self.team.number,
+                self.__get_competitors_str())
+        if self.seed:
+            team_str = "[%d] %s" %(self.seed, team_str)
+        return team_str
 
     def num_competitors(self):
         return sum(map(lambda x: x is not None,
@@ -604,13 +608,13 @@ class TeamMatch(models.Model):
         return "Match #" + str(self.number)
 
     def status(self):
-    	if self.winning_team:
-    		return "Complete"
-    	elif self.ring_number:
-    		return "At ring " + str(self.ring_number)
-    	elif self.in_holding:
-    		return "Report to holding"
-    	return "----"
+        if self.winning_team:
+                return "Complete"
+        elif self.ring_number:
+                return "At ring " + str(self.ring_number)
+        elif self.in_holding:
+                return "Report to holding"
+        return "----"
 
     def get_previous_round_matches(self):
         upper_match_query = TeamMatch.objects.filter(division=self.division,
@@ -626,6 +630,15 @@ class TeamMatch(models.Model):
                     round_slot = self.round_slot / 2)
         except TeamMatch.DoesNotExist:
             return None
+
+    @staticmethod
+    def get_matches_by_round(tournament_division):
+        matches = {}
+        num_rounds = 0
+        for match in TeamMatch.objects.filter(division=tournament_division):
+            matches[(match.round_num, match.round_slot)] = match
+            num_rounds = max(num_rounds, match.round_num)
+        return matches, num_rounds
 
     def update_winning_team(self):
         parent_match = self.get_next_round_match()

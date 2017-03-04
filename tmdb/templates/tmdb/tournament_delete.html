@@ -2,7 +2,10 @@
 
 {% block main-content %}
 <h1>Delete Tournament</h1>
-<p>Are you sure you want to delete {{tournament.date}} {{tournament.location}}?</p>
+{% if err_msg %}
+<div class="alert alert-danger">{{err_msg}}</div>
+{% endif %}
+<p>Are you sure you want to delete the tournament at <b>{{tournament.location}}</b> on <b>{{tournament.date}}</b>?</p>
 <form action="{% url 'tmdb:tournament_delete' delete_form.instance.slug %}" method="post">
     {% csrf_token %}
     {{ edit_form.as_p }}

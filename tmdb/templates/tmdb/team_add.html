@@ -2,6 +2,9 @@
 
 {% block main-content %}
 <h2>Adding team to {{school}}</h2>
+{% if err_msg %}
+<div class="alert alert-danger">{{err_msg}}</div>
+{% endif %}
 <form action="{% url 'tmdb:team_add' tournament.slug school.slug %}" method="post">
   {% csrf_token %}
   {{form.as_p}}

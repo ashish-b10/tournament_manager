@@ -1,9 +1,24 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 from . import views
 
 urlpatterns = [
+    url(r'^create_headtable_user/*$',
+            views.create_headtable_user, name='create_headtable_user'),
+    url(r'^create_ringtable_user/*$',
+            views.create_ringtable_user, name='create_ringtable_user'),
+    url(r'^add_match/*/(?P<match_id>[0-9]+)/*/upper/*$',
+            views.add_upper_match, name='add_upper_match'),
+    url(r'^add_match/*/(?P<match_id>[0-9]+)/*/lower/*$',
+            views.add_lower_match, name='add_lower_match'),
+    url(r'^registration_credentials/*$', views.registration_credentials,
+            name='registration_credentials'),
+    url(r'^new_tournament/*$', views.tournament_create,
+            name='tournament_create'),
+    url(r'^settings/*/$', views.settings, name='settings'),
+    url(r'^auth/*/', include('django.contrib.auth.urls')),
+    url(r'^$', views.index, name='index'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<school_slug>[a-z0-9_-]+)/*'
             + r'/add_competitor/*',
@@ -45,16 +60,10 @@ urlpatterns = [
             + r'/(?P<division_slug>[a-z0-9_-]+)/*'
             + r'/match_sheets/*',
             views.match_sheet, name='match_sheet'),
-    url(r'^add_match/*/(?P<match_id>[0-9]+)/*/upper/*$',
-            views.add_upper_match, name='add_upper_match'),
-    url(r'^add_match/*/(?P<match_id>[0-9]+)/*/lower/*$',
-            views.add_lower_match, name='add_lower_match'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<division_slug>)[a-z0-9_-]+/*'
             + r'/seeding/*$',
             views.seeding, name='seeding'),
-    url(r'^registration_credentials/*$', views.registration_credentials,
-            name='registration_credentials'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/teams/*$',
             views.team_list, name='team_list'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
@@ -68,10 +77,10 @@ urlpatterns = [
             views.team_points, name='team_points'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/seedings/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.seedings, name='seedings'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*/printable/*$',
+            views.bracket_printable, name='bracket_printable'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.bracket, name='bracket'),
-    url(r'^new_tournament/*$', views.tournament_create,
-            name='tournament_create'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/edit/*$',
             views.tournament_edit, name='tournament_edit'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/delete/*$',
@@ -83,12 +92,10 @@ urlpatterns = [
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + '/schools/*/(?P<school_slug>[a-z0-9_-]+)/*$',
             views.tournament_school, name='tournament_school'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/tournament_dashboard/rings/*$',
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/tournament_dashboard/*/rings/*$',
             views.rings, name='rings'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/*$',
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/$',
             views.tournament_dashboard, name='tournament_dashboard'),
-    url(r'^settings/*$', views.settings, name='settings'),
-    url(r'^$', views.index, name='index'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

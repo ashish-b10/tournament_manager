@@ -2,6 +2,7 @@ from django import forms
 import datetime
 
 from . import models
+from django.contrib.auth import models as auth_models
 
 from collections import defaultdict
 
@@ -57,7 +58,10 @@ class SchoolRegistrationImportForm(forms.Form):
 class SchoolCompetitorForm(forms.ModelForm):
     class Meta:
         model = models.Competitor
-        fields = ['name', 'sex', 'belt_rank', 'weight']
+        fields = ['name', 'sex', 'belt_rank', 'weight', 'registration']
+        widgets = {
+            'registration': forms.HiddenInput(),
+        }
 
 class SchoolCompetitorDeleteForm(forms.ModelForm):
     class Meta:
@@ -148,3 +152,9 @@ class TeamRegistrationSeedingForm(forms.Form):
     team_registration = forms.ModelChoiceField(
             queryset=models.TeamRegistration.objects.all())
     readonly_fields = ('seed',)
+
+class UserForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput())
+    class Meta:
+        model = auth_models.User
+        fields = ('username', 'password')
