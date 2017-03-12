@@ -59,6 +59,13 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'ectc_tm_server.urls'
 
+class InvalidStringWarning(str):
+    def __mod__(self, other):
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning("Undefined template variable: %s" %(other,))
+        return ""
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -73,6 +80,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'string_if_invalid': InvalidStringWarning("%s"),
         },
     },
 ]
