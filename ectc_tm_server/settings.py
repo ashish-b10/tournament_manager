@@ -157,3 +157,4 @@ LOGGING = {
 }
 
 LOGIN_REDIRECT_URL = '/tmdb/'
+LOGIN_URL = '/tmdb/auth/login'
