@@ -4,8 +4,10 @@
 
 {% block main-content %}
   <div class="row page-header">
-    <h1 class="col-sm-5 col-md-5"> Tournament Manager</h1>
-    <a class="col-sm-offset-2 col-sm-3 col-md-offset-3 col-md-3 btn btn-primary" id="createTournamentButton" data-toggle="modal" data-target="#createTournamentModal">Create New Tournament</a>
+    <h1 class="col-sm-5 col-md-5">ECTC Tournaments</h1>
+    {% if perms.tmdb.add_tournament %}
+    <a class="col-sm-offset-2 col-sm-3 col-md-offset-3 col-md-3 btn btn-primary" id="createTournamentButton" href="{%url 'tmdb:tournament_add'%}" >Create New Tournament</a>
+    {% endif %}
   </div>
 
   <table class="table table-striped">
@@ -14,14 +16,16 @@
       <th>Date</th>
       <th>Details</th>
       <th>Schools</th>
+      {% if perms.tmdb.delete_tournament %}
       <th>Delete</th>
+      {% endif %}
     </thead>
   {% if tournaments %}
     {% for tournament in tournaments %}
     <tr>
       <td><a href="{% url 'tmdb:tournament_dashboard' tournament.slug %}">{{tournament.location}}</a></td>
       <td>{{tournament.date}} </td>
-      <td><a class="btn btn-default" href="{% url 'tmdb:tournament_edit' tournament.slug %}">Edit</a></td>
+      <td><a class="btn btn-default" href="{% url 'tmdb:tournament_change' tournament.slug %}">Edit</a></td>
       <td>
         {% if tournament.imported %}
           <a class="btn btn-default" href="{% url 'tmdb:tournament_schools' tournament.slug %}">Import</a>
@@ -30,7 +34,9 @@
         {% endif %}
       </td>
       <td>
-        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteTournamentModal{{tournament.id}}">Delete</button>
+        {% if perms.tmdb.delete_tournament %}
+        <button type="button" class="btn btn-danger" href="{% url 'tmdb:tournament_delete' tournament.slug %}">Delete</button>
+        {% endif %}
         <!-- Modal to confirm that you want to delete -->
         <div class="modal" id="confirmDeleteTournamentModal{{tournament.id}}" role="dialog" tabindex="-1">
           <div class="modal-dialog" role="document">
@@ -59,25 +65,4 @@
   <tr><td>There are no existing tournaments in the database.</td></tr>
   {% endif %}
   </table>
-
-  <div id="createTournamentModal" class="modal fade" role="dialog" tabindex="-1">
-    <div class="modal-dialog">
-      <!-- Modal content-->
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h3 class="modal-title">Create Tournament</h3>
-        </div>
-        <div class="modal-body">
-          <p> This form will create and import the schools. </p>
-          <form class="create-form" action="{% url 'tmdb:tournament_create' %}" method="post">
-              {% csrf_token %}
-              {{ edit_form |bootstrap }}
-              <input id="submitCreateTournament" formmethod="post" type="submit" class="btn btn-default" value="Create Tournament"/>
-          </form>
-        </div>
-      </div>
-
-    </div>
-  </div>
 {% endblock %}

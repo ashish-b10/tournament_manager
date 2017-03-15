@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidde
 from django.forms.models import modelformset_factory
 from django.core.urlresolvers import reverse
 from django.conf import settings as config
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import models as auth_models
 from django.core.exceptions import PermissionDenied
 
@@ -31,85 +31,71 @@ def can_import_school_registration(user):
         "tmdb.delete_teamregistration",
     ])
 
-def index(request, tournament_slug=None):
+@login_required
+def settings(request):
+    return render(request, 'tmdb/settings.html')
+
+def index(request):
+    return HttpResponseRedirect(reverse('tmdb:tournaments'))
+
+def tournaments(request, tournament_slug=None):
     today = datetime.date.today()
     edit_form = forms.TournamentEditForm(initial={'date': today})
     context = {
         'edit_form': edit_form,
         'tournaments': models.Tournament.objects.order_by('-date')
     }
-    return render(request, 'tmdb/index.html', context)
+    return render(request, 'tmdb/tournaments.html', context)
 
-@login_required
-def settings(request):
-    return render(request, 'tmdb/settings.html')
-
-def tournament_create(request):
-    template_name = 'tmdb/tournament_edit.html'
+@permission_required("tmdb.add_tournament")
+def tournament_add(request):
+    template_name = 'tmdb/tournament_add_change.html'
     context = {}
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        edit_form = forms.TournamentEditForm(request.POST)
-        context['edit_form'] = edit_form
-        if not request.user.has_perm('tmdb.add_tournament'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "create tournaments")
-            return render(request, template_name, context, status=403)
-        if edit_form.is_valid():
-            edit_form.save()
-            edit_form.instance.import_school_registrations()
+        add_form = forms.TournamentEditForm(request.POST)
+        context['add_form'] = add_form
+        if add_form.is_valid():
+            add_form.save()
+            add_form.instance.import_school_registrations()
             return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
-                    args=(edit_form.instance.slug,)))
+                    args=(add_form.instance.slug,)))
     else:
         today = datetime.date.today()
-        edit_form = forms.TournamentEditForm(initial={'date': today})
-    context['edit_form'] = edit_form
-    return render(request, 'tmdb/tournament_edit.html', context)
+        add_form = forms.TournamentEditForm(initial={'date': today})
+    context['add_form'] = add_form
+    return render(request, template_name, context)
 
-def tournament_edit(request, tournament_slug):
+@permission_required("tmdb.change_tournament")
+def tournament_change(request, tournament_slug):
     instance = get_object_or_404(models.Tournament, slug=tournament_slug)
-    template_name = 'tmdb/tournament_edit.html'
+    template_name = 'tmdb/tournament_add_change.html'
     context = {}
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        edit_form = forms.TournamentEditForm(request.POST, instance=instance)
-        context['edit_form'] = edit_form
-        if not request.user.has_perm('tmdb.change_tournament'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "change tournaments")
-            return render(request, template_name, context, status=403)
-        if edit_form.is_valid():
-            tournament = edit_form.save()
+        change_form = forms.TournamentEditForm(request.POST, instance=instance)
+        context['change_form'] = change_form
+        if change_form.is_valid():
+            tournament = change_form.save()
             return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
-                    args=(edit_form.instance.slug,)))
+                    args=(change_form.instance.slug,)))
     else:
-        edit_form = forms.TournamentEditForm(instance=instance)
+        change_form = forms.TournamentEditForm(instance=instance)
         import_form = forms.TournamentImportForm(instance=instance)
         context['import_form'] = import_form
-        delete_form = forms.TournamentDeleteForm(instance=instance)
-        context['delete_form'] = delete_form
-    context['edit_form'] = edit_form
-    return render(request, 'tmdb/tournament_edit.html', context)
+        if request.user.has_perm("tmdb.delete_tournament"):
+            context['delete_form'] = forms.TournamentDeleteForm(
+                instance=instance)
+    context['change_form'] = change_form
+    return render(request, template_name, context)
 
+@permission_required("tmdb.delete_tournament")
 def tournament_delete(request, tournament_slug):
     instance = get_object_or_404(models.Tournament, slug=tournament_slug)
     template_name = 'tmdb/tournament_delete.html'
     context = {'tournament': instance}
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
         delete_form = forms.TournamentDeleteForm(request.POST,
                 instance=instance)
         context['delete_form'] = delete_form
-        if not request.user.has_perm('tmdb.delete_tournament'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "delete tournaments")
-            return render(request, template_name, context, status=403)
         if delete_form.is_valid():
             instance.delete()
             return HttpResponseRedirect(reverse('tmdb:index'))
