@@ -7,9 +7,16 @@ from django.contrib.auth import models as auth_models
 from collections import defaultdict
 
 class TournamentEditForm(forms.ModelForm):
+    import_field = forms.BooleanField(required=False, label="Import Schools?")
+
     class Meta:
         model = models.Tournament
         exclude = ['slug', 'imported']
+
+    def save(self, *args, **kwargs):
+        super().save()
+        if self.cleaned_data['import_field']:
+            self.instance.import_school_registrations()
 
 class TournamentDeleteForm(forms.ModelForm):
     class Meta:

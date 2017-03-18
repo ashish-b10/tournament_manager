@@ -56,12 +56,14 @@ def tournament_add(request):
         context['add_form'] = add_form
         if add_form.is_valid():
             add_form.save()
-            add_form.instance.import_school_registrations()
             return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
                     args=(add_form.instance.slug,)))
     else:
         today = datetime.date.today()
-        add_form = forms.TournamentEditForm(initial={'date': today})
+        add_form = forms.TournamentEditForm(initial={
+                'date': today,
+                'import_field': True,
+        })
     context['add_form'] = add_form
     return render(request, template_name, context)
 
@@ -78,7 +80,8 @@ def tournament_change(request, tournament_slug):
             return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
                     args=(change_form.instance.slug,)))
     else:
-        change_form = forms.TournamentEditForm(instance=instance)
+        change_form = forms.TournamentEditForm(instance=instance,
+                initial={'import': False})
         import_form = forms.TournamentImportForm(instance=instance)
         context['import_form'] = import_form
         if request.user.has_perm("tmdb.delete_tournament"):
