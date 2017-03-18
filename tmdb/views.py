@@ -40,9 +40,7 @@ def index(request):
 
 def tournaments(request, tournament_slug=None):
     today = datetime.date.today()
-    edit_form = forms.TournamentEditForm(initial={'date': today})
     context = {
-        'edit_form': edit_form,
         'tournaments': models.Tournament.objects.order_by('-date')
     }
     return render(request, 'tmdb/tournaments.html', context)
