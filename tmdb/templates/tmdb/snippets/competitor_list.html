@@ -1,4 +1,4 @@
-<a class="btn btn-primary" href="{% url 'tmdb:add_competitor' tournament.slug school_registration.school.slug %}">Add competitor</a>
+<a class="btn btn-primary" href="{% url 'tmdb:competitor_add' tournament.slug school_registration.school.slug %}">Add competitor</a>
 
 <table class="table table-striped">
   <thead>
@@ -13,7 +13,7 @@
     <td> {{competitor.sex_label}} </td>
     <td> {{competitor.belt_rank_label}} </td>
     <td> {{competitor.weight|default:"-"}} </td>
-    <td><a class="btn btn-primary" href="{% url 'tmdb:edit_competitor' tournament.slug school_registration.school.slug competitor.id %}">Edit</a></td>
+    <td><a class="btn btn-primary" href="{% url 'tmdb:competitor_change' tournament.slug school_registration.school.slug competitor.id %}">Edit</a></td>
     <td>
       <button type='button' class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteCompetitorModal{{competitor.id}}">Delete</button>
       <div class="modal" id="confirmDeleteCompetitorModal{{competitor.id}}" role="dialog" tabindex="-1">

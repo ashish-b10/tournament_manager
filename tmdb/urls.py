@@ -18,6 +18,18 @@ urlpatterns = [
             views.tournament_delete, name='tournament_delete'),
 
     # competitor create/edit/delete
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/competitors/*/add/*$',
+            views.competitor_add, name='competitor_add'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/competitors/*/(?P<competitor_id>[0-9]+)/*$',
+            views.competitor_change, name='competitor_change'),
+    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/delete_competitor/*/(?P<competitor_id>[0-9]+)',
+            views.competitor_delete, name='delete_competitor'),
 
     url(r'^create_headtable_user/*$',
             views.create_headtable_user, name='create_headtable_user'),
@@ -32,20 +44,6 @@ urlpatterns = [
     url(r'^settings/*/$', views.settings, name='settings'),
     url(r'^auth/*/', include('django.contrib.auth.urls')),
     url(r'^$', views.index, name='index'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
-            + r'/add_competitor/*',
-            views.add_competitor, name='add_competitor'),
-
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
-            + r'/edit_competitor/*/(?P<competitor_id>[0-9]+)',
-            views.edit_competitor, name='edit_competitor'),
-
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
-            + r'/delete_competitor/*/(?P<competitor_id>[0-9]+)',
-            views.delete_competitor, name='delete_competitor'),
 
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<school_slug>[a-z0-9_-]+)/*'

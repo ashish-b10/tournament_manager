@@ -104,15 +104,10 @@ def tournament_delete(request, tournament_slug):
     context['delete_form'] = delete_form
     return render(request, 'tmdb/tournament_delete.html', context)
 
+@permission_required("tmdb.change_tournament")
 def tournament_import(request, tournament_slug):
-    instance = models.Tournament.objects.filter(slug=tournament_slug).first()
     if request.method == "POST":
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        if not request.user.has_perm('tmdb.add_tournament'):
-            return HttpResponseForbidden(permission_error_string(request.user,
-                    "import tournaments"))
+        instance = get_object_or_404(models.Tournament, slug=tournament_slug)
         instance.import_school_registrations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
@@ -700,39 +695,61 @@ def seeding(request, tournament_slug, division_slug, seed=None):
     }
     return render(request, 'tmdb/modify_team_registration_seed.html', context)
 
-def add_competitor(request, tournament_slug, school_slug):
+@permission_required("tmdb.add_competitor")
+def competitor_add(request, tournament_slug, school_slug):
+    template_name = 'tmdb/competitor_add_change.html'
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
     school_registration = get_object_or_404(models.SchoolRegistration,
             tournament=tournament, school=school)
     competitors = models.Competitor.objects.filter(registration=school_registration)
-    template_name = 'tmdb/add_competitor.html'
     context = {}
     context['tournament'] = tournament
     context['school'] = school
     context['school_registration'] = school_registration
     context['competitors'] = competitors
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        edit_form = forms.SchoolCompetitorForm(request.POST)
-        context['edit_form'] = edit_form
-        if not request.user.has_perm('tmdb.add_competitor'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "create competitors")
-            return render(request, template_name, context, status=403)
-        if edit_form.is_valid():
-            edit_form.save()
+        add_form = forms.SchoolCompetitorForm(request.POST)
+        context['add_form'] = add_form
+        if add_form.is_valid():
+            add_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school",
                     args=(tournament_slug, school_slug,)))
     else:
-        edit_form = forms.SchoolCompetitorForm(
+        add_form = forms.SchoolCompetitorForm(
                 initial={'registration': school_registration})
-        context['edit_form'] = edit_form
-    return render(request, 'tmdb/add_competitor.html', context)
+        context['add_form'] = add_form
+    return render(request, template_name, context)
 
-def delete_competitor(request, tournament_slug, school_slug, competitor_id):
+@permission_required("tmdb.change_competitor")
+def competitor_change(request, tournament_slug, school_slug, competitor_id):
+    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
+    school = get_object_or_404(models.School, slug=school_slug)
+    school_registration = get_object_or_404(models.SchoolRegistration,
+            tournament=tournament, school=school)
+    instance = models.Competitor.objects.get(pk = competitor_id)
+    template_name = 'tmdb/competitor_add_change.html'
+    context = {}
+    context['tournament'] = tournament
+    context['school'] = school
+    context['school_registration'] = school_registration
+    context['competitor'] = instance
+    context['name'] = instance.name
+    if request.method == 'POST':
+        change_form = forms.SchoolCompetitorForm(request.POST,
+                instance=instance)
+        context['change_form'] = change_form
+        if change_form.is_valid():
+            competitor = change_form.save()
+            return HttpResponseRedirect(reverse('tmdb:tournament_school', args = (tournament_slug, school_slug)))
+    else:
+        change_form = forms.SchoolCompetitorForm(instance = instance)
+        change_form.registration = school_registration
+        context['change_form'] = change_form
+    return render(request, template_name, context)
+
+@permission_required("tmdb.delete_competitor")
+def competitor_delete(request, tournament_slug, school_slug, competitor_id):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
     school_registration = get_object_or_404(models.SchoolRegistration,
@@ -745,16 +762,9 @@ def delete_competitor(request, tournament_slug, school_slug, competitor_id):
     context['school_registration'] = school_registration
     context['competitor'] = instance
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
         delete_form = forms.SchoolCompetitorDeleteForm(request.POST,
                 instance=instance)
         context['delete_form'] = delete_form
-        if not request.user.has_perm('tmdb.delete_competitor'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "delete competitors")
-            return render(request, template_name, context, status=403)
         if delete_form.is_valid():
             instance.delete()
             return HttpResponseRedirect(reverse("tmdb:tournament_school",
@@ -763,38 +773,6 @@ def delete_competitor(request, tournament_slug, school_slug, competitor_id):
         delete_form = forms.SchoolCompetitorDeleteForm(instance = instance)
     context['delete_form'] = delete_form
     return render(request, template_name, context)
-
-def edit_competitor(request, tournament_slug, school_slug, competitor_id):
-    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.SchoolRegistration,
-            tournament=tournament, school=school)
-    instance = models.Competitor.objects.get(pk = competitor_id)
-    template_name = 'tmdb/edit_competitor.html'
-    context = {}
-    context['tournament'] = tournament
-    context['school'] = school
-    context['school_registration'] = school_registration
-    context['competitor'] = instance
-    context['name'] = instance.name
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        edit_form = forms.SchoolCompetitorForm(request.POST, instance=instance)
-        context['edit_form'] = edit_form
-        if not request.user.has_perm('tmdb.change_competitor'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "change competitors")
-            return render(request, template_name, context, status=403)
-        if edit_form.is_valid():
-            competitor = edit_form.save()
-            return HttpResponseRedirect(reverse('tmdb:tournament_school', args = (tournament_slug, school_slug)))
-    else:
-        edit_form = forms.SchoolCompetitorForm(instance = instance)
-        edit_form.registration = school_registration
-        context['edit_form'] = edit_form
-    return render(request, 'tmdb/edit_competitor.html', context)
 
 def add_upper_match(request, match_id):
     return add_match(request, match_id, side='upper')
