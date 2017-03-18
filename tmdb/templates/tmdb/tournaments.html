@@ -35,7 +35,7 @@
       </td>
       <td>
         {% if perms.tmdb.delete_tournament %}
-        <button type="button" class="btn btn-danger" href="{% url 'tmdb:tournament_delete' tournament.slug %}">Delete</button>
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#confirmDeleteTournamentModal{{tournament.id}}">Delete</button>
         {% endif %}
         <!-- Modal to confirm that you want to delete -->
         <div class="modal" id="confirmDeleteTournamentModal{{tournament.id}}" role="dialog" tabindex="-1">
