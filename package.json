@@ -2,7 +2,6 @@
   "name": "tournament_manager",
   "version": "0.0.0",
   "description": "ECTC Tournament Manager",
-  "main": "index.js",
   "directories": {
     "test": "tests"
   },
