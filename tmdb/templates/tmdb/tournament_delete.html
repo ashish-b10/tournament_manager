@@ -8,7 +8,7 @@
 <p>Are you sure you want to delete the tournament at <b>{{tournament.location}}</b> on <b>{{tournament.date}}</b>?</p>
 <form action="{% url 'tmdb:tournament_delete' delete_form.instance.slug %}" method="post">
     {% csrf_token %}
-    {{ edit_form.as_p }}
+    {{ delete_form.as_p }}
     <input type="submit" value="Delete Tournament"/>
 </form>
 {% endblock %}
