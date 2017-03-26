@@ -5,7 +5,7 @@ import decimal
 from itertools import product
 from django.template.defaultfilters import slugify
 
-from tmdb.util import BracketGenerator, SlotAssigner
+from tmdb.util import BracketGenerator, SlotAssigner, d3_bracket_layout
 
 class SexField(models.CharField):
     FEMALE = 'F'
@@ -429,6 +429,11 @@ class TournamentDivision(models.Model):
     def __repr__(self):
         return "%s (%s)" %(self.division, self.tournament)
 
+    def get_d3_bracket(self):
+        matches = TeamMatch.objects.filter(division=self)
+        matches_by_round = {(m.round_num, m.round_slot,):m for m in matches}
+        return d3_bracket_layout(self, matches_by_round)
+
 class TournamentDivisionBeltRanks(models.Model):
     belt_rank = BeltRankField()
     tournament_division = models.ForeignKey(TournamentDivision)
@@ -465,6 +470,10 @@ class Team(models.Model):
 
     def __str__(self):
         return "%s %s%d" %(str(self.school), str(self.division), self.number,)
+
+    def short_str(self):
+        return "%s %s%d" %(str(self.school), self.division.skill_level,
+                self.number,)
 
 #TODO team.division must equal tournament_division.division
 class TeamRegistration(models.Model):
