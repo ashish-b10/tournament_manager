@@ -21,37 +21,40 @@ def __get_d3_round_name(match):
         return match.winning_team.team.short_str()
     return str(match)
 
-def __get_d3_bracket_layout(match, matches_by_round, side=None):
-    layout = {}
-    layout['name'] = __get_d3_round_name(match)
+def __get_d3_bracket_layout(match, matches_by_round):
+    layout = {
+        "text": {
+            "name": __get_d3_round_name(match)
+        }
+    }
 
-    if side is None:
-        upper_side = []
-        layout['winners'] = upper_side
-        lower_side = []
-        layout['competitors'] = lower_side
-    else:
-        upper_side = lower_side = layout[side] = []
+    children = []
 
-    upper_competitor = __get_upper_competitor(match, matches_by_round)
-    if upper_competitor:
-        upper_side.append(__get_d3_bracket_layout(
-                upper_competitor, matches_by_round, 'winners'))
+    upper_child = __get_upper_competitor(match, matches_by_round)
+    if upper_child:
+        children.append(__get_d3_bracket_layout(upper_child, matches_by_round))
     else:
-        blue_team_str = 'bye'
+        new_child = {
+            "text": {
+                "name": "Bye"
+            }
+        }
         if match.blue_team:
-            blue_team_str = match.blue_team.team.short_str()
-        upper_side.append({'name': blue_team_str})
+            new_child['text']['name'] = match.blue_team.team.short_str()
+        children.append(new_child)
 
-    lower_competitor = __get_lower_competitor(
-            match, matches_by_round)
-    if lower_competitor:
-        lower_side.append(__get_d3_bracket_layout(
-                lower_competitor, matches_by_round, 'competitors'))
+    lower_child = __get_lower_competitor(match, matches_by_round)
+    if lower_child:
+        children.append(__get_d3_bracket_layout(lower_child, matches_by_round))
     else:
-        red_team_str = 'bye'
+        new_child = {
+            "text": {
+                "name": "Bye"
+            }
+        }
         if match.red_team:
-            red_team_str = match.red_team.team.short_str()
-        lower_side.append({'name': red_team_str})
+            new_child['text']['name'] = match.red_team.team.short_str()
+        children.append(new_child)
+    layout['children'] = children
 
     return layout

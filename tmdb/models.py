@@ -432,6 +432,8 @@ class TournamentDivision(models.Model):
     def get_d3_bracket(self):
         matches = TeamMatch.objects.filter(division=self)
         matches_by_round = {(m.round_num, m.round_slot,):m for m in matches}
+        import json
+        print(json.dumps(d3_bracket_layout(self, matches_by_round)))
         return d3_bracket_layout(self, matches_by_round)
 
 class TournamentDivisionBeltRanks(models.Model):
