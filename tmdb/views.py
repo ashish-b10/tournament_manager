@@ -265,8 +265,9 @@ def match_list(request, tournament_slug, division_slug=None):
     }
     return render(request, 'tmdb/match_list.html', context)
 
-def team_delete(request, tournament_slug, school_slug, division_slug,
-        team_number):
+@permission_required("tmdb.delete_teamregistration")
+def team_registration_delete(request, tournament_slug, school_slug,
+        division_slug, team_number):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
     division = get_object_or_404(models.Division, slug=division_slug)
@@ -279,21 +280,17 @@ def team_delete(request, tournament_slug, school_slug, division_slug,
     context = {}
     context['team'] = team_registration
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
         delete_form = forms.TeamRegistrationDeleteForm(request.POST,
                 instance=team_registration)
         context['delete_form'] = delete_form
-        if not request.user.has_perm('tmdb.delete_teamregistration'):
-            return HttpResponseForbidden(permission_error_string(request.user,
-                    "delete a team registration"))
         if delete_form.is_valid():
             team_registration.delete()
             return HttpResponseRedirect(reverse("tmdb:tournament_school",
                     args=(tournament_slug, school_slug,)))
 
-def team_edit(request, tournament_slug, school_slug, division_slug, team_number):
+@permission_required("tmdb.change_teamregistration")
+def team_registration_change(request, tournament_slug, school_slug,
+        division_slug, team_number):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
     school_registration = get_object_or_404(models.SchoolRegistration,
@@ -305,7 +302,7 @@ def team_edit(request, tournament_slug, school_slug, division_slug, team_number)
             number=team_number)
     instance = get_object_or_404(models.TeamRegistration,
             tournament_division=tournament_division, team=team)
-    template_name = 'tmdb/team_edit.html'
+    template_name = 'tmdb/team_registration_add_change.html'
     context = {}
     context['school'] = school
     context['school_registration'] = school_registration
@@ -313,78 +310,41 @@ def team_edit(request, tournament_slug, school_slug, division_slug, team_number)
     context['instance'] = instance
     used_competitors = []
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        edit_form = forms.TeamRegistrationForm(school,
-                school_registration, used_competitors, request.POST,
-                instance=instance)
+        edit_form = forms.TeamRegistrationForm(school_registration,
+                request.POST, instance=instance)
         context['edit_form'] = edit_form
-        if not request.user.has_perm('tmdb.change_teamregistration'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "change teams")
-            return render(request, template_name, context, status=403)
         if edit_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
     else:
-        for i in models.TeamRegistration.objects.all().exclude(pk=instance.id):
-            used_competitors.extend(i.get_competitors_ids())
-        edit_form = forms.TeamRegistrationForm(school, school_registration, used_competitors, instance=instance)
+        edit_form = forms.TeamRegistrationForm(school_registration,
+                instance=instance, initial={'tournament': tournament.pk})
         context['edit_form'] = edit_form
 
-    return render(request, 'tmdb/team_edit.html', context)
+    return render(request, template_name, context)
 
-def team_add(request, tournament_slug, school_slug):
+@permission_required("tmdb.add_teamregistration")
+def team_registration_add(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = models.SchoolRegistration.objects.get(school=school, tournament=tournament)
+    school_registration = models.SchoolRegistration.objects.get(
+            school__slug=school_slug, tournament=tournament)
     context = {}
-    context['school'] = school
     context['school_registration'] = school_registration
     context['tournament'] = tournament
-    template_name = 'tmdb/team_add.html'
-    used_competitors = []
+    template_name = 'tmdb/team_registration_add_change.html'
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        form = forms.TeamRegistrationForm(school, school_registration, used_competitors, request.POST)
-        context['form'] = form
-        if not request.user.has_perm('tmdb.add_teamregistration'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "add teams")
-            return render(request, template_name, context, status=403)
-        if form.is_valid():
-            tournament_division = models.TournamentDivision.objects.get(pk=request.POST['tournament_division'])
-            team = models.Team.objects.get(pk=request.POST['team'])
-            light = request.POST['lightweight']
-            middle = request.POST['middleweight']
-            heavy = request.POST['heavyweight']
-            a1 = request.POST['alternate1']
-            a2 = request.POST['alternate2']
-
-            if light: light = models.Competitor.objects.get(pk= int(light))
-            else: light = None
-            if middle: middle = models.Competitor.objects.get(pk= int(middle))
-            else: middle = None
-            if heavy: heavy = models.Competitor.objects.get(pk= int(heavy))
-            else: heavy = None
-            if a1: a1 = models.Competitor.objects.get(pk= int(a1))
-            else: a1 = None
-            if a2 : a2 = models.Competitor.objects.get(pk= int(a2))
-            else: a2 = None
-
-            TeamReg = models.TeamRegistration.objects.create(tournament_division=tournament_division, team=team,lightweight=light, middleweight=middle, heavyweight=heavy, alternate1=a1, alternate2=a2)
+        add_form = forms.TeamRegistrationForm(school_registration,
+                request.POST)
+        context['add_form'] = add_form
+        if add_form.is_valid():
+            add_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug,school_slug,)))
     else:
-        for i in models.TeamRegistration.objects.all():
-            used_competitors.extend(i.get_competitors_ids())
+        add_form = forms.TeamRegistrationForm(school_registration,
+                initial={'tournament': tournament.pk})
+        context['add_form'] = add_form
 
-        form = forms.TeamRegistrationForm(school, school_registration, used_competitors)
-        context['form'] = form
-
-    return render(request, 'tmdb/team_add.html', context)
+    return render(request, template_name, context)
 
 def team_list(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)

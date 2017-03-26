@@ -9,20 +9,22 @@ urlpatterns = [
     url(r'^tournaments/*/add/*$',
             views.tournament_add, name='tournament_add'),
     url(r'^tournaments/*'
-            + '/(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + '/change/*$',
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/change/*$',
             views.tournament_change, name='tournament_change'),
     url(r'^tournaments/*'
-            + '/(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + '/delete/*$',
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/delete/*$',
             views.tournament_delete, name='tournament_delete'),
 
     # competitor create/edit/delete
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<school_slug>[a-z0-9_-]+)/*'
             + r'/competitors/*/add/*$',
             views.competitor_add, name='competitor_add'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<school_slug>[a-z0-9_-]+)/*'
             + r'/competitors/*/(?P<competitor_id>[0-9]+)/*$',
             views.competitor_change, name='competitor_change'),
@@ -30,6 +32,33 @@ urlpatterns = [
             + r'/(?P<school_slug>[a-z0-9_-]+)/*'
             + r'/delete_competitor/*/(?P<competitor_id>[0-9]+)',
             views.competitor_delete, name='delete_competitor'),
+
+    # team_registration create/edit/delete
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/schools/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/teams/*'
+            + r'/add/*',
+            views.team_registration_add, name='team_registration_add'),
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/schools/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/teams/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<team_number>[0-9]+)'
+            + r'/edit/*',
+            views.team_registration_change, name='team_registration_change'),
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/schools/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/teams/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/(?P<team_number>[0-9]+)'
+            + r'/delete/*',
+            views.team_registration_delete, name='team_registration_delete'),
 
     url(r'^create_headtable_user/*$',
             views.create_headtable_user, name='create_headtable_user'),
@@ -44,23 +73,6 @@ urlpatterns = [
     url(r'^settings/*/$', views.settings, name='settings'),
     url(r'^auth/*/', include('django.contrib.auth.urls')),
     url(r'^$', views.index, name='index'),
-
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
-            + r'/delete_team/*/(?P<division_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<team_number>[0-9]+)',
-            views.team_delete, name='team_delete'),
-
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
-            + r'/edit_team/*/(?P<division_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<team_number>[0-9]+)',
-            views.team_edit, name='team_edit'),
-
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
-            + r'/add_team/*',
-            views.team_add, name='team_add'),
 
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + r'/(?P<division_slug>[a-z0-9_-]+)/*'

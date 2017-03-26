@@ -34,24 +34,50 @@ class TeamRegistrationDeleteForm(forms.ModelForm):
         fields = []
 
 class TeamRegistrationForm(forms.ModelForm):
-    def __init__(self, school, school_registration, used_competitors, *args, **kwargs):
+    tournament = forms.ModelChoiceField(
+            queryset=models.Tournament.objects.all())
+
+    def __init__(self, school_registration, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['tournament'].widget = forms.HiddenInput()
+        self.fields['tournament_division'].widget = forms.HiddenInput()
 
-        lst = ['lightweight', 'middleweight', 'heavyweight', 'alternate1', 'alternate2']
-
+        lst = ['lightweight', 'middleweight', 'heavyweight', 'alternate1',
+                'alternate2', 'tournament_division']
         for key in self.fields:
             if key in lst:
                 self.fields[key].required = False
 
-        if len(kwargs) != 0:
-            self.fields['team'].queryset = models.Team.objects.filter(school=school, registrations__in=[None, kwargs['instance'].tournament_division])
+        used_competitors = set()
+        for i in models.TeamRegistration.objects.filter(
+                team__school=school_registration.school,
+                tournament_division__tournament=school_registration.tournament):
+            used_competitors.update(i.get_competitors_ids())
+
+        if 'instance' in kwargs:
+            self.fields['team'].widget = forms.HiddenInput()
+            used_competitors -= set(kwargs['instance'].get_competitors_ids())
         else:
-            self.fields['team'].queryset = models.Team.objects.filter(school=school, registrations=None)
-        self.fields['lightweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
-        self.fields['middleweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
-        self.fields['heavyweight'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
-        self.fields['alternate1'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
-        self.fields['alternate2'].queryset = models.Competitor.objects.filter(registration=school_registration).exclude(pk__in=used_competitors)
+            self.fields['team'].queryset = models.Team.objects.filter(
+                school=school_registration.school,
+                registrations=None).order_by('division', 'number')
+
+        available_competitors = models.Competitor.objects.filter(
+                registration=school_registration).exclude(
+                        pk__in=used_competitors)
+
+        self.fields['lightweight'].queryset = available_competitors
+        self.fields['middleweight'].queryset = available_competitors
+        self.fields['heavyweight'].queryset = available_competitors
+        self.fields['alternate1'].queryset = available_competitors
+        self.fields['alternate2'].queryset = available_competitors
+
+    def clean(self):
+        tournament = self.cleaned_data['tournament']
+        division = self.cleaned_data['team'].division
+        tournament_division = models.TournamentDivision.objects.get(
+                tournament=tournament, division=division)
+        self.cleaned_data['tournament_division'] = tournament_division
 
     class Meta:
         model = models.TeamRegistration

@@ -405,7 +405,7 @@ class Division(models.Model):
     def __str__(self):
         if self.sex == SexField.FEMALE: sex_name = "Women's"
         if self.sex == SexField.MALE: sex_name = "Men's"
-        return sex_name + " " + DivisionLevelField.label(self.skill_level)
+        return sex_name + " " + self.skill_level
 
     def match_number_start_val(self):
         if self.skill_level == DivisionLevelField.A_TEAM_VAL:
