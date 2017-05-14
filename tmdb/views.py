@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404, get_list_or_404
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.forms.models import modelformset_factory
 from django.core.urlresolvers import reverse
@@ -872,6 +872,30 @@ def match_sheet(request, tournament_slug, division_slug, match_number=None):
 
     response = HttpResponse(sheet, content_type="application/pdf")
     response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
+    return response
+
+def export_seeds(request, tournament_slug, division_slug):
+    tournament_division = get_object_or_404(models.TournamentDivision, tournament__slug=tournament_slug, division__slug=division_slug)
+    teams = get_list_or_404(models.TeamRegistration, tournament_division=tournament_division)
+    filename = "%s-%s seeds" %(tournament_slug, division_slug)
+    string = tournament_division.name() + " Seeds:\n"
+
+    team_dict = {}
+
+    for team in teams:
+        team_dict[team.seed] =  str(team.team.school) + " " + team.team.division.name() + str(team.team.number) + " " + str(team.get_competitors_str()) + '\n'
+
+    last_seed = max(team_dict.keys(), key=int)
+
+    for i in range(1, last_seed + 1):
+        if i not in team_dict.keys():
+            team_dict[i] = 'bye' + str(i) + '\n'
+
+    for i in team_dict:
+        team_string = str(i) + '\t' + team_dict[i]
+        string += team_string
+
+    response = HttpResponse(string, content_type="text/plain")
     return response
 
 def create_headtable_user(request):

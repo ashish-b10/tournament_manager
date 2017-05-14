@@ -402,6 +402,10 @@ class Division(models.Model):
     def slugify(self):
         return slugify(str(self))
 
+    def name(self):
+        string = str(self)
+        return string.replace('-team', '')
+
     def __str__(self):
         if self.sex == SexField.FEMALE: sex_name = "Women's"
         if self.sex == SexField.MALE: sex_name = "Men's"
@@ -428,6 +432,9 @@ class TournamentDivision(models.Model):
 
     def __repr__(self):
         return "%s (%s)" %(self.division, self.tournament)
+
+    def name(self):
+        return self.division.name()
 
 class TournamentDivisionBeltRanks(models.Model):
     belt_rank = BeltRankField()
@@ -494,6 +501,9 @@ class TeamRegistration(models.Model):
         if not lightweight and not middleweight and not heavyweight:
             return ""
         return "(" + lightweight + middleweight + heavyweight + ")"
+
+    def get_competitors_str(self):
+        return self.__get_competitors_str()
 
     def get_competitors_ids(self):
         competitors = []

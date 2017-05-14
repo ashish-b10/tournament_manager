@@ -16,6 +16,8 @@
   <p>
   ***WARNING*** As soon as you submit this form, ALL MATCHES IN THIS DIVISION WILL BE DELETED. This means that ALL RING ASSIGNMENTS AND MATCH RESULTS WILL BE COMPLETELY LOST AND DELETED. Under no circumstances should this button be pressed once the bracket has started and matches have been completed.
   </p>
+  <p><a href="{% url 'tmdb:export_seeds' tournament.slug tournament_division.division.slug %}"><input class="btn btn-primary" type="button" value="Print Seeds"></input></a></p>
+
   <form action="{% url 'tmdb:seedings' tournament_division.tournament.slug tournament_division.division.slug %}" method="post">
     {% csrf_token %}
     <input type="hidden" name="tournament_division_pk" value="{{tournament_division.pk}}"/>
