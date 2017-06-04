@@ -372,10 +372,13 @@ class SchoolRegistration(models.Model):
         self.imported = False
         self.save()
 
-    def import_competitors_and_teams(self):
+    def import_competitors_and_teams(self, reimport=False):
+        if reimport and self.imported:
+            self.drop_competitors_and_teams()
+
         if self.imported:
-            raise IntegrityError(("%s is already imported" %(self)
-                    + " - and cannot be imported again"))
+            raise IntegrityError(("%s is already imported" %(self.school)
+                    + " and will not be reimported"))
 
         school_extracted_data = self.download_school_registration()
         competitors = self.save_extracted_competitors(

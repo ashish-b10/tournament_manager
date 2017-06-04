@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 from django.conf import settings as config
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import models as auth_models
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 
 from . import forms
@@ -166,59 +167,53 @@ def tournament_school(request, tournament_slug, school_slug):
     }
     return render(request, 'tmdb/tournament_school_competitors.html', context)
 
-def build_tournament_schools(request, tournament, context=None, status=None):
-    if context is None:
-        context = {}
-    context['tournament'] = tournament
-    template_name = 'tmdb/tournament_schools.html'
-    school_registrations = models.SchoolRegistration.objects.filter(
-        tournament=tournament).order_by('school__name')
-    school_pks = []
-    all_schools_imported = True
-    for school_reg in school_registrations:
-        initial = {'school_registrations': school_reg.pk, 'reimport': True}
-        school_reg.import_form = forms.SchoolRegistrationImportForm(
-                initial=initial)
-        school_pks.append(school_reg.pk)
-        all_schools_imported = all_schools_imported and school_reg.imported
-    context['school_registrations'] = school_registrations
-    context['all_schools_imported'] = all_schools_imported
-    context['import_all_form'] = forms.SchoolRegistrationImportForm(
-            initial={
-                'reimport': False,
-                'school_registrations': ','.join(map(str, school_pks))
-            })
-    return render(request, 'tmdb/tournament_schools.html', context)
+@permission_required("tmdb.change_schoolregistration")
+def tournament_school_import(request, tournament_slug, school_slug=None):
+    context = {}
+    if request.method == "POST":
+        if school_slug is None:
+            school_regs = models.SchoolRegistration.objects.filter(
+                    tournament__slug=tournament_slug)
+        else:
+            school_reg = get_object_or_404(models.SchoolRegistration,
+                    tournament__slug = tournament_slug,
+                    school__slug=school_slug)
+            school_regs = [school_reg]
+        reimport = False
+        if 'reimport' in request.POST and request.POST['reimport'] == "true":
+            reimport = True
+        err_msgs = []
+        already_imported_schools = []
+        for school_reg in school_regs:
+            if school_reg.imported and not reimport:
+                already_imported_schools.append(school_reg.school.name)
+                continue
+            try:
+                school_reg.import_competitors_and_teams(reimport=reimport)
+            except Exception as e:
+                err_msg = "Error importing %s: %s" %(school_reg.school.name,
+                        str(e))
+                err_msgs.append(err_msg)
+        for err_msg in err_msgs:
+            messages.error(request, err_msg, extra_tags="alert alert-danger")
+        if already_imported_schools:
+            msg = "The following schools were not re-imported: %s" %(
+                    ", ".join(already_imported_schools))
+            messages.warning(request, msg, extra_tags="alert alert-warning")
+        return HttpResponseRedirect(reverse('tmdb:tournament_schools',
+                args=(tournament_slug,)))
+    return HttpResponse("Invalid operation: %s on %s" %(request.method,
+            request.get_full_path()), status=400)
 
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    context = {}
-    if request.method == "POST":
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        if not can_import_school_registration(request.user):
-            context['err_msg'] = permission_error_string(request.user,
-                    "import school registration")
-            return build_tournament_schools(request, tournament, context,
-                    status=403)
-        form = forms.SchoolRegistrationImportForm(request.POST)
-        if form.is_valid():
-            school_reg_pks = list(map(int,
-                    form.cleaned_data['school_registrations'].split(',')))
-            school_regs = models.SchoolRegistration.objects.filter(
-                    pk__in=school_reg_pks)
-            for school_reg in school_regs:
-                if school_reg.imported and not form.cleaned_data['reimport']:
-                    continue
-                if school_reg.imported and form.cleaned_data['reimport']:
-                    school_reg.drop_competitors_and_teams()
-                school_reg.import_competitors_and_teams()
-            return HttpResponseRedirect(reverse('tmdb:tournament_schools',
-                    args=(tournament.slug,)))
-        context['error_form'] = form
-
-    return build_tournament_schools(request, tournament, context)
+    school_registrations = models.SchoolRegistration.objects.filter(
+        tournament=tournament).order_by('school__name')
+    context = {
+        'tournament': tournament,
+        'school_registrations': school_registrations
+    }
+    return render(request, 'tmdb/tournament_schools.html', context)
 
 def match_list(request, tournament_slug, division_slug=None):
     if request.method == 'POST':

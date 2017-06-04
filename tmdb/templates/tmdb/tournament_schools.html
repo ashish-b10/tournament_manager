@@ -1,27 +1,16 @@
 {% extends "tmdb/base_tournament_dashboard.html" %}
 
 {% block content %}
+{% include "tmdb/snippets/message_area.html" %}
 <div class="row page-header">
-    {% if err_msg %}
-    <div class="alert alert-danger">
-    {{err_msg}}
-    </div>
-    {% endif %}
-    {% if error_form %}
-    <div class="alert alert-danger">
-    {{error_form.as_p}}
-    </div>
-    {% endif %}
     <h1 class="col-sm-5 col-md-5">Schools List at {{tournament.location}} on {{tournament.date}}</h1>
     {% if all_schools_imported %}
         <div class="col-sm-offset-2 col-sm-3 col-md-offset-3 col-md-3 btn btn-success"/>
         All schools imported
         </div>
     {% else %}
-    <form action="{% url 'tmdb:tournament_schools' tournament.slug %}" method="post">
+    <form action="{% url 'tmdb:tournament_school_import' tournament.slug %}" method="post">
         {% csrf_token %}
-        {{import_all_form.school_registrations}}
-        {{import_all_form.reimport}}
         <input class="col-sm-offset-2 col-sm-3 col-md-offset-3 col-md-3 btn btn-primary" type="submit" value="Import All Schools"/>
     </form>
     {% endif %}
@@ -46,14 +35,13 @@
           {% endif %}
       </td>
       <td>
-        <form action="{% url 'tmdb:tournament_schools' tournament.slug %}" method="post">
-          <input type="hidden" name="tournament_slug" value="{{tournament.slug}}"/>
+        <form action="{% url 'tmdb:tournament_school_import' tournament.slug school_reg.school.slug %}" method="post">
           {% csrf_token %}
-          {{ school_reg.import_form.school_registrations }}
-          {{ school_reg.import_form.reimport }}
           {% if school_reg.imported %}
+          <input type="hidden" name="reimport" value="true"/>
           <button class="btn btn-warning" input type="submit"> Re-import Teams </button>
           {% else %}
+          <input type="hidden" name="reimport" value="false"/>
           <button class="btn btn-primary" input type="submit"> Import Teams </button>
           {% endif %}
         </form>

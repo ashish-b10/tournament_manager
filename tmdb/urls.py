@@ -66,6 +66,22 @@ urlpatterns = [
             + r'/import_schools/*',
             views.tournament_import, name='tournament_import'),
 
+    # tournament schools
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/schools/*$',
+            views.tournament_schools, name='tournament_schools'),
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/schools/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*'
+            + r'/import_competitors/*$',
+            views.tournament_school_import, name='tournament_school_import'),
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/import_competitors/*$',
+            views.tournament_school_import, name='tournament_school_import'),
+
     url(r'^create_headtable_user/*$',
             views.create_headtable_user, name='create_headtable_user'),
     url(r'^create_ringtable_user/*$',
@@ -110,8 +126,6 @@ urlpatterns = [
             views.bracket_printable, name='bracket_printable'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.bracket, name='bracket'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/schools/*$',
-            views.tournament_schools, name='tournament_schools'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + '/schools/*/(?P<school_slug>[a-z0-9_-]+)/*$',
             views.tournament_school, name='tournament_school'),
