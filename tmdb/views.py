@@ -82,9 +82,6 @@ def tournament_change(request, tournament_slug):
                 initial={'import': False})
         import_form = forms.TournamentImportForm(instance=instance)
         context['import_form'] = import_form
-        if request.user.has_perm("tmdb.delete_tournament"):
-            context['delete_form'] = forms.TournamentDeleteForm(
-                instance=instance)
     context['change_form'] = change_form
     return render(request, template_name, context)
 
