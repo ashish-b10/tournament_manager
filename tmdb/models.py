@@ -460,8 +460,17 @@ class Team(models.Model):
     school = models.ForeignKey(School)
     division = models.ForeignKey(Division)
     number = models.SmallIntegerField()
+    slug = models.SlugField(unique=True)
     registrations = models.ManyToManyField(TournamentDivision,
             through="TeamRegistration")
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = self.slugify()
+        super(Team, self).save(*args, **kwargs)
+
+    def slugify(self):
+        return self.school.slug + '-' + self.division.slug + str(self.number)
 
     class Meta:
         unique_together = (('school', 'division', 'number',),)

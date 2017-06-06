@@ -1,0 +1,17 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block main-content %}
+{% if err_msg %}
+<div class="alert alert-danger">{{err_msg}}</div>
+{% endif %}
+
+{% if edit_form %}
+<h2>Editing seeding for {{edit_form.instance}}</h2>
+<form action="{% url 'tmdb:division_seeding' tournament.slug tournament_division.division.slug edit_form.instance.team.slug %}" method="post">
+  <input type="hidden" name="team_registration.id" value="{{edit_form.instance.pk}}"/>
+  {% csrf_token %}
+  {{edit_form.as_p}}
+  <input class="btn btn-primary" type="submit" value="Save changes"/>
+</form>
+{% endif %}
+{% endblock %}

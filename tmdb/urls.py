@@ -10,7 +10,7 @@ urlpatterns = [
             views.tournament_add, name='tournament_add'),
     url(r'^tournaments/*'
             + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/change/*$',
+            + r'/edit/*$',
             views.tournament_change, name='tournament_change'),
     url(r'^tournaments/*'
             + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
@@ -82,6 +82,22 @@ urlpatterns = [
             + r'/import_competitors/*$',
             views.tournament_school_import, name='tournament_school_import'),
 
+    # match creation from seedings
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/divisions/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/seedings/*$',
+            views.division_seedings, name='division_seedings'),
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/divisions/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/seeding/*'
+            + r'/(?P<team_slug>[a-z0-9_-]+)/*'
+            + r'/edit/*$',
+            views.division_seeding, name='division_seeding'),
+
     url(r'^create_headtable_user/*$',
             views.create_headtable_user, name='create_headtable_user'),
     url(r'^create_ringtable_user/*$',
@@ -118,10 +134,6 @@ urlpatterns = [
             views.match_list, name='match_list'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/matches/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.match_list, name='match_list'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/team_points/*/(?P<division_slug>[a-z0-9_-]+)/*$',
-            views.team_points, name='team_points'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/seedings/*/(?P<division_slug>[a-z0-9_-]+)/*$',
-            views.seedings, name='seedings'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*/printable/*$',
             views.bracket_printable, name='bracket_printable'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*$',
