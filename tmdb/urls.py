@@ -97,6 +97,13 @@ urlpatterns = [
             + r'/(?P<team_slug>[a-z0-9_-]+)/*'
             + r'/edit/*$',
             views.division_seeding, name='division_seeding'),
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/divisions/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/create_matches/*$',
+            views.create_tournament_division_matches,
+            name='create_tournament_division_matches'),
 
     url(r'^create_headtable_user/*$',
             views.create_headtable_user, name='create_headtable_user'),
@@ -122,7 +129,7 @@ urlpatterns = [
             + r'/match_sheets/*',
             views.match_sheet, name='match_sheet'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<division_slug>)[a-z0-9_-]+/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
             + r'/seeding/*$',
             views.seeding, name='seeding'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/teams/*$',

@@ -393,6 +393,17 @@ def division_seeding(request, tournament_slug, division_slug, team_slug):
     }
     return render(request, 'tmdb/division_seeding_change.html', context)
 
+@permission_required("tmdb.add_teammatch")
+def create_tournament_division_matches(request, tournament_slug, division_slug):
+    if request.method != "POST":
+        return HttpResponse("Invalid operation: %s on %s" %(request.method,
+                request.get_full_path()), status=400)
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    models.TeamMatch.create_matches_from_slots(tournament_division)
+    return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
+            args=(tournament_slug,)))
+
 def rings(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     matches_by_ring = defaultdict(list)

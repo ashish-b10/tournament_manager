@@ -2,7 +2,14 @@
 
 {% block content %}
 <h2>List of teams in {{tournament_division.division}}</h2>
-Below is a list of all teams that are registered in this division. Enter each team's number of points earned in previous tournaments to determine which ones will receive preferable seedings.
+<div>Below is a list of all teams that are registered in this division. Enter each team's number of points earned in previous tournaments to determine which ones will receive preferable seedings.</div>
+<div>Once the seedings have been created, click the "Create Matches" button to create the matches.</div>
+<div>
+<form action="{% url 'tmdb:create_tournament_division_matches' tournament.slug tournament_division.division.slug %}" method="post">
+{%csrf_token%}
+<button class="btn btn-primary" input type="submit">Create Matches</button>
+</form>
+</div>
 <table class="table table-striped">
   <thead>
       <th>Team Name</th>
