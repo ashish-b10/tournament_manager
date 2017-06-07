@@ -105,14 +105,19 @@ urlpatterns = [
             views.create_tournament_division_matches,
             name='create_tournament_division_matches'),
 
+    # add team to bracket
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/divisions/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/bracket/*'
+            + r'/add_team/*',
+            views.add_team_to_bracket, name='add_team_to_bracket'),
+
     url(r'^create_headtable_user/*$',
             views.create_headtable_user, name='create_headtable_user'),
     url(r'^create_ringtable_user/*$',
             views.create_ringtable_user, name='create_ringtable_user'),
-    url(r'^add_match/*/(?P<match_id>[0-9]+)/*/upper/*$',
-            views.add_upper_match, name='add_upper_match'),
-    url(r'^add_match/*/(?P<match_id>[0-9]+)/*/lower/*$',
-            views.add_lower_match, name='add_lower_match'),
     url(r'^registration_credentials/*$', views.registration_credentials,
             name='registration_credentials'),
     url(r'^settings/*/$', views.settings, name='settings'),
@@ -128,10 +133,6 @@ urlpatterns = [
             + r'/(?P<division_slug>[a-z0-9_-]+)/*'
             + r'/match_sheets/*',
             views.match_sheet, name='match_sheet'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
-            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
-            + r'/seeding/*$',
-            views.seeding, name='seeding'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/teams/*$',
             views.team_list, name='team_list'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'

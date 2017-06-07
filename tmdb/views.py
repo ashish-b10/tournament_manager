@@ -543,40 +543,6 @@ def get_lowest_bye_seed(tournament_division):
         return max_seed
     return max(seeds)
 
-def seeding(request, tournament_slug, division_slug, seed=None):
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        if not request.user.has_perm('tmdb.change_teamregistration'):
-            return HttpResponseForbidden(permission_error_string(request.user,
-                    "change team seeding"))
-        form = forms.TeamRegistrationSeedingForm(request.POST)
-        if form.is_valid():
-            team_registration = models.TeamRegistration.objects.get(
-                    pk=request.POST['team_registration'])
-            team_registration.seed = int(request.POST['seed'])
-            team_registration.save()
-            tournament_division = team_registration.tournament_division
-            models.TeamMatch.create_matches_from_slots(tournament_division)
-            return HttpResponseRedirect(reverse("tmdb:bracket", args=(
-                    tournament_division.tournament.slug,
-                    tournament_division.division.slug,)))
-    else:
-        tournament_division = get_object_or_404(models.TournamentDivision,
-                tournament__slug=tournament_slug, division__slug=division_slug)
-        form = forms.TeamRegistrationSeedingForm(initial={'seed': seed})
-        form.fields['team_registration'].queryset = \
-                models.TeamRegistration.get_teams_without_assigned_slot(
-                        tournament_division)
-        form.fields['seed'].widget.attrs['readonly'] = True
-    context = {
-            'tournament_division': tournament_division,
-            'tournament': tournament_division.tournament,
-            'form': form,
-    }
-    return render(request, 'tmdb/modify_team_registration_seed.html', context)
-
 @permission_required("tmdb.add_competitor")
 def competitor_add(request, tournament_slug, school_slug):
     template_name = 'tmdb/competitor_add_change.html'
@@ -656,23 +622,49 @@ def competitor_delete(request, tournament_slug, school_slug, competitor_id):
     context['delete_form'] = delete_form
     return render(request, template_name, context)
 
-def add_upper_match(request, match_id):
-    return add_match(request, match_id, side='upper')
-
-def add_lower_match(request, match_id):
-    return add_match(request, match_id, side='lower')
-
-def add_match(request, match_id, side):
-    next_round_match = models.TeamMatch.objects.get(pk=match_id)
-    if side == 'upper':
-        existing_team = next_round_match.blue_team
+@permission_required("tmdb.add_teammatch")
+def add_team_to_bracket(request, tournament_slug, division_slug):
+    if request.method == 'POST':
+        form = forms.TeamRegistrationSeedingForm(request.POST)
+        if form.is_valid():
+            team_registration = models.TeamRegistration.objects.get(
+                    pk=request.POST['team_registration'])
+            team_registration.seed = int(request.POST['seed'])
+            team_registration.save()
+            tournament_division = team_registration.tournament_division
+            models.TeamMatch.create_matches_from_slots(tournament_division)
+            return HttpResponseRedirect(reverse("tmdb:bracket", args=(
+                    tournament_division.tournament.slug,
+                    tournament_division.division.slug,)))
     else:
-        existing_team = next_round_match.red_team
-    new_seed = 2**(next_round_match.round_num + 2) - existing_team.seed + 1
-    tournament_division = next_round_match.division
-    tournament_slug = tournament_division.tournament.slug
-    division_slug = tournament_division.division.slug
-    return seeding(request, tournament_slug, division_slug, new_seed)
+        side = request.GET.get('side')
+        round_num = request.GET.get('round_num')
+        round_slot = request.GET.get('round_slot')
+        tournament_division = get_object_or_404(models.TournamentDivision,
+                tournament__slug=tournament_slug, division__slug=division_slug)
+        existing_match = get_object_or_404(models.TeamMatch,
+                division=tournament_division, round_num=round_num,
+                round_slot=round_slot)
+        if side == "upper":
+            existing_team = existing_match.blue_team
+        elif side == "lower":
+            existing_team = existing_match.red_team
+        else:
+            raise ValueError("side was `%s`, must be `upper` or `lower`" %(
+                    side,))
+        new_seed = 2**(int(round_num) + 2) - existing_team.seed + 1
+        form = forms.TeamRegistrationSeedingForm(initial={'seed': new_seed})
+        form.fields['team_registration'].queryset = \
+                models.TeamRegistration.get_teams_without_assigned_slot(
+                        tournament_division)
+    context = {
+            'tournament_division': tournament_division,
+            'tournament': tournament_division.tournament,
+            'existing_team': existing_team,
+            'new_seed': new_seed,
+            'form': form,
+    }
+    return render(request, 'tmdb/modify_team_registration_seed.html', context)
 
 def match_sheet(request, tournament_slug, division_slug, match_number=None):
     tournament_division = get_object_or_404(models.TournamentDivision,

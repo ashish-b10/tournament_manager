@@ -121,6 +121,7 @@ class ConfigurationSetting(forms.ModelForm):
 class TeamRegistrationPointsSeedingForm(forms.ModelForm):
     recompute_seedings = forms.BooleanField(required=False,
             label="Recompute seedings?")
+
     class Meta:
         model = models.TeamRegistration
         fields = ['seed', 'points']
@@ -138,6 +139,10 @@ class TeamRegistrationSeedingForm(forms.Form):
     team_registration = forms.ModelChoiceField(
             queryset=models.TeamRegistration.objects.all())
     readonly_fields = ('seed',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['seed'].widget.attrs['readonly'] = True
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
