@@ -2,7 +2,7 @@
 
 {% block content %}
   {% for division, team_matches in team_matches %}
-  <h2>{{division}}</h2>
+  <h2>Matches in {{division}} division</h2>
     {% if team_matches %}
     <div>
       <p><a href="{%url 'tmdb:match_sheet' division.tournament.slug division.division.slug %}"><input class="btn btn-primary" type="button" value="Print All Match Sheets"></input></a></p>
