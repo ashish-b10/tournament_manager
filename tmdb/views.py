@@ -393,7 +393,7 @@ def division_seeding(request, tournament_slug, division_slug, team_slug):
     }
     return render(request, 'tmdb/division_seeding_change.html', context)
 
-@permission_required("tmdb.add_teammatch")
+@permission_required("tmdb.add_teammatch", "tmdb.delete_teammatch")
 def create_tournament_division_matches(request, tournament_slug, division_slug):
     if request.method != "POST":
         return HttpResponse("Invalid operation: %s on %s" %(request.method,
