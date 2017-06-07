@@ -211,21 +211,37 @@ def tournament_schools(request, tournament_slug):
     }
     return render(request, 'tmdb/tournament_schools.html', context)
 
-def match_list(request, tournament_slug, division_slug=None):
+@permission_required("tmdb.change_teammatch")
+def update_teammatch_status(request, tournament_slug, division_slug, match_num):
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    team_match = get_object_or_404(models.TeamMatch,
+            division=tournament_division, number=match_num)
+    context = {
+        'tournament': tournament_division.tournament,
+        'tournament_division': tournament_division,
+        'team_match': team_match,
+    }
     if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        if not request.user.has_perm('tmdb.change_teammatch'):
-            return HttpResponseForbidden(permission_error_string(request.user,
-                    "change matches"))
-        match = models.TeamMatch.objects.get(pk=request.POST['team_match_id'])
-        form = forms.MatchForm(request.POST, instance=match)
+        team_match_form = forms.MatchForm(request.POST, instance=team_match)
+        context['team_match_form'] = team_match_form
+        if team_match_form.is_valid():
+            team_match_form.save()
+            return HttpResponseRedirect(reverse("tmdb:match_list",
+                    args=(tournament_slug, division_slug,)))
+    else:
+        team_match_form = forms.MatchForm(instance=team_match)
+        context['team_match_form'] = team_match_form
+        match_teams = []
+        if team_match.blue_team is not None:
+            match_teams.append(team_match.blue_team.pk)
+        if team_match.red_team is not None:
+            match_teams.append(team_match.red_team.pk)
+        teams = models.TeamRegistration.objects.filter(pk__in=match_teams)
+        team_match_form.fields['winning_team'].queryset = teams
+    return render(request, "tmdb/team_match_status_change.html", context)
 
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(request.path)
-
+def match_list(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament__slug=tournament_slug)
@@ -237,16 +253,7 @@ def match_list(request, tournament_slug, division_slug=None):
     for division in tournament_divisions:
         team_matches = models.TeamMatch.objects.filter(
                 division=division).order_by('number')
-        for team_match in team_matches:
-            team_match.form = forms.MatchForm(instance=team_match)
-            match_teams = []
-            if team_match.blue_team is not None:
-                match_teams.append(team_match.blue_team.pk)
-            if team_match.red_team is not None:
-                match_teams.append(team_match.red_team.pk)
-            team_match.form.fields['winning_team'].queryset =  \
-                    models.TeamRegistration.objects.filter(pk__in=match_teams)
-        matches.append((division, team_matches))
+        matches.append((division, team_matches,))
     context = {
         'team_matches' : matches,
         'tournament': tournament,

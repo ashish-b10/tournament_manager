@@ -97,6 +97,10 @@ class SchoolCompetitorDeleteForm(forms.ModelForm):
         fields = []
 
 class MatchForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['ring_assignment_time'].widget = forms.HiddenInput()
+
     def clean(self):
         if 'ring_number' in self.changed_data:
             self.cleaned_data['ring_assignment_time'] = datetime.datetime.now()

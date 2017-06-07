@@ -1,0 +1,13 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+  <h2>Editing result for match #{{team_match.number}}</h2>
+  <div>Blue team: {{team_match.blue_team|default_if_none:"tbd"}} </div>
+  <div>Red team: {{team_match.red_team|default_if_none:"tbd"}} </div>
+  <div>Current status: {{team_match.status}}</div>
+  <form action="{% url 'tmdb:update_teammatch_status' tournament.slug tournament_division.division.slug team_match.number%}" method="post">
+    {% csrf_token %}
+    {{team_match_form.as_p}}
+    <input class="btn btn-primary" type="submit" value="Update Status"/>
+  </form>
+{% endblock %}

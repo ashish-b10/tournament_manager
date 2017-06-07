@@ -628,6 +628,15 @@ class TeamMatch(models.Model):
                 return "Report to holding"
         return "----"
 
+    def round_str(self):
+        if self.round_num == 0:
+            return "Finals"
+        if self.round_num == 1:
+            return "Semi-Finals"
+        if self.round_num == 2:
+            return "Quarter-Finals"
+        return "Round of %d" %(1 << (self.round_num))
+
     def get_previous_round_matches(self):
         upper_match_query = TeamMatch.objects.filter(division=self.division,
                 round_num=self.round_num + 1, round_slot=2*self.round_slot)

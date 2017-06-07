@@ -12,57 +12,29 @@
         <thead>
           <tr>
             <th>Match No.</th>
+            <th>Round</th>
             <th>Blue Team</th>
             <th>Red Team</th>
             <th>Ring No.</th>
             <th>Winning Team</th>
             <th> Status </th>
-            <th> Holding Status </th>
             <th> Modify </th>
             <th>Match Sheet</th>
-
           </tr>
         </thead>
         <tbody>
           {% for team_match in team_matches %}
-          <form action="{{request.path}}" method="post">
-            {% csrf_token %}
-            <input type="hidden" name="team_match_id" value="{{team_match.pk}}"/>
-            <tr>
-              <td>{{team_match.number}}</td>
-              {% if team_match.blue_team %}
-              <td>{{team_match.blue_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.red_team %}
-              <td>{{team_match.red_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              <td>{{team_match.form.ring_number}}</td>
-              <td>{{team_match.form.winning_team}}</td>
-              <td>{{team_match.status}}</td>
-              <td>{{team_match.form.in_holding}}</td>
-<!--               <td>
-                <div class="dropdown">
-                  <button class="btn dropdown-toggle" type="button" data-toggle="dropdown"> Unassigned
-                    <span class="caret"></span> 
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li> <a href="#"> In Holding </a></li>
-                    <li> <a href="#"> At Ring </a></li>
-                    <li> <a href="#"> Competing </a></li>
-                    <li> <a href="#"> Done </a></li>
-                    <li> <a href="#"> Warning </a></li>
-                    <li> <a href="#"> Ring Down </a></li>
-                  </ul>
-                </div> 
-              </td> -->
-              <td><input class="btn btn-primary" type="submit" value="Modify"/></td>
-              <td><a href="{%url 'tmdb:match_sheet' team_match.division.tournament.slug team_match.division.division.slug team_match.number %}"><input class="btn btn-primary" type="button" value="Print"/></a></td>
-            </tr>
-          </form>
+          <tr>
+            <td>{{team_match.number}}</td>
+            <td>{{team_match.round_str}}</td>
+            <td>{{team_match.blue_team|default_if_none:""}}</td>
+            <td>{{team_match.red_team|default_if_none:""}}</td>
+            <td>{{team_match.ring_number|default_if_none:""}}</td>
+            <td>{{team_match.winning_team|default_if_none:""}}</td>
+            <td>{{team_match.status|default_if_none:""}}</td>
+            <td><a class="btn btn-primary" href="{%url 'tmdb:update_teammatch_status' tournament.slug team_match.division.division.slug team_match.number %}">Update Status</a></td>
+            <td><a class="btn btn-primary" href="{%url 'tmdb:match_sheet' team_match.division.tournament.slug team_match.division.division.slug team_match.number %}">Print</a></td>
+          </tr>
           {% endfor %}
         </tbody>
       </table>

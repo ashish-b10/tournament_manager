@@ -114,6 +114,26 @@ urlpatterns = [
             + r'/add_team/*',
             views.add_team_to_bracket, name='add_team_to_bracket'),
 
+    # list of team matches
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/matches/*$',
+            views.match_list, name='match_list'),
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/divisions/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/matches/*$',
+            views.match_list, name='match_list'),
+    url(r'^tournaments/*'
+            + r'/(?P<tournament_slug>[a-z0-9_-]+)/*'
+            + r'/divisions/*'
+            + r'/(?P<division_slug>[a-z0-9_-]+)/*'
+            + r'/matches/*'
+            + r'/(?P<match_num>[0-9]+)/*'
+            + r'/update_status/*$',
+            views.update_teammatch_status, name='update_teammatch_status'),
+
     url(r'^create_headtable_user/*$',
             views.create_headtable_user, name='create_headtable_user'),
     url(r'^create_ringtable_user/*$',
@@ -138,10 +158,6 @@ urlpatterns = [
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*'
             + '/teams/*/(?P<division_slug>[a-z0-9_-]+)/*$',
             views.team_list, name='team_list'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/matches/*$',
-            views.match_list, name='match_list'),
-    url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/matches/*/(?P<division_slug>[a-z0-9_-]+)/*$',
-            views.match_list, name='match_list'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*/printable/*$',
             views.bracket_printable, name='bracket_printable'),
     url(r'^(?P<tournament_slug>[a-z0-9_-]+)/*/brackets/*/(?P<division_slug>[a-z0-9_-]+)/*$',
