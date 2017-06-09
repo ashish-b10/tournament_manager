@@ -1,0 +1,11 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+<p>Are you sure you want to delete <b>{{team_registration}}</b> from the tournament at <b>{{tournament.location}}</b> on <b>{{tournament.date}}</b>?</p>
+<form action="{% url 'tmdb:team_registration_delete' tournament.slug team_registration.team.school.slug team_registration.team.division.slug team_registration.team.number %}" method="post">
+    {% csrf_token %}
+    {{ edit_form.as_p }}
+    <input type="submit" value="Delete Team"/>
+</form>
+{% endblock %}
+

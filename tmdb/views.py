@@ -272,8 +272,13 @@ def team_registration_delete(request, tournament_slug, school_slug,
             number=team_number)
     team_registration = get_object_or_404(models.TeamRegistration,
             tournament_division=tournament_division, team=team)
-    context = {}
-    context['team'] = team_registration
+    context = {
+        'school': school,
+        'team_registration': team_registration,
+        'tournament': tournament,
+        'tournament_division': tournament_division,
+    }
+    context['team_registration'] = team_registration
     if request.method == 'POST':
         delete_form = forms.TeamRegistrationDeleteForm(request.POST,
                 instance=team_registration)
@@ -282,6 +287,11 @@ def team_registration_delete(request, tournament_slug, school_slug,
             team_registration.delete()
             return HttpResponseRedirect(reverse("tmdb:tournament_school",
                     args=(tournament_slug, school_slug,)))
+    else:
+        delete_form = forms.TeamRegistrationDeleteForm(
+                instance=team_registration)
+    context['delete_form'] = delete_form
+    return render(request, 'tmdb/team_registration_delete.html', context)
 
 @permission_required("tmdb.change_teamregistration")
 def team_registration_change(request, tournament_slug, school_slug,
