@@ -14,16 +14,6 @@ import datetime
 from .util.match_sheet import create_match_sheets
 from .util.bracket_svg import SvgBracket
 
-def can_import_school_registration(user):
-    return user.has_perms([
-        "tmdb.add_competitor",
-        "tmdb.add_teamregistration",
-        "tmdb.change_competitor",
-        "tmdb.change_teamregistration",
-        "tmdb.delete_competitor",
-        "tmdb.delete_teamregistration",
-    ])
-
 def index(request):
     return HttpResponseRedirect(reverse('tmdb:tournaments'))
 
@@ -91,7 +81,10 @@ def tournament_delete(request, tournament_slug):
     context['delete_form'] = delete_form
     return render(request, 'tmdb/tournament_delete.html', context)
 
-@permission_required("tmdb.change_tournament")
+@permission_required([
+        "tmdb.add_school",
+        "tmdb.add_schoolregistration",
+])
 def tournament_import(request, tournament_slug):
     if request.method == "POST":
         instance = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -155,7 +148,15 @@ def tournament_school(request, tournament_slug, school_slug):
     }
     return render(request, 'tmdb/tournament_school_competitors.html', context)
 
-@permission_required("tmdb.change_schoolregistration")
+@permission_required([
+        "tmdb.add_competitor",
+        "tmdb.add_teamregistration",
+        "tmdb.change_competitor",
+        "tmdb.change_schoolregistration",
+        "tmdb.change_teamregistration",
+        "tmdb.delete_competitor",
+        "tmdb.delete_teamregistration",
+])
 def tournament_school_import(request, tournament_slug, school_slug=None):
     context = {}
     if request.method == "POST":
@@ -402,7 +403,7 @@ def division_seeding(request, tournament_slug, division_slug, team_slug):
     }
     return render(request, 'tmdb/division_seeding_change.html', context)
 
-@permission_required("tmdb.add_teammatch", "tmdb.delete_teammatch")
+@permission_required(["tmdb.add_teammatch", "tmdb.delete_teammatch"])
 def create_tournament_division_matches(request, tournament_slug, division_slug):
     if request.method != "POST":
         return HttpResponse("Invalid operation: %s on %s" %(request.method,
