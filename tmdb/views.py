@@ -28,7 +28,7 @@ def can_import_school_registration(user):
         "tmdb.delete_teamregistration",
     ])
 
-@login_required
+@permission_required("tmdb.change_configurationsetting")
 def settings(request):
     return render(request, 'tmdb/settings.html')
 
