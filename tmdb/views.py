@@ -14,10 +14,6 @@ import datetime
 from .util.match_sheet import create_match_sheets
 from .util.bracket_svg import SvgBracket
 
-def permission_error_string(user, perm_type):
-    return "Username `%s` does not have permission to %s." %(
-            user.username, perm_type)
-
 def can_import_school_registration(user):
     return user.has_perms([
         "tmdb.add_competitor",
@@ -27,10 +23,6 @@ def can_import_school_registration(user):
         "tmdb.delete_competitor",
         "tmdb.delete_teamregistration",
     ])
-
-@permission_required("tmdb.change_configurationsetting")
-def settings(request):
-    return render(request, 'tmdb/settings.html')
 
 def index(request):
     return HttpResponseRedirect(reverse('tmdb:tournaments'))
@@ -433,36 +425,6 @@ def rings(request, tournament_slug):
     }
     return render(request, 'tmdb/rings.html', context)
 
-def registration_credentials(request):
-    template_name = 'tmdb/configuration_setting.html'
-    context = {"setting_name": "Registration Import Credentials"}
-    setting_key = models.ConfigurationSetting.REGISTRATION_CREDENTIALS
-    existing_value = models.ConfigurationSetting.objects.filter(
-            key=setting_key).first()
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
-        form = forms.ConfigurationSetting(request.POST,
-                instance=existing_value)
-        context['form'] = form
-        if not request.user.has_perm('tmdb.change_configurationsetting'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "change settings")
-            return render(request, template_name, context, status=403)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('tmdb:index'))
-    else:
-        if existing_value is not None:
-            value = existing_value.value
-        else:
-            value = None
-        form = forms.ConfigurationSetting(initial={'key': setting_key,
-                'value': value})
-        context['form'] = form
-    return render(request, 'tmdb/configuration_setting.html', context)
-
 def blue_team_text(team_match):
     if team_match.blue_team is None:
         return None
@@ -701,20 +663,42 @@ def match_sheet(request, tournament_slug, division_slug, match_number=None):
     response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
     return response
 
+@permission_required("tmdb.change_configurationsetting")
+def settings(request):
+    return render(request, 'tmdb/settings.html')
+
+@permission_required("tmdb.change_configurationsetting")
+def registration_credentials(request):
+    template_name = 'tmdb/configuration_setting.html'
+    context = {"setting_name": "Registration Import Credentials"}
+    setting_key = models.ConfigurationSetting.REGISTRATION_CREDENTIALS
+    existing_value = models.ConfigurationSetting.objects.filter(
+            key=setting_key).first()
+    if request.method == 'POST':
+        form = forms.ConfigurationSetting(request.POST,
+                instance=existing_value)
+        context['form'] = form
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('tmdb:index'))
+    else:
+        if existing_value is not None:
+            value = existing_value.value
+        else:
+            value = None
+        form = forms.ConfigurationSetting(initial={'key': setting_key,
+                'value': value})
+    context['form'] = form
+    return render(request, 'tmdb/configuration_setting.html', context)
+
+@permission_required("auth.add_user")
 def create_headtable_user(request):
     template_name = 'tmdb/add_user.html'
     context = {}
     context['form_action'] = reverse('tmdb:create_headtable_user')
     if request.method == "POST":
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
         form = forms.UserForm(request.POST)
         context['form'] = form
-        if not request.user.has_perm('auth.add_user'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "create users")
-            return render(request, template_name, context, status=403)
         if form.is_valid():
             user = auth_models.User.objects.create_user(**form.cleaned_data)
             user.groups.set([get_headtable_permission_group()])
@@ -723,22 +707,17 @@ def create_headtable_user(request):
         form = forms.UserForm()
 
     context['form'] = form
+    context['user_type'] = "Head Table"
     return render(request, 'tmdb/add_user.html', context)
 
+@permission_required("auth.add_user")
 def create_ringtable_user(request):
     template_name = 'tmdb/add_user.html'
     context = {}
     context['form_action'] = reverse('tmdb:create_ringtable_user')
     if request.method == "POST":
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' %(
-                    reverse('tmdb:login'), request.path,))
         form = forms.UserForm(request.POST)
         context['form'] = form
-        if not request.user.has_perm('auth.add_user'):
-            context['err_msg'] = permission_error_string(request.user,
-                    "create users")
-            return render(request, template_name, context, status=403)
         if form.is_valid():
             user = auth_models.User.objects.create_user(**form.cleaned_data)
             user.groups.set([get_ringtable_permission_group()])
@@ -747,6 +726,7 @@ def create_ringtable_user(request):
         form = forms.UserForm()
 
     context['form'] = form
+    context['user_type'] = "Ring Table"
     return render(request, 'tmdb/add_user.html', context)
 
 def get_ringtable_permission_group():

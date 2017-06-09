@@ -1,9 +1,7 @@
 {% extends "tmdb/base.html" %}
 
 {% block main-content %}
-{% if err_msg %}
-<div class="alert alert-danger">{{err_msg}}</div>
-{% endif %}
+<div>Enter the credentials for the new <span style="font-weight: bold">{{user_type}}</span> user below:</div>
 <form action="{{form_action}}" method="post">
   {% csrf_token %}
   {{ form.as_p }}
