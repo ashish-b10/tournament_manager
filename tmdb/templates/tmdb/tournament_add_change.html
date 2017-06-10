@@ -4,10 +4,6 @@
 
 {% block main-content %}
 
-{% if err_msg %}
-<div class="alert alert-danger">{{err_msg}}</div>
-{% endif %}
-
 {% if add_form %}
 <h1>Create Tournament</h1>
 <form action="{% url 'tmdb:tournament_add' %}" method="post">

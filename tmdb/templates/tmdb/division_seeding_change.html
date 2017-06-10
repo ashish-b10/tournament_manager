@@ -1,9 +1,6 @@
 {% extends "tmdb/base_tournament_dashboard.html" %}
 
 {% block main-content %}
-{% if err_msg %}
-<div class="alert alert-danger">{{err_msg}}</div>
-{% endif %}
 
 {% if edit_form %}
 <h2>Editing seeding for {{edit_form.instance}}</h2>
