@@ -86,9 +86,11 @@ def tournament_delete(request, tournament_slug):
         "tmdb.add_schoolregistration",
 ])
 def tournament_import(request, tournament_slug):
-    if request.method == "POST":
-        instance = get_object_or_404(models.Tournament, slug=tournament_slug)
-        instance.import_school_registrations()
+    if request.method != "POST":
+        return HttpResponse("Invalid operation: %s on %s" %(request.method,
+                request.get_full_path()), status=400)
+    instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+    instance.import_school_registrations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
 def tournament_dashboard(request, tournament_slug, division_slug=None):
@@ -158,40 +160,39 @@ def tournament_school(request, tournament_slug, school_slug):
         "tmdb.delete_teamregistration",
 ])
 def tournament_school_import(request, tournament_slug, school_slug=None):
-    if request.method == "POST":
-        if school_slug is None:
-            school_regs = models.SchoolRegistration.objects.filter(
-                    tournament__slug=tournament_slug)
-        else:
-            school_reg = get_object_or_404(models.SchoolRegistration,
-                    tournament__slug = tournament_slug,
-                    school__slug=school_slug)
-            school_regs = [school_reg]
-        reimport = False
-        if request.POST.get('reimport') == "true":
-            reimport = True
-        err_msgs = []
-        already_imported_schools = []
-        for school_reg in school_regs:
-            if school_reg.imported and not reimport:
-                already_imported_schools.append(school_reg.school.name)
-                continue
-            try:
-                school_reg.import_competitors_and_teams(reimport=reimport)
-            except Exception as e:
-                err_msg = "Error importing %s: %s" %(school_reg.school.name,
-                        str(e))
-                err_msgs.append(err_msg)
-        for err_msg in err_msgs:
-            messages.error(request, err_msg, extra_tags="alert alert-danger")
-        if already_imported_schools:
-            msg = "The following schools were not re-imported: %s" %(
-                    ", ".join(already_imported_schools))
-            messages.warning(request, msg, extra_tags="alert alert-warning")
-        return HttpResponseRedirect(reverse('tmdb:tournament_schools',
-                args=(tournament_slug,)))
-    return HttpResponse("Invalid operation: %s on %s" %(request.method,
-            request.get_full_path()), status=400)
+    if request.method != "POST":
+        return HttpResponse("Invalid operation: %s on %s" %(request.method,
+                request.get_full_path()), status=400)
+    if school_slug is None:
+        school_regs = models.SchoolRegistration.objects.filter(
+                tournament__slug=tournament_slug)
+    else:
+        school_reg = get_object_or_404(models.SchoolRegistration,
+                tournament__slug = tournament_slug, school__slug=school_slug)
+        school_regs = [school_reg]
+    reimport = False
+    if request.POST.get('reimport') == "true":
+        reimport = True
+    err_msgs = []
+    already_imported_schools = []
+    for school_reg in school_regs:
+        if school_reg.imported and not reimport:
+            already_imported_schools.append(school_reg.school.name)
+            continue
+        try:
+            school_reg.import_competitors_and_teams(reimport=reimport)
+        except Exception as e:
+            err_msg = "Error importing %s: %s" %(school_reg.school.name,
+                    str(e))
+            err_msgs.append(err_msg)
+    for err_msg in err_msgs:
+        messages.error(request, err_msg, extra_tags="alert alert-danger")
+    if already_imported_schools:
+        msg = "The following schools were not re-imported: %s" %(
+                ", ".join(already_imported_schools))
+        messages.warning(request, msg, extra_tags="alert alert-warning")
+    return HttpResponseRedirect(reverse('tmdb:tournament_schools',
+            args=(tournament_slug,)))
 
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
