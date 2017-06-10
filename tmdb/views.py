@@ -158,7 +158,6 @@ def tournament_school(request, tournament_slug, school_slug):
         "tmdb.delete_teamregistration",
 ])
 def tournament_school_import(request, tournament_slug, school_slug=None):
-    context = {}
     if request.method == "POST":
         if school_slug is None:
             school_regs = models.SchoolRegistration.objects.filter(
@@ -169,7 +168,7 @@ def tournament_school_import(request, tournament_slug, school_slug=None):
                     school__slug=school_slug)
             school_regs = [school_reg]
         reimport = False
-        if 'reimport' in request.POST and request.POST['reimport'] == "true":
+        if request.POST.get('reimport') == "true":
             reimport = True
         err_msgs = []
         already_imported_schools = []
@@ -217,14 +216,12 @@ def update_teammatch_status(request, tournament_slug, division_slug, match_num):
     }
     if request.method == 'POST':
         team_match_form = forms.MatchForm(request.POST, instance=team_match)
-        context['team_match_form'] = team_match_form
         if team_match_form.is_valid():
             team_match_form.save()
             return HttpResponseRedirect(reverse("tmdb:match_list",
                     args=(tournament_slug, division_slug,)))
     else:
         team_match_form = forms.MatchForm(instance=team_match)
-        context['team_match_form'] = team_match_form
         match_teams = []
         if team_match.blue_team is not None:
             match_teams.append(team_match.blue_team.pk)
@@ -232,6 +229,7 @@ def update_teammatch_status(request, tournament_slug, division_slug, match_num):
             match_teams.append(team_match.red_team.pk)
         teams = models.TeamRegistration.objects.filter(pk__in=match_teams)
         team_match_form.fields['winning_team'].queryset = teams
+    context['team_match_form'] = team_match_form
     return render(request, "tmdb/team_match_status_change.html", context)
 
 def match_list(request, tournament_slug, division_slug=None):
@@ -275,7 +273,6 @@ def team_registration_delete(request, tournament_slug, school_slug,
     if request.method == 'POST':
         delete_form = forms.TeamRegistrationDeleteForm(request.POST,
                 instance=team_registration)
-        context['delete_form'] = delete_form
         if delete_form.is_valid():
             team_registration.delete()
             return HttpResponseRedirect(reverse("tmdb:tournament_school",
@@ -310,15 +307,13 @@ def team_registration_change(request, tournament_slug, school_slug,
     if request.method == 'POST':
         edit_form = forms.TeamRegistrationForm(school_registration,
                 request.POST, instance=instance)
-        context['edit_form'] = edit_form
         if edit_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
     else:
         edit_form = forms.TeamRegistrationForm(school_registration,
                 instance=instance, initial={'tournament': tournament.pk})
-        context['edit_form'] = edit_form
-
+    context['edit_form'] = edit_form
     return render(request, template_name, context)
 
 @permission_required("tmdb.add_teamregistration")
@@ -333,15 +328,13 @@ def team_registration_add(request, tournament_slug, school_slug):
     if request.method == 'POST':
         add_form = forms.TeamRegistrationForm(school_registration,
                 request.POST)
-        context['add_form'] = add_form
         if add_form.is_valid():
             add_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug,school_slug,)))
     else:
         add_form = forms.TeamRegistrationForm(school_registration,
                 initial={'tournament': tournament.pk})
-        context['add_form'] = add_form
-
+    context['add_form'] = add_form
     return render(request, template_name, context)
 
 def team_list(request, tournament_slug, division_slug=None):
@@ -538,7 +531,6 @@ def competitor_add(request, tournament_slug, school_slug):
     context['competitors'] = competitors
     if request.method == 'POST':
         add_form = forms.SchoolCompetitorForm(request.POST)
-        context['add_form'] = add_form
         if add_form.is_valid():
             add_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school",
@@ -546,7 +538,7 @@ def competitor_add(request, tournament_slug, school_slug):
     else:
         add_form = forms.SchoolCompetitorForm(
                 initial={'registration': school_registration})
-        context['add_form'] = add_form
+    context['add_form'] = add_form
     return render(request, template_name, context)
 
 @permission_required("tmdb.change_competitor")
@@ -566,14 +558,13 @@ def competitor_change(request, tournament_slug, school_slug, competitor_id):
     if request.method == 'POST':
         change_form = forms.SchoolCompetitorForm(request.POST,
                 instance=instance)
-        context['change_form'] = change_form
         if change_form.is_valid():
             competitor = change_form.save()
             return HttpResponseRedirect(reverse('tmdb:tournament_school', args = (tournament_slug, school_slug)))
     else:
         change_form = forms.SchoolCompetitorForm(instance = instance)
         change_form.registration = school_registration
-        context['change_form'] = change_form
+    context['change_form'] = change_form
     return render(request, template_name, context)
 
 @permission_required("tmdb.delete_competitor")
@@ -592,7 +583,6 @@ def competitor_delete(request, tournament_slug, school_slug, competitor_id):
     if request.method == 'POST':
         delete_form = forms.SchoolCompetitorDeleteForm(request.POST,
                 instance=instance)
-        context['delete_form'] = delete_form
         if delete_form.is_valid():
             instance.delete()
             return HttpResponseRedirect(reverse("tmdb:tournament_school",
