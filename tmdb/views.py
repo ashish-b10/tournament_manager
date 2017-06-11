@@ -96,7 +96,8 @@ def tournament_import(request, tournament_slug):
 def tournament_dashboard(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_divisions = models.TournamentDivision.objects.filter(
-            tournament=tournament)
+            tournament=tournament).order_by(
+            'division__sex', 'division__skill_level')
 
     if division_slug is not None:
         tournament_divisions = tournament_divisions.filter(
