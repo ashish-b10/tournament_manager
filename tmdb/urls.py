@@ -49,7 +49,8 @@ urlpatterns = [
     url(tournament_base
             + r'/schools/*$',
             views.tournament_schools, name='tournament_schools'),
-    url(tournament_school_base,
+    url(tournament_school_base
+            + r'/*$',
             views.tournament_school, name='tournament_school'),
     url(tournament_school_base
             + r'/import_competitors/*$',
