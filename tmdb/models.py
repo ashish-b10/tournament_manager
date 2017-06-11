@@ -126,10 +126,8 @@ class Tournament(models.Model):
     imported = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        new_tournament = False
-        if not self.id:
-            self.slug = self.slugify()
-            new_tournament = True
+        self.slug = self.slugify()
+        new_tournament = not self.id
 
         super(Tournament, self).save(*args, **kwargs)
 
@@ -215,10 +213,8 @@ class School(models.Model):
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
-        new_school = False
-        if not self.id:
-            new_school = True
-            self.slug = self.slugify()
+        self.slug = self.slugify()
+        new_school = not self.id
 
         super(School, self).save(*args, **kwargs)
 
@@ -398,8 +394,7 @@ class Division(models.Model):
         unique_together = (("sex", "skill_level"),)
 
     def save(self, *args, **kwargs):
-        if not self.id:
-            self.slug = self.slugify()
+        self.slug = self.slugify()
         super(Division, self).save(*args, **kwargs)
 
     def slugify(self):
@@ -465,8 +460,7 @@ class Team(models.Model):
             through="TeamRegistration")
 
     def save(self, *args, **kwargs):
-        if not self.id:
-            self.slug = self.slugify()
+        self.slug = self.slugify()
         super(Team, self).save(*args, **kwargs)
 
     def slugify(self):
