@@ -80,7 +80,7 @@
               <td></td>
               {% endif %}
               <td> {{team_match.status}} </td>
-              <td><a class="btn" href="">Modify</a></td>
+              <td><a class="btn btn-primary" href="{%url 'tmdb:update_teammatch_status' team_match.division.tournament.slug team_match.division.division.slug team_match.number %}">Modify</a></td>
             </tr>
            {% endfor %}
           </table>
