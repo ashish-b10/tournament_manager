@@ -20,7 +20,7 @@ class ExportSeeds():
         self.getSeeds(self.womensC_sheet, 0, 2)
 
     def getSeeds(self, sheet, sex, skill):
-        self.tournament  = Tournament.objects.get(location="Cornell")
+        self.tournament  = Tournament.objects.get(location="Brown")
         self.div = Division.objects.get(sex=sex, skill_level = skill)
         self.tournamentDivision = TournamentDivision.objects.get(tournament= self.tournament, division=self.div)
         self.teams = TeamRegistration.objects.filter(tournament_division=self.tournamentDivision)
