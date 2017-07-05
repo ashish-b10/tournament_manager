@@ -12,7 +12,7 @@ function start_teammatch_websocket(tournament_slug) {
     }
     tmdb_vars.match_update_ws.onclose = function() {
       setInterval(function() {
-        alert("Connection to " + ws_url + " lost\n\nPlease reload the page.");
+        alert("Lost connection to " + ws_url + "\n\nPlease reload the page.");
       }, 3500);
     }
   }
