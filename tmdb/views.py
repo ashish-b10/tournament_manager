@@ -204,7 +204,7 @@ def update_teammatch_status(request, tournament_slug, division_slug, match_num):
         if team_match_form.is_valid():
             team_match_form.save()
             return HttpResponseRedirect(reverse("tmdb:match_list",
-                    args=(tournament_slug, division_slug,)))
+                    args=(tournament_slug,)))
     else:
         team_match_form = forms.MatchForm(instance=team_match)
         match_teams = []
@@ -217,13 +217,10 @@ def update_teammatch_status(request, tournament_slug, division_slug, match_num):
     context['team_match_form'] = team_match_form
     return render(request, "tmdb/team_match_status_change.html", context)
 
-def matches(request, tournament_slug, division_slug=None):
+def matches(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament__slug=tournament_slug)
-    if division_slug is not None:
-        tournament_divisions = tournament_divisions.filter(
-                division__slug=division_slug)
 
     all_matches = []
     matches_by_division = []

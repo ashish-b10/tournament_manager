@@ -7,7 +7,6 @@
         <tr>
           <th> Division </th>
           <th> Progress </th>
-          <th> Matches </th>
           <th> Teams </th>
           <th> Seedings </th>
           <th> Bracket </th>
@@ -18,7 +17,6 @@
         <tr>
         <td>{{tournament_div}}</td>
         <td> Not started </td>
-        <td> <a href="{% url 'tmdb:match_list' tournament_div.tournament.slug tournament_div.division.slug %}">Matches</a> </td>
         <td> <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a> </td>
         <td> <a href="{% url 'tmdb:division_seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Create matches</a> </td>
         <td> <a href="{% url 'tmdb:bracket' tournament_div.tournament.slug tournament_div.division.slug %}">Bracket</a> </td>
