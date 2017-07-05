@@ -16,10 +16,7 @@
     </div>
     {% for division, team_matches in matches_by_division %}
     <div role="tabpanel" class="tab-pane" id="division-{{division.division.slug}}">
-      <div>
-        <p><a href="{%url 'tmdb:match_sheet' division.tournament.slug division.division.slug %}"><input class="btn btn-primary" type="button" value="Print All Match Sheets"></input></a></p>
-      </div>
-      {% include 'tmdb/snippets/match_list.html' with tournament=tournament tournament_division=division team_matches=team_matches %}
+      {% include 'tmdb/snippets/match_list.html' with tournament=tournament tournament_division=division team_matches=team_matches only %}
     </div>
     {% endfor %}
   </div>

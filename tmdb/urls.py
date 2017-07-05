@@ -119,10 +119,10 @@ urlpatterns = [
     # list of team matches
     url(tournament_base
             + r'/matches/*$',
-            views.match_list, name='match_list'),
+            views.matches, name='match_list'),
     url(tournament_division_base
             + r'/matches/*$',
-            views.match_list, name='match_list'),
+            views.matches, name='match_list'),
     url(tournament_division_match_base
             + r'/update_status/*$',
             views.update_teammatch_status, name='update_teammatch_status'),

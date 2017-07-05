@@ -107,18 +107,11 @@ def tournament_dashboard(request, tournament_slug):
         matches_by_division.append((division, team_matches))
         all_matches += team_matches
 
-    # Information about the matches by ring.
-    matches_by_ring = defaultdict(list)
-    for match in models.TeamMatch.objects.filter(ring_number__isnull=False,
-            division__tournament=tournament).order_by('ring_assignment_time'):
-        matches_by_ring[str(match.ring_number)].append(match)
-
     context = {
         'tournament': tournament,
         'tournament_divisions': tournament_divisions,
         'all_matches': all_matches,
         'matches_by_division': matches_by_division,
-        'matches_by_ring': sorted(matches_by_ring.items()),
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
 
@@ -224,7 +217,7 @@ def update_teammatch_status(request, tournament_slug, division_slug, match_num):
     context['team_match_form'] = team_match_form
     return render(request, "tmdb/team_match_status_change.html", context)
 
-def match_list(request, tournament_slug, division_slug=None):
+def matches(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_divisions = models.TournamentDivision.objects.filter(
             tournament__slug=tournament_slug)
@@ -232,16 +225,21 @@ def match_list(request, tournament_slug, division_slug=None):
         tournament_divisions = tournament_divisions.filter(
                 division__slug=division_slug)
 
-    matches = []
+    all_matches = []
+    matches_by_division = []
     for division in tournament_divisions:
         team_matches = models.TeamMatch.objects.filter(
                 division=division).order_by('number')
-        matches.append((division, team_matches,))
+        matches_by_division.append((division, team_matches))
+        all_matches += team_matches
+
     context = {
-        'team_matches' : matches,
         'tournament': tournament,
+        'tournament_divisions': tournament_divisions,
+        'all_matches': all_matches,
+        'matches_by_division': matches_by_division,
     }
-    return render(request, 'tmdb/match_list.html', context)
+    return render(request, 'tmdb/matches.html', context)
 
 @permission_required("tmdb.delete_teamregistration")
 def team_registration_delete(request, tournament_slug, school_slug,

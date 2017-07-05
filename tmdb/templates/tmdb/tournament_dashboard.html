@@ -28,9 +28,14 @@
     </table>
   <hr/>
   <h3>Matches (based on divisions)</h3>
-  {% include "tmdb/match_table_component.html" %}
+  {% include "tmdb/snippets/match_table_component.html" %}
 
   <hr/>
   {% include "tmdb/ring_table_component.html" %}
 
+{% endblock %}
+
+{% block script %}
+{% load static %}
+    <script src="{% static 'js/match_websocket.js' %}"></script>
 {% endblock %}

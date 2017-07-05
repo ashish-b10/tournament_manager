@@ -1,16 +1,15 @@
 {% if team_matches %}
 <div class="form-horizontal">
+  {% if tournament_division %}
+  <div>
+    <p><a href="{%url 'tmdb:match_sheet' tournament_division.tournament.slug tournament_division.division.slug %}"><input class="btn btn-primary" type="button" value="Print All Match Sheets"></input></a></p>
+  </div>
+  {% endif %}
   <table class="table table-striped match_table table">
     <script type="text/javascript">
-      {% if tournament_division %}
-      window.addEventListener("load", function() {
-        start_teammatch_websocket("{{tournament.slug}}", "{{tournament_division.division.slug}}");
-      });
-      {% else %}
       window.addEventListener("load", function() {
         start_teammatch_websocket("{{tournament.slug}}");
-      }
-      {% endif %}
+      });
     </script>
     <thead>
       <tr>
