@@ -9,6 +9,11 @@
     </div>
     <div class="form-horizontal">
       <table class="table table-striped match_table table">
+        <script type="text/javascript">
+          window.addEventListener("load", function() {
+            start_teammatch_websocket("{{tournament.slug}}");
+          });
+        </script>
         <thead>
           <tr>
             <th>Match No.</th>
@@ -44,4 +49,9 @@
     {% endif %}
   {% endfor %}
 
+{% endblock %}
+
+{% block script %}
+{% load static %}
+    <script src="{% static 'js/match_websocket.js' %}"></script>
 {% endblock %}

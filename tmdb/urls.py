@@ -41,7 +41,6 @@ urlpatterns = [
             + r'/dashboard/*$',
             views.tournament_dashboard, name='tournament_dashboard'),
     url(tournament_base
-            + r'/dashboard/*'
             + r'/rings/*$',
             views.rings, name='rings'),
 

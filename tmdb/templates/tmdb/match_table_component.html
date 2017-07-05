@@ -3,7 +3,7 @@
     <li role="presentation" class="active">
       <a href="#allDivisions" aria-controls="allDivisions" role="tab" data-toggle="tab">All Divisions</a>
     </li>
-    {% for division, team_matches in team_matches %}
+    {% for division, team_matches in matches_by_division %}
       <li role="presentation">
         <a href="#division-{{division.division.slug}}" aria-controls="division-{{division.division.slug}}" role="tab" data-toggle="tab">{{division}}</a>
       </li>
@@ -11,83 +11,16 @@
   </ul>
 
   <div class="tab-content">
-    <div role="tabpanel" class="tab-pane active" id="allDivisions"> 
-      <table class="table table-striped match_table">
-          <tr>
-            <th>Match No.</th>
-            <th>Blue Team</th>
-            <th>Red Team</th>
-            <th>Winning Team</th>
-          </tr>
-          {% for division, current_matches in team_matches %}
-            {% for team_match in current_matches%}
-            <tr>
-              <td>{{team_match.number}}</td>
-              {% if team_match.blue_team %}
-                <td>{{team_match.blue_team}}</td>
-              {% else %}
-                <td></td>
-              {% endif %}
-              {% if team_match.red_team %}
-                <td>{{team_match.red_team}}</td>
-              {% else %}
-                <td></td>
-              {% endif %}
-              {% if team_match.winning_team %}
-                <td>{{team_match.winning_team}}</td>
-              {% else %}
-                <td></td>
-              {% endif %}
-              </tr>
-            {% endfor %}
-          {% endfor %}
-      </table>
+    <div role="tabpanel" class="tab-pane active" id="allDivisions">
+      {% include 'tmdb/snippets/match_list.html' with tournament=tournament team_matches=all_matches only %}
     </div>
-    {% for division, team_matches in team_matches %}
-        <div role="tabpanel" class="tab-pane" id="division-{{division.division.slug}}">
-          {% if team_matches %}
-          <table id="match_table" class="table">
-            <tr>
-              <th>Match No.</th>
-              <th>Blue Team</th>
-              <th>Red Team</th>
-              <th>Ring No.</th>
-              <th>Winning Team</th>
-              <th> Status </th>
-              <th> Modify </th>
-            </tr>
-            {% for team_match in team_matches %}
-            <tr>
-              <td>{{team_match.number}}</td>
-              {% if team_match.blue_team %}
-              <td>{{team_match.blue_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.red_team %}
-              <td>{{team_match.red_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.ring_number %}
-              <td>{{team_match.ring_number}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              {% if team_match.winning_team %}
-              <td>{{team_match.winning_team}}</td>
-              {% else %}
-              <td></td>
-              {% endif %}
-              <td> {{team_match.status}} </td>
-              <td><a class="btn btn-primary" href="{%url 'tmdb:update_teammatch_status' team_match.division.tournament.slug team_match.division.division.slug team_match.number %}">Modify</a></td>
-            </tr>
-           {% endfor %}
-          </table>
-          {% else %}
-            <p>No matches are available</p>
-          {% endif %}
-        </div>
-      {% endfor %}
+    {% for division, team_matches in matches_by_division %}
+    <div role="tabpanel" class="tab-pane" id="division-{{division.division.slug}}">
+      <div>
+        <p><a href="{%url 'tmdb:match_sheet' division.tournament.slug division.division.slug %}"><input class="btn btn-primary" type="button" value="Print All Match Sheets"></input></a></p>
+      </div>
+      {% include 'tmdb/snippets/match_list.html' with tournament=tournament tournament_division=division team_matches=team_matches %}
+    </div>
+    {% endfor %}
   </div>
 </div>

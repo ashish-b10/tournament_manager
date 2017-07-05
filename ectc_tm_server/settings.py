@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tmdb',
+    'channels',
 )
 try:
     import django_extensions
@@ -158,3 +159,10 @@ LOGGING = {
 
 LOGIN_REDIRECT_URL = '/tmdb/'
 LOGIN_URL = 'tmdb:login'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgiref.inmemory.ChannelLayer",
+        "ROUTING": "ectc_tm_server.routing.channel_routing",
+    },
+}

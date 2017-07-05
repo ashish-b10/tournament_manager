@@ -660,8 +660,12 @@ class TeamMatch(models.Model):
         if not parent_match:
             return
         if self.round_slot % 2:
+            if parent_match.red_team == self.winning_team:
+                return
             parent_match.red_team = self.winning_team
         else:
+            if parent_match.blue_team == self.winning_team:
+                return
             parent_match.blue_team = self.winning_team
         parent_match.clean()
         parent_match.save()

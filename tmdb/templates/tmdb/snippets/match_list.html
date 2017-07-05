@@ -1,0 +1,49 @@
+{% if team_matches %}
+<div class="form-horizontal">
+  <table class="table table-striped match_table table">
+    <script type="text/javascript">
+      {% if tournament_division %}
+      window.addEventListener("load", function() {
+        start_teammatch_websocket("{{tournament.slug}}", "{{tournament_division.division.slug}}");
+      });
+      {% else %}
+      window.addEventListener("load", function() {
+        start_teammatch_websocket("{{tournament.slug}}");
+      }
+      {% endif %}
+    </script>
+    <thead>
+      <tr>
+        <th>Match No.</th>
+        <th>Round</th>
+        <th>Blue Team</th>
+        <th>Red Team</th>
+        <th>Ring No.</th>
+        <th>Winning Team</th>
+        <th> Status </th>
+        <th> Modify </th>
+        <th>Match Sheet</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for team_match in team_matches %}
+      <tr>
+        <td>{{team_match.number}}</td>
+        <td>{{team_match.round_str}}</td>
+        <td>{{team_match.blue_team|default_if_none:""}}</td>
+        <td>{{team_match.red_team|default_if_none:""}}</td>
+        <td>{{team_match.ring_number|default_if_none:""}}</td>
+        <td>{{team_match.winning_team|default_if_none:""}}</td>
+        <td>{{team_match.status|default_if_none:""}}</td>
+        <td><a class="btn btn-primary" href="{%url 'tmdb:update_teammatch_status' tournament.slug team_match.division.division.slug team_match.number %}">Update Status</a></td>
+        <td><a class="btn btn-primary" href="{%url 'tmdb:match_sheet' tournament.slug team_match.division.division.slug team_match.number %}">Print</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div>
+No matches are available
+</div>
+{% endif %}
