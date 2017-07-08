@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = (
     'bootstrapform',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -60,6 +61,13 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'ectc_tm_server.urls'
 
+class InvalidStringWarning(str):
+    def __mod__(self, other):
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning("Undefined template variable: %s" %(other,))
+        return ""
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -74,6 +82,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'string_if_invalid': InvalidStringWarning("%s"),
         },
     },
 ]
@@ -151,3 +160,11 @@ LOGGING = {
 }
 
 LOGIN_REDIRECT_URL = '/tmdb/'
+LOGIN_URL = 'tmdb:login'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgiref.inmemory.ChannelLayer",
+        "ROUTING": "ectc_tm_server.routing.channel_routing",
+    },
+}

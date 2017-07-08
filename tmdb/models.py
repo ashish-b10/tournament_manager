@@ -126,10 +126,8 @@ class Tournament(models.Model):
     imported = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        new_tournament = False
-        if not self.id:
-            self.slug = self.slugify()
-            new_tournament = True
+        self.slug = self.slugify()
+        new_tournament = not self.id
 
         super(Tournament, self).save(*args, **kwargs)
 
@@ -215,10 +213,8 @@ class School(models.Model):
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
-        new_school = False
-        if not self.id:
-            new_school = True
-            self.slug = self.slugify()
+        self.slug = self.slugify()
+        new_school = not self.id
 
         super(School, self).save(*args, **kwargs)
 
@@ -372,10 +368,13 @@ class SchoolRegistration(models.Model):
         self.imported = False
         self.save()
 
-    def import_competitors_and_teams(self):
+    def import_competitors_and_teams(self, reimport=False):
+        if reimport and self.imported:
+            self.drop_competitors_and_teams()
+
         if self.imported:
-            raise IntegrityError(("%s is already imported" %(self)
-                    + " - and cannot be imported again"))
+            raise IntegrityError(("%s is already imported" %(self.school)
+                    + " and will not be reimported"))
 
         school_extracted_data = self.download_school_registration()
         competitors = self.save_extracted_competitors(
@@ -395,8 +394,7 @@ class Division(models.Model):
         unique_together = (("sex", "skill_level"),)
 
     def save(self, *args, **kwargs):
-        if not self.id:
-            self.slug = self.slugify()
+        self.slug = self.slugify()
         super(Division, self).save(*args, **kwargs)
 
     def slugify(self):
@@ -405,7 +403,7 @@ class Division(models.Model):
     def __str__(self):
         if self.sex == SexField.FEMALE: sex_name = "Women's"
         if self.sex == SexField.MALE: sex_name = "Men's"
-        return sex_name + " " + DivisionLevelField.label(self.skill_level)
+        return sex_name + " " + self.skill_level
 
     def match_number_start_val(self):
         if self.skill_level == DivisionLevelField.A_TEAM_VAL:
@@ -457,8 +455,16 @@ class Team(models.Model):
     school = models.ForeignKey(School)
     division = models.ForeignKey(Division)
     number = models.SmallIntegerField()
+    slug = models.SlugField(unique=True)
     registrations = models.ManyToManyField(TournamentDivision,
             through="TeamRegistration")
+
+    def save(self, *args, **kwargs):
+        self.slug = self.slugify()
+        super(Team, self).save(*args, **kwargs)
+
+    def slugify(self):
+        return self.school.slug + '-' + self.division.slug + str(self.number)
 
     class Meta:
         unique_together = (('school', 'division', 'number',),)
@@ -516,9 +522,13 @@ class TeamRegistration(models.Model):
                 str(self.tournament_division.tournament),)
 
     def bracket_str(self):
-        if not self.seed:
-            return str(self)
-        return "[%d] %s" %(self.seed, str(self))
+        team_str = "%s %s%d %s" %(self.team.school,
+                self.team.division.skill_level,
+                self.team.number,
+                self.__get_competitors_str())
+        if self.seed:
+            team_str = "[%d] %s" %(self.seed, team_str)
+        return team_str
 
     def num_competitors(self):
         return sum(map(lambda x: x is not None,
@@ -593,7 +603,7 @@ class TeamMatch(models.Model):
     winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
             related_name="winning_team")
     in_holding = models.BooleanField(default=False)
-    
+
     class Meta:
         unique_together = (
                 ("division", "round_num", "round_slot"),
@@ -604,13 +614,22 @@ class TeamMatch(models.Model):
         return "Match #" + str(self.number)
 
     def status(self):
-    	if self.winning_team:
-    		return "Complete"
-    	elif self.ring_number:
-    		return "At ring " + str(self.ring_number)
-    	elif self.in_holding:
-    		return "Report to holding"
-    	return "----"
+        if self.winning_team:
+                return "Complete"
+        elif self.ring_number:
+                return "At ring " + str(self.ring_number)
+        elif self.in_holding:
+                return "Report to holding"
+        return "----"
+
+    def round_str(self):
+        if self.round_num == 0:
+            return "Finals"
+        if self.round_num == 1:
+            return "Semi-Finals"
+        if self.round_num == 2:
+            return "Quarter-Finals"
+        return "Round of %d" %(1 << (self.round_num))
 
     def get_previous_round_matches(self):
         upper_match_query = TeamMatch.objects.filter(division=self.division,
@@ -627,13 +646,26 @@ class TeamMatch(models.Model):
         except TeamMatch.DoesNotExist:
             return None
 
+    @staticmethod
+    def get_matches_by_round(tournament_division):
+        matches = {}
+        num_rounds = 0
+        for match in TeamMatch.objects.filter(division=tournament_division):
+            matches[(match.round_num, match.round_slot)] = match
+            num_rounds = max(num_rounds, match.round_num)
+        return matches, num_rounds
+
     def update_winning_team(self):
         parent_match = self.get_next_round_match()
         if not parent_match:
             return
         if self.round_slot % 2:
+            if parent_match.red_team == self.winning_team:
+                return
             parent_match.red_team = self.winning_team
         else:
+            if parent_match.blue_team == self.winning_team:
+                return
             parent_match.blue_team = self.winning_team
         parent_match.clean()
         parent_match.save()

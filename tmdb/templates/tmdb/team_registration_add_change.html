@@ -1,0 +1,23 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block main-content %}
+
+{% if add_form %}
+<h2>Adding sparring team for {{school_registration.school}}</h2>
+<form action="{% url 'tmdb:team_registration_add' tournament.slug school_registration.school.slug %}" method="post">
+  {% csrf_token %}
+  {{add_form.as_p}}
+  <input class="btn btn-primary" type="submit" value="Add team"/>
+</form>
+{% endif %}
+
+{% if edit_form %}
+<h2>Editing sparring team {{instance.tournament_division}}{{instance.team.number}} from {{school}}</h2>
+<form action="{% url 'tmdb:team_registration_change' tournament.slug school_registration.school.slug instance.tournament_division.division.slug instance.team.number %}" method="post">
+  <input type="hidden" name="team_registration.id" value="{{instance.pk}}"/>
+  {% csrf_token %}
+  {{edit_form.as_p}}
+  <input class="btn btn-primary" type="submit" value="Save changes"/>
+</form>
+{% endif %}
+{% endblock %}

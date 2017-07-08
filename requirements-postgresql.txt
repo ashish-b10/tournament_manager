@@ -1,2 +1,1 @@
-psycopg2
-pelican
+psycopg2==2.7.1

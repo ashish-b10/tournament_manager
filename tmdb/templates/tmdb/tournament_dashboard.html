@@ -7,10 +7,8 @@
         <tr>
           <th> Division </th>
           <th> Progress </th>
-          <th> Matches </th>
           <th> Teams </th>
           <th> Seedings </th>
-          <th> Create Matches </th>
           <th> Bracket </th>
         </tr>
       </thead>
@@ -19,10 +17,8 @@
         <tr>
         <td>{{tournament_div}}</td>
         <td> Not started </td>
-        <td> <a href="{% url 'tmdb:match_list' tournament_div.tournament.slug tournament_div.division.slug %}">Matches</a> </td>
         <td> <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a> </td>
-        <td> <a href="{% url 'tmdb:seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Seedings</a> </td>
-        <td> <a href="{% url 'tmdb:team_points' tournament_div.tournament.slug tournament_div.division.slug %}">Create matches</a> </td>
+        <td> <a href="{% url 'tmdb:division_seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Create matches</a> </td>
         <td> <a href="{% url 'tmdb:bracket' tournament_div.tournament.slug tournament_div.division.slug %}">Bracket</a> </td>
         </tr>
         {% endfor %}
@@ -30,11 +26,14 @@
     </table>
   <hr/>
   <h3>Matches (based on divisions)</h3>
-  {% include "tmdb/match_table_component.html" %}
+  {% include "tmdb/snippets/match_table_component.html" %}
 
   <hr/>
   {% include "tmdb/ring_table_component.html" %}
 
 {% endblock %}
 
-
+{% block script %}
+{% load static %}
+    <script src="{% static 'js/match_websocket.js' %}"></script>
+{% endblock %}

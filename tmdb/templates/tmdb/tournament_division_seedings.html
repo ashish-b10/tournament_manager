@@ -1,0 +1,28 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+<h2>List of teams in {{tournament_division.division}}</h2>
+<div>Below is a list of all teams that are registered in this division. Enter each team's number of points earned in previous tournaments to determine which ones will receive preferable seedings.</div>
+<div>Once the seedings have been created, click the "Create Matches" button to create the matches.</div>
+<div>
+<form action="{% url 'tmdb:create_tournament_division_matches' tournament.slug tournament_division.division.slug %}" method="post">
+{%csrf_token%}
+<button class="btn btn-primary" input type="submit">Create Matches</button>
+</form>
+</div>
+<table class="table table-striped">
+  <thead>
+      <th>Team Name</th>
+      <th>Points</th>
+      <th>Seeding</th>
+  </thead>
+  {% for team_registration in team_registrations %}
+  <tr>
+    <td style="font-weight: bold">{{team_registration}}</td>
+    <td>{{team_registration.points|default:"-"}}</td>
+    <td>{{team_registration.seed|default:"-"}}</td>
+    <td><a class="btn btn-primary" href="{% url 'tmdb:division_seeding' team_registration.tournament_division.tournament.slug team_registration.tournament_division.division.slug team_registration.team.slug%}" >Edit</a></td>
+  </tr>
+{% endfor %}
+</table>
+{% endblock %}

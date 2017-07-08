@@ -1,0 +1,13 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+  <h2>Matches at {{tournament}}</h2>
+  <div class="alert alert-info">Select a division to print match sheets for the whole division</div>
+  {% include "tmdb/snippets/match_table_component.html" with tournament=tournament matches_by_division=matches_by_division all_matches=all_matches only %}
+
+{% endblock %}
+
+{% block script %}
+{% load static %}
+    <script src="{% static 'js/match_websocket.js' %}"></script>
+{% endblock %}

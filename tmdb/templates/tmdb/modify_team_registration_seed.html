@@ -3,8 +3,10 @@
 {% block title %} Editing {{tournament_division.division}} bracket {% endblock %}
 
 {% block content %}
-  <h2>Bracket for {{tournament_division}} at {{tournament_division.tournament}}</h2>
-  <form action="{%url 'tmdb:seeding' tournament_division.tournament.slug tournament_division.division.slug%}" method="post">
+  <h2>Adding match to {{tournament_division}} at {{tournament_division.tournament}}</h2>
+  <div>Select a team to insert in the bracket. The team selected will have seed <span style="font-weight: bold">{{new_seed}}</span></div>
+  <div>The team that is selected will face the following team in the first round match: <span style="font-weight: bold">{{existing_team}}</span></div>
+  <form action="{%url 'tmdb:add_team_to_bracket' tournament_division.tournament.slug tournament_division.division.slug%}" method="post">
     {% csrf_token %}
     {{form.as_p}}
     <input type="submit" value="Update Bracket"/>

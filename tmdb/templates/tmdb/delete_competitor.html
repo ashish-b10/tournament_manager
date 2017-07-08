@@ -1,9 +1,6 @@
 {% extends "tmdb/base_tournament_dashboard.html" %}
 
 {% block content %}
-{% if err_msg %}
-<div class="alert alert-danger">{{err_msg}}</div>
-{% endif %}
 <p>Are you sure you want to delete <b>{{competitor}}</b> from the tournament at <b>{{tournament.location}}</b> on <b>{{tournament.date}}</b>?</p>
 <form action="{% url 'tmdb:delete_competitor' tournament.slug school.slug competitor.pk %}" method="post">
     {% csrf_token %}
