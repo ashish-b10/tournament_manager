@@ -1,4 +1,7 @@
+import json
+
 from django.shortcuts import redirect, render, get_object_or_404
+from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required, permission_required
@@ -114,6 +117,50 @@ def tournament_dashboard(request, tournament_slug):
         'matches_by_division': matches_by_division,
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
+
+def model_to_json(query_set, fields):
+    obj_json = serializers.serialize('json', query_set, fields=fields)
+    return json.loads(obj_json)
+
+def tournament_json(request, tournament_slug):
+    msg = []
+    tournament = models.Tournament.objects.get(slug=tournament_slug)
+    msg.extend(model_to_json(
+            [tournament],
+            ('id', 'location', 'date',)))
+    msg.extend(model_to_json(
+            models.Division.objects.all(),
+            ('id', 'sex', 'skill_level',)))
+    msg.extend(model_to_json(
+            models.School.objects.all(),
+            ('id', 'name',)))
+    msg.extend(model_to_json(
+            models.Team.objects.all(),
+            ('id', 'division', 'school', 'number',)))
+    msg.extend(model_to_json(
+            models.TournamentDivision.objects.filter(tournament=tournament),
+            ('id', 'division', 'tournament',)))
+    msg.extend(model_to_json(
+            models.SchoolRegistration.objects.filter(tournament=tournament),
+            ('id', 'school', 'tournament',)))
+    msg.extend(model_to_json(
+            models.Competitor.objects.filter(
+                    registration__tournament=tournament),
+            ('id', 'registration', 'belt_rank', 'name', 'sex',)))
+    msg.extend(model_to_json(
+            models.TeamRegistration.objects.filter(
+                    tournament_division__tournament=tournament),
+            ('id', 'lightweight', 'middleweight', 'heavyweight', 'alternate1',
+                    'alternate2', 'team', 'tournament_division', 'points',
+                    'seed',)))
+    msg.extend(model_to_json(
+            models.TeamMatch.objects.filter(division__tournament=tournament),
+            ('id', 'blue_team', 'red_team', 'winning_team', 'division',
+                    'in_holding', 'number', 'ring_assignment_time',
+                    'ring_number', 'round_num', 'round_slot',)))
+
+    msg_json = json.dumps(msg)
+    return HttpResponse(msg_json, content_type="application/json")
 
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
