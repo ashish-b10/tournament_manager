@@ -30,6 +30,9 @@ urlpatterns = [
     url(tournament_base
             + r'/delete/*$',
             views.tournament_delete, name='tournament_delete'),
+    url(tournament_base
+            + r'/json_data/*$',
+            views.tournament_json, name='tournament_json'),
 
     # tournament import
     url(tournament_base
