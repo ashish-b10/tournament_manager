@@ -29,10 +29,13 @@ def division_seedings(request, tournament_slug, division_slug):
     team_registrations = models.TeamRegistration.objects.filter(
             tournament_division=tournament_division).order_by(
             'team__school__name', 'team__number')
+    unimported_schools = models.SchoolRegistration.objects.filter(
+            tournament=tournament_division.tournament)
     context = {
         'tournament': tournament_division.tournament,
         'tournament_division': tournament_division,
         'team_registrations': team_registrations,
+        'unimported_schools': unimported_schools,
     }
     return render(request, 'tmdb/tournament_division_seedings.html', context)
 
