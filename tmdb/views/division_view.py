@@ -20,7 +20,6 @@ from tmdb import models
 from collections import defaultdict
 import datetime
 
-from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
 def division_seedings(request, tournament_slug, division_slug):

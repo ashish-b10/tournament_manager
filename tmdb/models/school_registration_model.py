@@ -5,11 +5,11 @@ Last Updated: 07-25-2017
 """
 
 from django.db import models
-import decimal
 
 from .fields_model import *
 from .tournament_model import *
 from .school_model import *
+
 
 class SchoolRegistration(models.Model):
     tournament = models.ForeignKey(Tournament)
@@ -21,21 +21,21 @@ class SchoolRegistration(models.Model):
         unique_together = (('tournament', 'school'),)
 
     def __str__(self):
-        return '%s/%s' %(self.tournament, self.school,)
+        return '%s/%s' % (self.tournament, self.school,)
 
     def download_school_registration(self):
         from ectc_registration import GoogleDocsDownloader
         from ectc_registration import SchoolRegistrationExtractor
         try:
             creds = ConfigurationSetting.objects.get(
-                    key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
+                key=ConfigurationSetting.REGISTRATION_CREDENTIALS).value
         except ConfigurationSetting.DoesNotExist:
             raise IntegrityError("Registration credentials have not been"
-                    + " provided")
+                                 + " provided")
         downloader = GoogleDocsDownloader(creds_json=creds)
         url = self.registration_doc_url
         registration_extractor = SchoolRegistrationExtractor(
-                school_name=self.school.name, registration_doc_url=url)
+            school_name=self.school.name, registration_doc_url=url)
         registration_extractor.extract(downloader)
         return registration_extractor
 
@@ -49,13 +49,13 @@ class SchoolRegistration(models.Model):
                 belt_rank = BeltRankField.value(c['rank'])
             except IndexError:
                 raise ValidationError("Unexpected belt rank value: "
-                        + c['rank'])
+                                      + c['rank'])
             competitor = Competitor.objects.get_or_create(name=c['name'],
-                    registration=self, defaults={
-                            'sex': c['sex'],
-                            'belt_rank': belt_rank,
-                            'weight': weight,
-                    })[0]
+                                                          registration=self, defaults={
+                    'sex': c['sex'],
+                    'belt_rank': belt_rank,
+                    'weight': weight,
+                })[0]
             model_competitors[competitor.name] = competitor
         return model_competitors
 
@@ -81,16 +81,16 @@ class SchoolRegistration(models.Model):
             sex = SexField.FEMALE
             skill = DivisionLevelField.C_TEAM_VAL
         if sex is None or skill is None:
-            raise ValueError("Invalid division supplied: %s" %(division_name,))
-        return Division.objects.get(sex=sex, skill_level = skill)
+            raise ValueError("Invalid division supplied: %s" % (division_name,))
+        return Division.objects.get(sex=sex, skill_level=skill)
 
     def check_roster_competitors(self, team_registration, roster, competitors):
         competitor_names = {c for c in roster if c}
         missing_competitors = competitor_names - set(competitors.keys())
         if missing_competitors:
             raise Competitor.DoesNotExist("Could not find Competitor(s): ["
-                    + ", ".join(missing_competitors) + "] for team ["
-                    + str(team_registration.team) + "]")
+                                          + ", ".join(missing_competitors) + "] for team ["
+                                          + str(team_registration.team) + "]")
 
     def save_team_roster(self, team_registration, roster, competitors):
         self.check_roster_competitors(team_registration, roster, competitors)
@@ -115,21 +115,21 @@ class SchoolRegistration(models.Model):
                     continue
                 roster = [r.strip() for r in roster]
                 team = Team.objects.get_or_create(school=self.school,
-                        division=division, number=team_num+1)[0]
+                                                  division=division, number=team_num + 1)[0]
                 tournament_division = TournamentDivision.objects.get(
-                        tournament=self.tournament, division=division)
+                    tournament=self.tournament, division=division)
                 team_reg = TeamRegistration.objects.get_or_create(
-                        tournament_division=tournament_division, team=team)[0]
+                    tournament_division=tournament_division, team=team)[0]
                 self.save_team_roster(team_reg, roster, competitors)
 
     def drop_competitors_and_teams(self):
         if not self.imported:
-            raise IntegrityError(("%s is not imported" %(self)
-                    + " - and must be imported before it is dropped"))
+            raise IntegrityError(("%s is not imported" % (self)
+                                  + " - and must be imported before it is dropped"))
 
         TeamRegistration.objects.filter(
-                tournament_division__tournament=self.tournament,
-                team__school=self.school).delete()
+            tournament_division__tournament=self.tournament,
+            team__school=self.school).delete()
         Competitor.objects.filter(registration=self).delete()
         self.imported = False
         self.save()
@@ -139,12 +139,12 @@ class SchoolRegistration(models.Model):
             self.drop_competitors_and_teams()
 
         if self.imported:
-            raise IntegrityError(("%s is already imported" %(self.school)
-                    + " and will not be reimported"))
+            raise IntegrityError(("%s is already imported" % (self.school)
+                                  + " and will not be reimported"))
 
         school_extracted_data = self.download_school_registration()
         competitors = self.save_extracted_competitors(
-                school_extracted_data.extracted_competitors)
+            school_extracted_data.extracted_competitors)
         self.save_extracted_teams(school_extracted_data.teams, competitors)
         self.imported = True
         self.save()

@@ -6,12 +6,7 @@ Last Updated: 07-25-2017
 
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
-import decimal
-from itertools import product
-from django.template.defaultfilters import slugify
 
-from tmdb.util import BracketGenerator, SlotAssigner
 
 class SexField(models.CharField):
     FEMALE = 'F'

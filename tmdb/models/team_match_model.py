@@ -5,17 +5,11 @@ Last Updated: 07-25-2017
 """
 
 from django.db import models
-from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
-import decimal
-from itertools import product
-from django.template.defaultfilters import slugify
-
-from tmdb.util import BracketGenerator, SlotAssigner
-
 from .fields_model import *
 from .tournament_division_model import *
 from .team_registration_model import *
+from tmdb.util import BracketGenerator
+
 
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch

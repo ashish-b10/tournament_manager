@@ -20,7 +20,6 @@ from tmdb import models
 from collections import defaultdict
 import datetime
 
-from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
 @permission_required("tmdb.add_competitor")

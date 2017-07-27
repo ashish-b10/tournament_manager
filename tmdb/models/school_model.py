@@ -5,14 +5,8 @@ Last Updated: 07-25-2017
 """
 
 from django.db import models
-from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
-import decimal
-from itertools import product
 from django.template.defaultfilters import slugify
-
-from tmdb.util import BracketGenerator, SlotAssigner
-
+from itertools import product
 
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)

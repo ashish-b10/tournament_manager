@@ -15,12 +15,11 @@ from django.contrib.auth import models as auth_models
 from django.contrib import messages
 
 from tmdb import forms
-from tmdb import models
+import tmdb.models as models
 
 from collections import defaultdict
 import datetime
 
-from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
 def bracket_printable(request, tournament_slug, division_slug):
