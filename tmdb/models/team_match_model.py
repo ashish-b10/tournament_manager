@@ -3,13 +3,11 @@ Team Match Model
 
 Last Updated: 07-25-2017
 """
-
+# Django imports
 from django.db import models
-from .fields_model import *
-from .tournament_division_model import *
-from .team_registration_model import *
 from tmdb.util import BracketGenerator
-
+# Model imports
+from . import *
 
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
@@ -35,17 +33,17 @@ class TeamMatch(models.Model):
                         The time at which the ring was assigned
         winning_team    The winner of the TeamMatch
     """
-    division = models.ForeignKey(TournamentDivision)
+    division = models.ForeignKey('TournamentDivision')
     number = models.PositiveIntegerField()
     round_num = models.SmallIntegerField()
     round_slot = models.IntegerField()
-    blue_team = models.ForeignKey(TeamRegistration, related_name="blue_team",
+    blue_team = models.ForeignKey('TeamRegistration', related_name="blue_team",
             blank=True, null=True)
-    red_team = models.ForeignKey(TeamRegistration, related_name="red_team",
+    red_team = models.ForeignKey('TeamRegistration', related_name="red_team",
             blank=True, null=True)
     ring_number = models.PositiveIntegerField(blank=True, null=True)
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
-    winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
+    winning_team = models.ForeignKey('TeamRegistration', blank=True, null=True,
             related_name="winning_team")
     in_holding = models.BooleanField(default=False)
 

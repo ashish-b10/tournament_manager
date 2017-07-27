@@ -4,12 +4,11 @@ School Model
 Last Updated: 07-25-2017
 """
 
-from .division_model import *
-from .fields_model import *
-from .team_model import *
+# Django imports
 from django.db import models
 from django.template.defaultfilters import slugify
-from itertools import product
+# Model imports
+from tmdb.models import *
 
 
 class School(models.Model):
@@ -38,7 +37,7 @@ class School(models.Model):
             self.create_division_teams(division)
 
     def create_division_teams(self, division):
-        for team_num in range(1,11):
+        for team_num in range(1, 11):
             team = Team(school=self, division=division, number=team_num)
             team.clean()
             team.save()

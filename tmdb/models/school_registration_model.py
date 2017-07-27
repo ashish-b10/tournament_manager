@@ -4,16 +4,17 @@ School Registration Model
 Last Updated: 07-25-2017
 """
 
+# Django imports
 from django.db import models
-
-from .fields_model import *
-from .tournament_model import *
-from .school_model import *
+from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
+# Model imports
+from . import *
 
 
 class SchoolRegistration(models.Model):
-    tournament = models.ForeignKey(Tournament)
-    school = models.ForeignKey(School)
+    tournament = models.ForeignKey('Tournament')
+    school = models.ForeignKey('School')
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
 
@@ -51,7 +52,8 @@ class SchoolRegistration(models.Model):
                 raise ValidationError("Unexpected belt rank value: "
                                       + c['rank'])
             competitor = Competitor.objects.get_or_create(name=c['name'],
-                                                          registration=self, defaults={
+                registration=self,
+                defaults={
                     'sex': c['sex'],
                     'belt_rank': belt_rank,
                     'weight': weight,

@@ -4,35 +4,26 @@ Team Registration Model
 Last Updated: 07-25-2017
 """
 
+# Django imports
 from django.db import models
-from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
-import decimal
-from itertools import product
-from django.template.defaultfilters import slugify
 
 from tmdb.util import BracketGenerator, SlotAssigner
 
-from .fields_model import *
-from .team_model import *
-from .tournament_division_model import *
-from .competitor_model import *
-
 #TODO team.division must equal tournament_division.division
 class TeamRegistration(models.Model):
-    tournament_division = models.ForeignKey(TournamentDivision)
-    team = models.ForeignKey(Team)
+    tournament_division = models.ForeignKey('TournamentDivision')
+    team = models.ForeignKey('Team')
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
     points = models.PositiveIntegerField(null=True, blank=True)
-    lightweight = models.ForeignKey(Competitor, null=True, blank=True,
+    lightweight = models.ForeignKey('Competitor', null=True, blank=True,
             related_name="lightweight", on_delete=models.deletion.SET_NULL)
-    middleweight = models.ForeignKey(Competitor, null=True, blank=True,
+    middleweight = models.ForeignKey('Competitor', null=True, blank=True,
             related_name="middleweight", on_delete=models.deletion.SET_NULL)
-    heavyweight = models.ForeignKey(Competitor, null=True, blank=True,
+    heavyweight = models.ForeignKey('Competitor', null=True, blank=True,
             related_name="heavyweight", on_delete=models.deletion.SET_NULL)
-    alternate1 = models.ForeignKey(Competitor, null=True, blank=True,
+    alternate1 = models.ForeignKey('Competitor', null=True, blank=True,
             related_name="alternate1", on_delete=models.deletion.SET_NULL)
-    alternate2 = models.ForeignKey(Competitor, null=True, blank=True,
+    alternate2 = models.ForeignKey('Competitor', null=True, blank=True,
             related_name="alternate2", on_delete=models.deletion.SET_NULL)
 
     class Meta:

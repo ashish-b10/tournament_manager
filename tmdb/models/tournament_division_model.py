@@ -4,15 +4,14 @@ Tournament division model
 Last Updated: 07-25-2017
 """
 
+# Django imports
 from django.db import models
-
+# Model imports
 from .fields_model import *
-from .tournament_model import *
-from .division_model import *
 
 class TournamentDivision(models.Model):
-    tournament = models.ForeignKey(Tournament)
-    division = models.ForeignKey(Division)
+    tournament = models.ForeignKey('Tournament')
+    division = models.ForeignKey('Division')
 
     class Meta:
         unique_together = (('tournament', 'division'),)
@@ -25,4 +24,4 @@ class TournamentDivision(models.Model):
 
 class TournamentDivisionBeltRanks(models.Model):
     belt_rank = BeltRankField()
-    tournament_division = models.ForeignKey(TournamentDivision)
+    tournament_division = models.ForeignKey('TournamentDivision')

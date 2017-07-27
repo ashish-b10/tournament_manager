@@ -8,12 +8,11 @@ Last Updated: 07-25-2017
 from django.db import models
 from django.template.defaultfilters import slugify
 # Model imports
-import tmdb.models.fields_model as fields_model
-
+from .fields_model import *
 
 class Division(models.Model):
-    sex = fields_model.SexField()
-    skill_level = fields_model.DivisionLevelField()
+    sex = SexField()
+    skill_level = DivisionLevelField()
     slug = models.SlugField(unique=True)
     tournaments = models.ManyToManyField('Tournament', through='TournamentDivision')
 
@@ -28,15 +27,15 @@ class Division(models.Model):
         return slugify(str(self))
 
     def __str__(self):
-        if self.sex == fields_model.SexField.FEMALE: sex_name = "Women's"
-        if self.sex == fields_model.SexField.MALE: sex_name = "Men's"
+        if self.sex == SexField.FEMALE: sex_name = "Women's"
+        if self.sex == SexField.MALE: sex_name = "Men's"
         return sex_name + " " + self.skill_level
 
     def match_number_start_val(self):
-        if self.skill_level == fields_model.DivisionLevelField.A_TEAM_VAL:
+        if self.skill_level == DivisionLevelField.A_TEAM_VAL:
             start_val = 100
-        elif self.skill_level == fields_model.DivisionLevelField.B_TEAM_VAL:
+        elif self.skill_level == DivisionLevelField.B_TEAM_VAL:
             start_val = 300
-        elif self.skill_level == fields_model.DivisionLevelField.C_TEAM_VAL:
+        elif self.skill_level == DivisionLevelField.C_TEAM_VAL:
             start_val = 500
-        return start_val + (100 if self.sex == fields_model.SexField.FEMALE else 0) + 1
+        return start_val + (100 if self.sex == SexField.FEMALE else 0) + 1

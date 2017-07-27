@@ -4,19 +4,16 @@ Team Model
 Last Updated: 07-25-2017
 """
 
+# Django imports
 from django.db import models
 
-from .fields_model import *
-from .school_model import *
-from .division_model import *
-from .tournament_division_model import *
 
 class Team(models.Model):
-    school = models.ForeignKey(School)
-    division = models.ForeignKey(Division)
+    school = models.ForeignKey('School')
+    division = models.ForeignKey('Division')
     number = models.SmallIntegerField()
     slug = models.SlugField(unique=True)
-    registrations = models.ManyToManyField(TournamentDivision,
+    registrations = models.ManyToManyField('TournamentDivision',
             through="TeamRegistration")
 
     def save(self, *args, **kwargs):
