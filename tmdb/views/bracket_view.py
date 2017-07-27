@@ -22,6 +22,19 @@ import datetime
 
 from tmdb.util.bracket_svg import SvgBracket
 
+
+def blue_team_text(team_match):
+    if team_match.blue_team is None:
+        return None
+    return team_match.blue_team.bracket_str()
+
+
+def red_team_text(team_match):
+    if team_match.red_team is None:
+        return None
+    return team_match.red_team.bracket_str()
+
+
 def bracket_printable(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_division = get_object_or_404(models.TournamentDivision,

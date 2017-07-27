@@ -15,8 +15,7 @@ from django.contrib.auth import models as auth_models
 from django.contrib import messages
 
 from tmdb import forms
-from tmdb import models
-
+import tmdb.models as models
 from collections import defaultdict
 import datetime
 

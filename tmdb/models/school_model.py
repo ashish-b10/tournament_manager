@@ -4,14 +4,17 @@ School Model
 Last Updated: 07-25-2017
 """
 
+from .division_model import *
+from .fields_model import *
+from .team_model import *
 from django.db import models
 from django.template.defaultfilters import slugify
 from itertools import product
 
+
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
-    tournaments = models.ManyToManyField('Tournament',
-            through='SchoolRegistration')
+    tournaments = models.ManyToManyField('Tournament', through='SchoolRegistration')
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
@@ -27,8 +30,7 @@ class School(models.Model):
         sex_labels = SexField.SEX_LABELS
         skill_labels = DivisionLevelField.DIVISION_LEVEL_LABELS
         for sex, skill_level in product(sex_labels, skill_labels):
-            division = Division.objects.filter(sex=sex,
-                    skill_level=skill_level).first()
+            division = Division.objects.filter(sex=sex, skill_level=skill_level).first()
             if division is None:
                 division = Division(sex=sex, skill_level=skill_level)
                 division.clean()
