@@ -126,42 +126,54 @@ def model_to_json(query_set, fields):
     obj_json = serializers.serialize('json', query_set, fields=fields)
     return json.loads(obj_json)
 
+json_fields = {
+    'tournament': ('id', 'location', 'date',),
+    'division': ('id', 'sex', 'skill_level',),
+    'school': ('id', 'name',),
+    'team': ('id', 'division', 'school', 'number',),
+    'tournament_division': ('id', 'division', 'tournament',),
+    'school_registration': ('id', 'school', 'tournament',),
+    'competitor': ('id', 'registration', 'belt_rank', 'name', 'sex',),
+    'team_registration': ('id', 'lightweight', 'middleweight', 'heavyweight',
+                    'alternate1', 'alternate2', 'team', 'tournament_division',
+                    'points', 'seed',),
+    'team_match': ('id', 'blue_team', 'red_team', 'winning_team', 'division',
+                    'in_holding', 'number', 'ring_assignment_time',
+                    'ring_number', 'round_num', 'round_slot',),
+}
+
 def tournament_json(request, tournament_slug):
     msg = []
     tournament = models.Tournament.objects.get(slug=tournament_slug)
     msg.extend(model_to_json(
             [tournament],
-            ('id', 'location', 'date',)))
+            json_fields['tournament']))
     msg.extend(model_to_json(
             models.Division.objects.all(),
-            ('id', 'sex', 'skill_level',)))
+            json_fields['division']))
     msg.extend(model_to_json(
             models.School.objects.all(),
-            ('id', 'name',)))
+            json_fields['school']))
     msg.extend(model_to_json(
             models.Team.objects.all(),
-            ('id', 'division', 'school', 'number',)))
+            json_fields['team']))
     msg.extend(model_to_json(
             models.TournamentDivision.objects.filter(tournament=tournament),
-            ('id', 'division', 'tournament',)))
+            json_fields['tournament_division']))
     msg.extend(model_to_json(
             models.SchoolRegistration.objects.filter(tournament=tournament),
-            ('id', 'school', 'tournament',)))
+            json_fields['school_registration']))
     msg.extend(model_to_json(
             models.Competitor.objects.filter(
                     registration__tournament=tournament),
-            ('id', 'registration', 'belt_rank', 'name', 'sex',)))
+            json_fields['competitor']))
     msg.extend(model_to_json(
             models.TeamRegistration.objects.filter(
                     tournament_division__tournament=tournament),
-            ('id', 'lightweight', 'middleweight', 'heavyweight', 'alternate1',
-                    'alternate2', 'team', 'tournament_division', 'points',
-                    'seed',)))
+            json_fields['team_registration']))
     msg.extend(model_to_json(
             models.TeamMatch.objects.filter(division__tournament=tournament),
-            ('id', 'blue_team', 'red_team', 'winning_team', 'division',
-                    'in_holding', 'number', 'ring_assignment_time',
-                    'ring_number', 'round_num', 'round_slot',)))
+            json_fields['team_match']))
 
     msg_json = json.dumps(msg)
     return HttpResponse(msg_json, content_type="application/json")
