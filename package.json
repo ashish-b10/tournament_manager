@@ -6,7 +6,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm run serve| npm run dev",
+    "build": "webpack --progress --colors"
   },
   "repository": {
     "type": "git",

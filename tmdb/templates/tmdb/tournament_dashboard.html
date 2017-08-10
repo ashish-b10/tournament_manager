@@ -1,6 +1,8 @@
 {% extends "tmdb/base_tournament_dashboard.html" %}
 
 {% block content %}
+  <div id='match-table'> </div>
+
   <h1>{{tournament}}</h1>
     <table class="table table-striped">
       <thead>
@@ -35,5 +37,7 @@
 
 {% block script %}
 {% load static %}
-    <script src="{% static 'js/match_websocket.js' %}"></script>
+<script src="{% static 'js/bundle.js' %}"></script>
+<!--<script src="{% static 'js/match_websocket.js'
+%}"></script> -->
 {% endblock %}
