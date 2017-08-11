@@ -48,7 +48,7 @@ function on_websocket_open() {
 
 function on_websocket_close() {
   setInterval(function() {
-    alert("Lost connection to " + ws_url + "\n\nPlease reload the page.");
+    alert("Lost connection to " + tmdb_vars.match_update_ws.url + "\n\nPlease reload the page.");
   }, 3500);
 }
 
