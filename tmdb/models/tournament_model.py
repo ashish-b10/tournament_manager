@@ -10,6 +10,8 @@ from django.db.utils import IntegrityError
 from django.template.defaultfilters import slugify
 # Model imports
 from . import *
+# Other imports
+from itertools import product
 
 class Tournament(models.Model):
     slug = models.SlugField(unique=True)
