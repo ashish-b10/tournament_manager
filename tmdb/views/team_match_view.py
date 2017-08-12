@@ -93,17 +93,29 @@ def _match_sheet_reponse(matches, filename):
 def match_sheet(request, tournament_slug, division_slug, match_number=None):
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
-    filename = "%s-%s" %(tournament_slug, division_slug)
+    filename = _match_sheet_filename(tournament_slug, division_slug,
+            match_number)
     if match_number:
         matches = [models.TeamMatch.objects.get(division=tournament_division,
                 number=match_number)]
-        filename += "-match_%s.pdf" %(match_number,)
     else:
         matches = models.TeamMatch.objects.filter(
                 division=tournament_division).order_by('number')
-        filename += "-matches.pdf"
     return _match_sheet_reponse(matches, filename)
 
+def _match_sheet_filename(tournament_slug, division_slug, match_number=None):
+    filename = "%s-%s" %(tournament_slug, division_slug)
+    if match_number:
+        filename += "-match_%s.pdf" %(match_number,)
+    else:
+        filename += "-matches.pdf"
+
+    return filename
+
 def match_sheet_by_pk(request):
-    import pdb ; pdb.set_trace()
-    match_pk = request.GET
+    match = models.TeamMatch.objects.get(pk=request.GET['team_match_pk'])
+    tournament_slug = match.division.tournament.slug
+    division_slug = match.division.division.slug
+    filename = _match_sheet_filename(tournament_slug, division_slug,
+            match.number)
+    return _match_sheet_reponse([match], filename)
