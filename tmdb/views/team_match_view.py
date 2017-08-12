@@ -83,6 +83,13 @@ def matches(request, tournament_slug):
     }
     return render(request, 'tmdb/matches.html', context)
 
+def _match_sheet_reponse(matches, filename):
+    sheet = create_match_sheets(matches)
+
+    response = HttpResponse(sheet, content_type="application/pdf")
+    response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
+    return response
+
 def match_sheet(request, tournament_slug, division_slug, match_number=None):
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
@@ -95,8 +102,8 @@ def match_sheet(request, tournament_slug, division_slug, match_number=None):
         matches = models.TeamMatch.objects.filter(
                 division=tournament_division).order_by('number')
         filename += "-matches.pdf"
-    sheet = create_match_sheets(matches)
+    return _match_sheet_reponse(matches, filename)
 
-    response = HttpResponse(sheet, content_type="application/pdf")
-    response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
-    return response
+def match_sheet_by_pk(request):
+    import pdb ; pdb.set_trace()
+    match_pk = request.GET
