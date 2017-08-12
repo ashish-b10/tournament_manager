@@ -26,7 +26,7 @@ def update_team_match(sender, instance, **kwargs):
         dispatch_uid="update_tournament")
 def update_tournament(sender, instance, **kwargs):
     tournament_json = json.loads(serializers.serialize('json', [instance],
-            fields=('id', 'date', 'location')))
+            fields=json_fields['tournament']))
     message = {"text": tournament_json}
     Group(instance.slug).send(message)
 
@@ -37,9 +37,7 @@ def match_updates_connect(message, tournament_slug):
     group_name = match_updates_group_name(tournament_slug)
     Group(group_name).add(message.reply_channel)
 
-@channel_session
-def match_updates_message(message, tournament_slug):
-    message.channel_session['tournament_slug'] = tournament_slug
+def process_update_message(message):
     raw_msgs = json.loads(message['text'])
     parsed_msgs = serializers.deserialize('json', message['text'])
     for raw_msg, parsed_msg in zip(raw_msgs, parsed_msgs):
@@ -50,6 +48,16 @@ def match_updates_message(message, tournament_slug):
             setattr(model_instance, model_attr, model_attr_value)
         model_instance.clean()
         model_instance.save()
+
+@channel_session
+def match_updates_message(message, tournament_slug):
+    try:
+        process_update_message(message)
+    except Exception as e:
+        err_msg = json.dumps({'error': str(e)})
+        message.reply_channel.send({'text': err_msg})
+        return
+    message.channel_session['tournament_slug'] = tournament_slug
     group_name = match_updates_group_name(tournament_slug)
     Group(group_name).add(message.reply_channel)
 

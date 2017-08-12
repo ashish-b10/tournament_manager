@@ -180,6 +180,11 @@ function render_winning_team(team_match) {
 function handle_message(msg) {
   console.log(msg);
   var data = JSON.parse(msg.data);
+  if ('error' in data) {
+    alert(data['error']);
+    render_updated_display();
+    return
+  }
   data.map(store_tournament_datum);
   render_updated_display();
 }
