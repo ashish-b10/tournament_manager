@@ -30,7 +30,7 @@ def division_seedings(request, tournament_slug, division_slug):
             tournament_division=tournament_division).order_by(
             'team__school__name', 'team__number')
     unimported_schools = models.SchoolRegistration.objects.filter(
-            tournament=tournament_division.tournament)
+            tournament=tournament_division.tournament, imported=False)
     context = {
         'tournament': tournament_division.tournament,
         'tournament_division': tournament_division,
