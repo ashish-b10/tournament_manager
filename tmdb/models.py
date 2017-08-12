@@ -659,6 +659,8 @@ class TeamMatch(models.Model):
         parent_match = self.get_next_round_match()
         if not parent_match:
             return
+        if parent_match.winning_team:
+            raise IntegrityError("Unable to update match - match #%d's winning team must be removed first" %(parent_match.number))
         if self.round_slot % 2:
             if parent_match.red_team == self.winning_team:
                 return
