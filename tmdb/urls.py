@@ -139,7 +139,7 @@ urlpatterns = [
     url(tournament_division_base
             + r'/match_sheets/*$',
             views.team_match_view.match_sheet, name='match_sheet'),
-    url(r'match_sheet/*$',
+    url(r'^match_sheet/*$',
             views.team_match_view.match_sheet_by_pk),
 
     # bracket views
