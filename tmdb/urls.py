@@ -104,6 +104,11 @@ urlpatterns = [
             + r'/seedings/*$',
             views.division_view.division_seedings, name='division_seedings'),
     url(tournament_division_base
+            + r'/points/*'
+            + r'/(?P<team_slug>[a-z0-9_-]+)/*'
+            + r'/edit/*$',
+            views.division_view.division_points, name='division_points'),
+    url(tournament_division_base
             + r'/seeding/*'
             + r'/(?P<team_slug>[a-z0-9_-]+)/*'
             + r'/edit/*$',

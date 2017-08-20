@@ -13,6 +13,8 @@
 {% endif %}
 <div>Below is a list of all teams that are registered in this division. Enter each team's number of points earned in previous tournaments to determine which ones will receive preferable seedings.</div>
 <div>Once the seedings have been created, click the "Create Matches" button to create the matches.</div>
+{% if tournament_division.allow_new_teams %}
+{% else %}
 <div>
 <form action="{% url 'tmdb:create_tournament_division_matches' tournament.slug tournament_division.division.slug %}" method="post">
 {%csrf_token%}
@@ -30,8 +32,10 @@
     <td style="font-weight: bold">{{team_registration}}</td>
     <td>{{team_registration.points|default:"-"}}</td>
     <td>{{team_registration.seed|default:"-"}}</td>
-    <td><a class="btn btn-primary" href="{% url 'tmdb:division_seeding' team_registration.tournament_division.tournament.slug team_registration.tournament_division.division.slug team_registration.team.slug%}" >Edit</a></td>
+    <td><a class="btn btn-primary" href="{% url 'tmdb:division_points' team_registration.tournament_division.tournament.slug team_registration.tournament_division.division.slug team_registration.team.slug%}" >Edit Points</a></td>
+    <td><a class="btn btn-primary" href="{% url 'tmdb:division_seeding' team_registration.tournament_division.tournament.slug team_registration.tournament_division.division.slug team_registration.team.slug%}" >Edit Seeding</a></td>
   </tr>
-{% endfor %}
+  {% endfor %}
 </table>
+{% endif %}
 {% endblock %}

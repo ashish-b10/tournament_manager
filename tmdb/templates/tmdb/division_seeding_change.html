@@ -2,13 +2,16 @@
 
 {% block main-content %}
 
-{% if edit_form %}
 <h2>Editing seeding for {{edit_form.instance}}</h2>
-<form action="{% url 'tmdb:division_seeding' tournament.slug tournament_division.division.slug edit_form.instance.team.slug %}" method="post">
-  <input type="hidden" name="team_registration.id" value="{{edit_form.instance.pk}}"/>
-  {% csrf_token %}
-  {{edit_form.as_p}}
-  <input class="btn btn-primary" type="submit" value="Save changes"/>
-</form>
-{% endif %}
+<div>
+Use this form to enter the seed that this team should have in the bracket. Matches will be automatically re-calculated any time a seed has been changed. <span style="font-weight: bold">This means that the results of any matches will be lost.</span>
+</div>
+<div>
+  <form action="{% url 'tmdb:division_seeding' tournament.slug tournament_division.division.slug edit_form.instance.team.slug %}" method="post">
+    <input type="hidden" name="team_registration.id" value="{{edit_form.instance.pk}}"/>
+    {% csrf_token %}
+    {{edit_form.as_p}}
+    <input class="btn btn-primary" type="submit" value="Save changes"/>
+  </form>
+</div>
 {% endblock %}

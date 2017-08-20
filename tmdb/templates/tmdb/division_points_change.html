@@ -1,0 +1,17 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block main-content %}
+
+<h2>Editing points for {{edit_form.instance}}</h2>
+<div>
+Use this form to enter the number of points that this team has received in previous tournaments. The teams with the highest 4 points will be guaranteed a high seed in the bracket. All seedings will be recalculated after entering this form.
+</div>
+<div>
+  <form action="{% url 'tmdb:division_points' tournament.slug tournament_division.division.slug edit_form.instance.team.slug %}" method="post">
+    <input type="hidden" name="team_registration.id" value="{{edit_form.instance.pk}}"/>
+    {% csrf_token %}
+    {{edit_form.as_p}}
+    <input class="btn btn-primary" type="submit" value="Save changes"/>
+  </form>
+</div>
+{% endblock %}

@@ -47,22 +47,45 @@ def division_seeding(request, tournament_slug, division_slug, team_slug):
             team__slug=team_slug)
     tournament_division = team_registration.tournament_division
     if request.method == 'POST':
-        edit_form = forms.TeamRegistrationPointsSeedingForm(request.POST,
+        edit_form = forms.TeamRegistrationSeedingForm(request.POST,
                 instance=team_registration)
         if edit_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse('tmdb:division_seedings',
                     args=(tournament_slug, division_slug,)))
     else:
-        edit_form = forms.TeamRegistrationPointsSeedingForm(
-                instance=team_registration,
-                initial={'recompute_seedings': True})
+        edit_form = forms.TeamRegistrationSeedingForm(
+                instance=team_registration)
     context = {
         'edit_form': edit_form,
         'tournament': tournament_division.tournament,
         'tournament_division': tournament_division,
     }
     return render(request, 'tmdb/division_seeding_change.html', context)
+
+@permission_required('tmdb.change_teamregistration')
+def division_points(request, tournament_slug, division_slug, team_slug):
+    team_registration = get_object_or_404(models.TeamRegistration,
+            tournament_division__tournament__slug=tournament_slug,
+            tournament_division__division__slug=division_slug,
+            team__slug=team_slug)
+    tournament_division = team_registration.tournament_division
+    if request.method == 'POST':
+        edit_form = forms.TeamRegistrationPointsForm(request.POST,
+                instance=team_registration)
+        if edit_form.is_valid():
+            edit_form.save()
+            return HttpResponseRedirect(reverse('tmdb:division_seedings',
+                    args=(tournament_slug, division_slug,)))
+    else:
+        edit_form = forms.TeamRegistrationPointsForm(
+                instance=team_registration)
+    context = {
+        'edit_form': edit_form,
+        'tournament': tournament_division.tournament,
+        'tournament_division': tournament_division,
+    }
+    return render(request, 'tmdb/division_points_change.html', context)
 
 @permission_required(["tmdb.add_teammatch", "tmdb.delete_teammatch"])
 def create_tournament_division_matches(request, tournament_slug, division_slug):

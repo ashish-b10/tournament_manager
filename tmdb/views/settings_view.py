@@ -130,7 +130,7 @@ def get_lowest_bye_seed(tournament_division):
 @permission_required("tmdb.add_teammatch")
 def add_team_to_bracket(request, tournament_slug, division_slug):
     if request.method == 'POST':
-        form = forms.TeamRegistrationSeedingForm(request.POST)
+        form = forms.TeamRegistrationBracketSeedingForm(request.POST)
         if form.is_valid():
             team_registration = models.TeamRegistration.objects.get(
                     pk=request.POST['team_registration'])
@@ -158,7 +158,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
             raise ValueError("side was `%s`, must be `upper` or `lower`" %(
                     side,))
         new_seed = 2**(int(round_num) + 2) - existing_team.seed + 1
-        form = forms.TeamRegistrationSeedingForm(initial={'seed': new_seed})
+        form = forms.TeamRegistrationBracketSeedingForm(initial={'seed': new_seed})
         form.fields['team_registration'].queryset = \
                 models.TeamRegistration.get_teams_without_assigned_slot(
                         tournament_division)
