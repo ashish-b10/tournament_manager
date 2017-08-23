@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from channels import Group
 from channels.sessions import channel_session
+from channels.auth import channel_session_user_from_http, channel_session_user
 
 from . import models
 from .views.tournament_view import json_fields
@@ -30,7 +31,7 @@ def update_tournament(sender, instance, **kwargs):
     message = {"text": tournament_json}
     Group(instance.slug).send(message)
 
-@channel_session
+@channel_session_user_from_http
 def match_updates_connect(message, tournament_slug):
     message.channel_session['tournament_slug'] = tournament_slug
     message.reply_channel.send({"accept": True})
@@ -49,8 +50,14 @@ def process_update_message(message):
         model_instance.clean()
         model_instance.save()
 
-@channel_session
+@channel_session_user
 def match_updates_message(message, tournament_slug):
+    if not message.user.has_perm('tmdb.change_teammatch'):
+        err_msg = str(message.user)
+        err_msg += " does not have permission to change this value"
+        err_msg = json.dumps({'error': err_msg})
+        message.reply_channel.send({'text': err_msg})
+        return
     try:
         process_update_message(message)
     except Exception as e:
