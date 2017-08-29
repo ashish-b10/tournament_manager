@@ -6,8 +6,7 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "npm run serve| npm run dev",
-    "build": "webpack --progress --colors"
+
   },
   "repository": {
     "type": "git",

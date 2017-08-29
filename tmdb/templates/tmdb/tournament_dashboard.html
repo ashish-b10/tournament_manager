@@ -32,12 +32,15 @@
 
   <hr/>
   {% include "tmdb/ring_table_component.html" %}
+  <div class="match-table"> </div>
 
 {% endblock %}
 
 {% block script %}
 {% load static %}
-<script src="{% static 'js/bundle.js' %}"></script>
-<!--<script src="{% static 'js/match_websocket.js'
-%}"></script> -->
+<script src="https://fb.me/react-15.0.0.js"></script>
+<script src="https://fb.me/react-dom-15.0.0.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+<script type="text/babel" src="{% static 'js/src/index.jsx' %}"></script>
+<script src="{% static 'js/match_websocket.js'%}"></script>
 {% endblock %}
