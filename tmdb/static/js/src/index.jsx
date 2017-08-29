@@ -54,7 +54,7 @@ class MatchRow extends React.Component {
              <td> {this.state.blue_team} </td>
              <td> {this.state.red_team} </td>
              <td> {this.state.ring_num} </td>
-             <td> {this.state.in_holding} </td>
+             <td> <input type="checkbox" checked={this.state.in_holding} /> </td>
              <td> {this.state.winning_team} </td>
              <td> {this.state.status} </td>
             </tr>
