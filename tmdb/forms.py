@@ -122,23 +122,21 @@ class ConfigurationSetting(forms.ModelForm):
             'value': ''
         }
 
-class TeamRegistrationPointsSeedingForm(forms.ModelForm):
-    recompute_seedings = forms.BooleanField(required=False,
-            label="Recompute seedings?")
-
+class TeamRegistrationPointsForm(forms.ModelForm):
     class Meta:
         model = models.TeamRegistration
-        fields = ['seed', 'points']
+        fields = ['points']
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if self.cleaned_data['recompute_seedings']:
-            teams = models.TeamRegistration.get_teams_with_assigned_slots(
-                    self.instance.tournament_division)
-            for team in teams:
-                team.save()
+        self.instance.tournament_division.assign_slots_to_team_registrations()
 
-class TeamRegistrationSeedingForm(forms.Form):
+class TeamRegistrationSeedingForm(forms.ModelForm):
+    class Meta:
+        model = models.TeamRegistration
+        fields = ['seed']
+
+class TeamRegistrationBracketSeedingForm(forms.Form):
     seed = forms.IntegerField()
     team_registration = forms.ModelChoiceField(
             queryset=models.TeamRegistration.objects.all())

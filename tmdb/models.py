@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 import decimal
@@ -418,6 +418,26 @@ class TournamentDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
     division = models.ForeignKey(Division)
 
+    def assign_slots_to_team_registrations(self):
+        """
+        Assigns all teams in tournament_division to a slot in the
+        bracket.
+        """
+        teams = TeamRegistration.objects.filter(tournament_division=self)
+        teams = teams.order_by('team__number').order_by('team__school')
+        teams = list(teams)
+        slot_assigner = SlotAssigner(list(teams), 4,
+                get_school_name = lambda team: team.team.school.name,
+                get_points = lambda team: team.points if team.points else 0)
+        with transaction.atomic():
+            for team in teams:
+                team.seed = None
+                team.save()
+            for team in teams:
+                team.seed = slot_assigner.slots_by_team.get(team)
+                team.save()
+        return teams
+
     class Meta:
         unique_together = (('tournament', 'division'),)
 
@@ -535,21 +555,6 @@ class TeamRegistration(models.Model):
                 [self.lightweight, self.middleweight, self.heavyweight]))
 
     @classmethod
-    def get_teams_with_assigned_slots(cls, tournament_division):
-        """
-        Assigns all teams in tournament_division to a slot in the
-        bracket. Returns a dict of {team:seed}.
-        """
-        teams = cls.objects.filter(tournament_division=tournament_division).order_by('team__number').order_by('team__school')
-        get_num_competitors = lambda team: team.num_competitors()
-        slot_assigner = SlotAssigner(list(teams), 4,
-                get_school_name = lambda team: team.team.school.name,
-                get_points = lambda team: team.points if team.points else 0)
-        for team in teams:
-            team.seed = slot_assigner.slots_by_team.get(team)
-        return teams
-
-    @classmethod
     def get_teams_without_assigned_slot(cls, tournament_division):
         """
         Returns a list of teams that do not have a slot in the bracket.
@@ -659,6 +664,8 @@ class TeamMatch(models.Model):
         parent_match = self.get_next_round_match()
         if not parent_match:
             return
+        if parent_match.winning_team:
+            raise IntegrityError("Unable to update match - match #%d's winning team must be removed first" %(parent_match.number))
         if self.round_slot % 2:
             if parent_match.red_team == self.winning_team:
                 return
