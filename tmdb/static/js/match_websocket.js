@@ -1,3 +1,7 @@
+//import React from 'react';
+//import ReactDOM from 'react-dom';
+//import {MatchTable} from './src/index.jsx';
+
 tmdb_vars = {};
 tmdb_vars.tournament_data = {};
 
@@ -31,7 +35,9 @@ function createObjectElem(elem_type, elem_content) {
 }
 
 function render_initial_display() {
-  render_full_display();
+//  render_full_display();
+
+
 }
 
 function render_updated_display() {

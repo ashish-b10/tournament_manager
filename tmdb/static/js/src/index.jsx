@@ -1,5 +1,6 @@
 //import React from 'react';
 //import ReactDOM from 'react-dom';
+//var React = require('react');
 
 class HeaderRow extends React.Component {
     render() {
@@ -53,7 +54,7 @@ class MatchRow extends React.Component {
              <td> {this.state.round} </td>
              <td> {this.state.blue_team} </td>
              <td> {this.state.red_team} </td>
-             <td> {this.state.ring_num} </td>
+             <td> <input type="text" value={this.state.ring_num} /> </td>
              <td> <input type="checkbox" checked={this.state.in_holding} /> </td>
              <td> {this.state.winning_team} </td>
              <td> {this.state.status} </td>
@@ -86,10 +87,8 @@ class MatchTable extends React.Component {
 	}
 };
 
-
-
 ReactDOM.render(
-	<MatchTable />,
-	document.getElementById('match-table')
+    <MatchTable />,
+    document.getElementById('match-table')
 );
 
