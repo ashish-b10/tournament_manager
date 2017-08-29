@@ -38,7 +38,7 @@ function render_updated_display() {
   render_full_display();
 }
 
-function render_full_display() {
+function render_full_display(division_name="Women's A") {
   var match_queues = document.getElementsByClassName("division-queue");
   for (var i = 0; i < match_queues.length; ++i) {
     match_queue = match_queues[i];
@@ -58,7 +58,6 @@ function render_full_display() {
     match_queue_row.appendChild(createTextElem("th", "Ring No."));
     match_queue_row.appendChild(createTextElem("th", "Winning Team"));
     match_queue_row.appendChild(createTextElem("th", "Status"));
-    match_queue_row.appendChild(createTextElem("th", "Match Sheet"));
     var team_matches = Object.values(
         tmdb_vars.tournament_data.tmdb_teammatch);
     team_matches = team_matches.sort(function(team_match1, team_match2) {
@@ -66,7 +65,9 @@ function render_full_display() {
     });
     var match_queue_table_body = document.createElement("tbody");
     match_queue_table.appendChild(match_queue_table_body);
-    team_matches.map(function(team_match) {
+    team_matches.filter(function(team_match) {
+        return get_division(team_match) == division_name;
+    }).map(function(team_match) {
       match_queue_row = document.createElement("tr");
       match_queue_table_body.appendChild(match_queue_row);
       match_queue_row.append(createTextElem("td", team_match.fields.number));
@@ -77,9 +78,26 @@ function render_full_display() {
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
-      match_queue_row.append(createObjectElem("td", render_match_sheet(team_match)));
     });
   }
+}
+
+function get_division(match) {
+  if (match == null) {
+    return null;
+  }
+  var team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[match.fields.blue_team];
+  if (team_registration == null) {
+     team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[match.fields.red_team];
+     if (team_registration == null) {
+        return null;
+     }
+  }
+  var team_id = team_registration.fields.team;
+  var team = tmdb_vars.tournament_data.tmdb_team[team_id];
+  var division_id = team.fields.division;
+  var division_str = render_division_name(division_id);
+  return division_str + "";
 }
 
 function render_round_num(team_match) {
