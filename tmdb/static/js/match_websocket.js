@@ -1,6 +1,11 @@
 tmdb_vars = {};
 tmdb_vars.tournament_data = {};
 
+function delete_tourament_datum(datum) {
+  datum.model = datum.model.replace(".", "_");
+  delete tmdb_vars.tournament_data[datum.model][datum.pk];
+}
+
 function store_tournament_datum(datum) {
   datum.model = datum.model.replace(".", "_");
   if (datum.model == "tmdb_tournament") {
@@ -218,12 +223,20 @@ function evaluate_status(team_match) {
 function handle_message(msg) {
   console.log(msg);
   var data = JSON.parse(msg.data);
+  if ('update' in data) {
+    var update_data = JSON.parse(data['update']);
+    update_data.map(store_tournament_datum);
+  }
+  if ('delete' in data) {
+    var delete_data = JSON.parse(data['delete']);
+    delete_data.map(delete_tourament_datum);
+  }
   if ('error' in data) {
-    alert(data['error']);
+    var error_data = JSON.parse(data['error']);
+    alert(error_data);
     render_updated_display();
     return
   }
-  data.map(store_tournament_datum);
   render_updated_display();
 }
 

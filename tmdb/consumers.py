@@ -1,7 +1,7 @@
 import json
 
 from django.core import serializers
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from channels import Group
 from channels.sessions import channel_session
@@ -13,6 +13,11 @@ from .views.tournament_view import json_fields
 def match_updates_group_name(tournament_slug):
     return "match-updates-%s" %(tournament_slug,)
 
+def create_message(message_type, message_content, dump_message_content=True):
+    if dump_message_content:
+        message_content = json.dumps(message_content)
+    return {'text': json.dumps({message_type: message_content})}
+
 @receiver(post_save, sender=models.TeamMatch,
         dispatch_uid="update_team_match")
 def update_team_match(sender, instance, **kwargs):
@@ -20,8 +25,17 @@ def update_team_match(sender, instance, **kwargs):
             fields = json_fields['team_match'])
     tournament_slug = instance.division.tournament.slug
     group_name = match_updates_group_name(tournament_slug)
-    message = {"text": team_match_json}
-    Group(group_name).send(message)
+    Group(group_name).send(create_message('update', team_match_json,
+            dump_message_content=False), immediately=True)
+
+@receiver(post_delete, sender=models.TeamMatch,
+        dispatch_uid="delete_team_match")
+def delete_team_match(sender, instance, **kwargs):
+    team_match_json = serializers.serialize('json', [instance], fields = [])
+    tournament_slug = instance.division.tournament.slug
+    group_name = match_updates_group_name(tournament_slug)
+    Group(group_name).send(create_message('delete', team_match_json,
+            dump_message_content=False), immediately=True)
 
 @receiver(post_save, sender=models.Tournament,
         dispatch_uid="update_tournament")
@@ -55,14 +69,12 @@ def match_updates_message(message, tournament_slug):
     if not message.user.has_perm('tmdb.change_teammatch'):
         err_msg = str(message.user)
         err_msg += " does not have permission to change this value"
-        err_msg = json.dumps({'error': err_msg})
-        message.reply_channel.send({'text': err_msg})
+        message.reply_channel.send(create_message('error', err_msg))
         return
     try:
         process_update_message(message)
     except Exception as e:
-        err_msg = json.dumps({'error': str(e)})
-        message.reply_channel.send({'text': err_msg})
+        message.reply_channel.send(create_message('error', str(e)))
         return
     message.channel_session['tournament_slug'] = tournament_slug
     group_name = match_updates_group_name(tournament_slug)
