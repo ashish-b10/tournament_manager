@@ -1,6 +1,5 @@
-//import React from 'react';
-//import ReactDOM from 'react-dom';
-//var React = require('react');
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 class HeaderRow extends React.Component {
     render() {
