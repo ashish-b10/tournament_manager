@@ -1,0 +1,15 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+<h2>Locking team registration for {{tournament_division}}</h2>
+<div>
+Are you sure you want to lock team registration for this division? This means no more teams can be added to this division. You must perform this operation before match results can be recorded.
+</div>
+<div>
+<form action="{% url 'tmdb:lock_team_registration' tournament_division.tournament.slug tournament_division.division.slug %}" method="post">
+  {% csrf_token %}
+  {{ form }}
+  <button type="submit" class="btn btn-primary">Lock team registration</button>
+</form>
+</div>
+{% endblock %}

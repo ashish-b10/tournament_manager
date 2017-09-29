@@ -133,7 +133,8 @@ urlpatterns = [
             views.team_match_view.matches, name='match_list'),
     url(tournament_division_match_base
             + r'/update_status/*$',
-            views.team_match_view.update_teammatch_status, name='update_teammatch_status'),
+            views.team_match_view.update_teammatch_status,
+            name='update_teammatch_status'),
 
     # match sheets
     url(tournament_division_base
@@ -155,6 +156,16 @@ urlpatterns = [
             + r'/bracket/*'
             + r'/printed/*$',
             views.bracket_view.bracket_printable, name='bracket_printable'),
+
+    # lock team registrations for tournament division
+    url(tournament_division_base
+            + r'/lock_registration/*$',
+            views.tournament_division_view.lock_team_registration,
+            name='lock_team_registration'),
+    url(tournament_division_base
+            + r'/unlock_registration/*$',
+            views.tournament_division_view.unlock_team_registration,
+            name='unlock_team_registration'),
 
     # miscellaneous functionality
     url(r'^create_headtable_user/*$',

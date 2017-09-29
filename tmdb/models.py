@@ -417,6 +417,7 @@ class Division(models.Model):
 class TournamentDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
     division = models.ForeignKey(Division)
+    locked_from_new_teams = models.BooleanField(default=False)
 
     def assign_slots_to_team_registrations(self):
         """
@@ -571,6 +572,18 @@ class TeamRegistration(models.Model):
         return query_set.order_by('team__school__name',
                 'tournament_division__division', 'team__number')
 
+    def ensure_division_not_locked_when_changing_teams(self):
+        if self.tournament_division.locked_from_new_teams:
+            raise IntegrityError("Unable to add team to division "
+                    + str(self.tournament_division) + " because the division"
+                    + " has been locked from editing teams")
+
+    def clean(self, *args, **kwargs):
+        self.ensure_division_not_locked_when_changing_teams()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
     can have multiple CompetitorMatches.
@@ -677,7 +690,13 @@ class TeamMatch(models.Model):
         parent_match.clean()
         parent_match.save()
 
+    def ensure_locked_when_setting_winning_team(self):
+        if self.winning_team and not self.division.locked_from_new_teams:
+            raise IntegrityError("Winning team cannot be set because the"
+                    + " division has not been locked from adding new teams")
+
     def clean(self, *args, **kwargs):
+        self.ensure_locked_when_setting_winning_team()
         self.update_winning_team()
 
     @staticmethod
@@ -698,9 +717,6 @@ class TeamMatch(models.Model):
                 match.blue_team = bracket_match.blue_team
             except AttributeError:
                 pass
-            try:
-                bracket_match.red_team
-            except: pass
             try:
                 match.red_team = bracket_match.red_team
             except AttributeError:

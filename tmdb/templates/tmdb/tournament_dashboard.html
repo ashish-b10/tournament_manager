@@ -10,6 +10,7 @@
           <th> Teams </th>
           <th> Seedings </th>
           <th> Bracket </th>
+          <th> Lock Registration </th>
         </tr>
       </thead>
       <tbody>
@@ -20,6 +21,11 @@
         <td> <a href="{% url 'tmdb:team_list' tournament_div.tournament.slug tournament_div.division.slug %}">Teams</a> </td>
         <td> <a href="{% url 'tmdb:division_seedings' tournament_div.tournament.slug tournament_div.division.slug %}">Create matches</a> </td>
         <td> <a href="{% url 'tmdb:bracket' tournament_div.tournament.slug tournament_div.division.slug %}">Bracket</a> </td>
+        {% if tournament_div.locked_from_new_teams %}
+        <td> <a href="{% url 'tmdb:unlock_team_registration' tournament_div.tournament.slug tournament_div.division.slug %}">Unlock</a> </td>
+        {% else %}
+        <td> <a href="{% url 'tmdb:lock_team_registration' tournament_div.tournament.slug tournament_div.division.slug %}">Lock</a> </td>
+        {% endif %}
         </tr>
         {% endfor %}
       </tbody>

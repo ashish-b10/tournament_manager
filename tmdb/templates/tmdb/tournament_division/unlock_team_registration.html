@@ -1,0 +1,18 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+<h2>Locking team registration for {{tournament_division}}</h2>
+<div>
+Are you sure you want to unlock team registration for this division? You should only perform this operation if you need to add additional teams to this division's bracket.
+</div>
+<div class="alert alert-danger">
+This operation will delete any team match results which have been recorded for this division!
+</div>
+<div>
+<form action="{% url 'tmdb:unlock_team_registration' tournament_division.tournament.slug tournament_division.division.slug %}" method="post">
+  {% csrf_token %}
+  {{ form }}
+  <button type="submit" class="btn btn-primary">Unlock team registration</button>
+</form>
+</div>
+{% endblock %}

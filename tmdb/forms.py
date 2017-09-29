@@ -146,6 +146,20 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['seed'].widget.attrs['readonly'] = True
 
+class TournamentDivisionLockUnlockForm(forms.ModelForm):
+    class Meta:
+        model = models.TournamentDivision
+        fields = ['locked_from_new_teams',]
+        widgets = {
+            'locked_from_new_teams': forms.HiddenInput(),
+        }
+
+    def save(self, *args, **kwargs):
+       super().save(*args, **kwargs)
+       if not self.cleaned_data['locked_from_new_teams']:
+           models.TeamMatch.objects.filter(division=self.instance).update(
+                   winning_team=None)
+
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
     class Meta:
