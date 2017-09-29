@@ -1,9 +1,3 @@
-"""
-Tournament View
-
-Last Updated: 07-09-2017
-"""
-
 import json
 
 from django.shortcuts import redirect, render, get_object_or_404
