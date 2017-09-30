@@ -414,9 +414,37 @@ class Division(models.Model):
             start_val = 500
         return start_val + (100 if self.sex == SexField.FEMALE else 0) + 1
 
+class TournamentDivisionStatus():
+    def __init__(self, num_matches, num_matches_completed):
+        self.num_matches = num_matches
+        self.num_matches_completed = num_matches_completed
+
+    def __str__(self):
+        if not self.num_matches:
+            return "No matches created"
+        return "%d/%d matches completed" %(
+                 self.num_matches_completed, self.num_matches,)
+
 class TournamentDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
     division = models.ForeignKey(Division)
+
+    class Meta:
+        unique_together = (('tournament', 'division'),)
+
+    def __str__(self):
+        return "%s" %(self.division)
+
+    def __repr__(self):
+        return "%s (%s)" %(self.division, self.tournament)
+
+    def status(self):
+        matches = TeamMatch.objects.filter(division=self)
+        num_matches = num_matches_completed = 0
+        for match in matches:
+            num_matches += 1
+            num_matches_completed += bool(match.winning_team)
+        return TournamentDivisionStatus(num_matches, num_matches_completed)
 
     def assign_slots_to_team_registrations(self):
         """
@@ -438,14 +466,33 @@ class TournamentDivision(models.Model):
                 team.save()
         return teams
 
-    class Meta:
-        unique_together = (('tournament', 'division'),)
+    def create_matches_from_slots(self):
+        TeamMatch.objects.filter(division=self).delete()
+        seeded_teams = TeamRegistration.objects.filter(
+                tournament_division=self, seed__isnull=False)
+        seeds = {team.seed:team for team in seeded_teams}
+        start_val = self.division.match_number_start_val()
+        bracket = BracketGenerator(seeds, match_number_start_val=start_val)
+        for bracket_match in bracket:
+            match = TeamMatch(division=self,
+                    number=bracket_match.number,
+                    round_num = bracket_match.round_num,
+                    round_slot = bracket_match.round_slot)
 
-    def __str__(self):
-        return "%s" %(self.division)
+            try:
+                match.blue_team = bracket_match.blue_team
+            except AttributeError:
+                pass
+            try:
+                bracket_match.red_team
+            except: pass
+            try:
+                match.red_team = bracket_match.red_team
+            except AttributeError:
+                pass
 
-    def __repr__(self):
-        return "%s (%s)" %(self.division, self.tournament)
+            match.clean()
+            match.save()
 
 class TournamentDivisionBeltRanks(models.Model):
     belt_rank = BeltRankField()
@@ -679,35 +726,6 @@ class TeamMatch(models.Model):
 
     def clean(self, *args, **kwargs):
         self.update_winning_team()
-
-    @staticmethod
-    def create_matches_from_slots(tournament_division):
-        TeamMatch.objects.filter(division=tournament_division).delete()
-        seeded_teams = TeamRegistration.objects.filter(
-                tournament_division=tournament_division, seed__isnull=False)
-        seeds = {team.seed:team for team in seeded_teams}
-        start_val = tournament_division.division.match_number_start_val()
-        bracket = BracketGenerator(seeds, match_number_start_val=start_val)
-        for bracket_match in bracket:
-            match = TeamMatch(division=tournament_division,
-                    number=bracket_match.number,
-                    round_num = bracket_match.round_num,
-                    round_slot = bracket_match.round_slot)
-
-            try:
-                match.blue_team = bracket_match.blue_team
-            except AttributeError:
-                pass
-            try:
-                bracket_match.red_team
-            except: pass
-            try:
-                match.red_team = bracket_match.red_team
-            except AttributeError:
-                pass
-
-            match.clean()
-            match.save()
 
 class ConfigurationSetting(models.Model):
     key = models.TextField(unique=True)
