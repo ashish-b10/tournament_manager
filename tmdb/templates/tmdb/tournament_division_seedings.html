@@ -12,13 +12,12 @@
 </div>
 {% endif %}
 <div>Below is a list of all teams that are registered in this division. Enter each team's number of points earned in previous tournaments to determine which ones will receive preferable seedings.</div>
-<div>Once the seedings have been created, click the "Create Matches" button to create the matches.</div>
-{% if tournament_division.allow_new_teams %}
-{% else %}
+<div>Once the seedings have been created, click the "Generate Bracket" button to generate the matches for this division from the teams' seeds. <span style="font-weight: bold">Any existing matches in this division will be deleted.</span></div>
 <div>
 <form action="{% url 'tmdb:create_tournament_division_matches' tournament.slug tournament_division.division.slug %}" method="post">
-{%csrf_token%}
-<button class="btn btn-primary" input type="submit">Create Matches</button>
+  {%csrf_token%}
+  {{generate_bracket_form}}
+  <button class="btn btn-primary" input type="submit">Generate Bracket</button>
 </form>
 </div>
 <table class="table table-striped">
@@ -37,5 +36,4 @@
   </tr>
   {% endfor %}
 </table>
-{% endif %}
 {% endblock %}
