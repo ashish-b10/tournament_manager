@@ -8,7 +8,10 @@ Last Updated: 07-25-2017
 from django.db import models
 from django.template.defaultfilters import slugify
 # Model imports
-from tmdb.models import *
+from .fields_model import *
+from django.apps import apps
+
+from itertools import product
 
 
 class School(models.Model):
@@ -29,16 +32,18 @@ class School(models.Model):
         sex_labels = SexField.SEX_LABELS
         skill_labels = DivisionLevelField.DIVISION_LEVEL_LABELS
         for sex, skill_level in product(sex_labels, skill_labels):
-            division = Division.objects.filter(sex=sex, skill_level=skill_level).first()
+            division_model = apps.get_model('tmdb', 'Division')
+            division = division_model.objects.filter(sex=sex, skill_level=skill_level).first()
             if division is None:
-                division = Division(sex=sex, skill_level=skill_level)
+                division = division_model(sex=sex, skill_level=skill_level)
                 division.clean()
                 division.save()
             self.create_division_teams(division)
 
     def create_division_teams(self, division):
         for team_num in range(1, 11):
-            team = Team(school=self, division=division, number=team_num)
+            team_model = apps.get_model('tmdb', 'Team')
+            team = team_model(school=self, division=division, number=team_num)
             team.clean()
             team.save()
 

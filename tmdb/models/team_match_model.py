@@ -6,8 +6,9 @@ Last Updated: 07-25-2017
 # Django imports
 from django.db import models
 from tmdb.util import BracketGenerator
+
 # Model imports
-from . import *
+from django.apps import apps
 
 class TeamMatch(models.Model):
     """ A match between two (or more?) Teams in a Division. A TeamMatch
@@ -46,6 +47,10 @@ class TeamMatch(models.Model):
     winning_team = models.ForeignKey('TeamRegistration', blank=True, null=True,
             related_name="winning_team")
     in_holding = models.BooleanField(default=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.team_registration_model = apps.get_model('tmdb', 'TeamRegistration')
 
     class Meta:
         unique_together = (
@@ -118,8 +123,9 @@ class TeamMatch(models.Model):
 
     @staticmethod
     def create_matches_from_slots(tournament_division):
+        team_registration_model = apps.get_model('tmdb', 'TeamRegistration')
         TeamMatch.objects.filter(division=tournament_division).delete()
-        seeded_teams = TeamRegistration.objects.filter(
+        seeded_teams = team_registration_model.objects.filter(
                 tournament_division=tournament_division, seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
         start_val = tournament_division.division.match_number_start_val()

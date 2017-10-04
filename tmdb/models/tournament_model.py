@@ -9,7 +9,8 @@ from django.db import models
 from django.db.utils import IntegrityError
 from django.template.defaultfilters import slugify
 # Model imports
-from . import *
+from .fields_model import *
+from django.apps import apps
 # Other imports
 from itertools import product
 
@@ -19,6 +20,13 @@ class Tournament(models.Model):
     date = models.DateField()
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.division_model = apps.get_model('tmdb', 'Division')
+        self.tournament_division_model = apps.get_model('tmdb', 'TournamentDivision')
+        self.school_registration_model = apps.get_model('tmdb', 'SchoolRegistration')
+        self.school_model = apps.get_model('tmdb', 'School')
 
     def save(self, *args, **kwargs):
         self.slug = self.slugify()
@@ -36,13 +44,13 @@ class Tournament(models.Model):
         sex_labels = SexField.SEX_LABELS
         skill_labels = DivisionLevelField.DIVISION_LEVEL_LABELS
         for sex, skill_level in product(sex_labels, skill_labels):
-            division = Division.objects.filter(sex=sex,
+            division = self.division_model.objects.filter(sex=sex,
                     skill_level=skill_level).first()
             if division is None:
-                division = Division(sex=sex, skill_level=skill_level)
+                division = self.division_model(sex=sex, skill_level=skill_level)
                 division.clean()
                 division.save()
-            td = TournamentDivision(tournament=self, division=division)
+            td = self.tournament_division_model(tournament=self, division=division)
             td.clean()
             td.save()
 
@@ -73,13 +81,13 @@ class Tournament(models.Model):
         return reg_extractor.get_registration_workbooks()
 
     def save_downloaded_school(self, school):
-        school_object = School.objects.filter(
+        school_object = self.school_model.objects.filter(
                 name=school.school_name).first()
         if school_object is None:
-            school_object = School(name=school.school_name)
+            school_object = self.school_model(name=school.school_name)
             school_object.clean()
             school_object.save()
-        registration = SchoolRegistration(tournament=self,
+        registration = self.school_registration_model(tournament=self,
                 school=school_object,
                 registration_doc_url=school.registration_doc_url)
         registration.clean()

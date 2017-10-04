@@ -9,7 +9,8 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 # Model imports
-from . import *
+from .fields_model import *
+from django.apps import apps
 
 
 class SchoolRegistration(models.Model):
@@ -17,6 +18,14 @@ class SchoolRegistration(models.Model):
     school = models.ForeignKey('School')
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.team_registration_model = apps.get_model('tmdb', 'TeamRegistration')
+        self.tournament_division_model = apps.get_model('tmdb', 'TournamentDivision')
+        self.competitor_model = apps.get_model('tmdb', 'Competitor')
+        self.team_model = apps.get_model('tmdb', 'Team')
+
 
     class Meta:
         unique_together = (('tournament', 'school'),)
@@ -51,7 +60,8 @@ class SchoolRegistration(models.Model):
             except IndexError:
                 raise ValidationError("Unexpected belt rank value: "
                                       + c['rank'])
-            competitor = Competitor.objects.get_or_create(name=c['name'],
+            competitior_model = apps.get_model('tmdb', 'Competitor')
+            competitor = competitior_model.objects.get_or_create(name=c['name'],
                 registration=self,
                 defaults={
                     'sex': c['sex'],
@@ -84,13 +94,14 @@ class SchoolRegistration(models.Model):
             skill = DivisionLevelField.C_TEAM_VAL
         if sex is None or skill is None:
             raise ValueError("Invalid division supplied: %s" % (division_name,))
-        return Division.objects.get(sex=sex, skill_level=skill)
+        division_model = apps.get_model('tmdb', 'Division')
+        return division_model.objects.get(sex=sex, skill_level=skill)
 
     def check_roster_competitors(self, team_registration, roster, competitors):
         competitor_names = {c for c in roster if c}
         missing_competitors = competitor_names - set(competitors.keys())
         if missing_competitors:
-            raise Competitor.DoesNotExist("Could not find Competitor(s): ["
+            raise self.competitor_model.DoesNotExist("Could not find Competitor(s): ["
                                           + ", ".join(missing_competitors) + "] for team ["
                                           + str(team_registration.team) + "]")
 
@@ -116,11 +127,11 @@ class SchoolRegistration(models.Model):
                 if not roster:
                     continue
                 roster = [r.strip() for r in roster]
-                team = Team.objects.get_or_create(school=self.school,
+                team = self.team_model.objects.get_or_create(school=self.school,
                                                   division=division, number=team_num + 1)[0]
-                tournament_division = TournamentDivision.objects.get(
+                tournament_division = self.tournament_division_model.objects.get(
                     tournament=self.tournament, division=division)
-                team_reg = TeamRegistration.objects.get_or_create(
+                team_reg = self.team_registration_model.objects.get_or_create(
                     tournament_division=tournament_division, team=team)[0]
                 self.save_team_roster(team_reg, roster, competitors)
 
@@ -129,10 +140,10 @@ class SchoolRegistration(models.Model):
             raise IntegrityError(("%s is not imported" % (self)
                                   + " - and must be imported before it is dropped"))
 
-        TeamRegistration.objects.filter(
+        self.team_registration_model.objects.filter(
             tournament_division__tournament=self.tournament,
             team__school=self.school).delete()
-        Competitor.objects.filter(registration=self).delete()
+        self.competitor_model.objects.filter(registration=self).delete()
         self.imported = False
         self.save()
 
