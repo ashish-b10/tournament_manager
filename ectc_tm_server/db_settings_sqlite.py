@@ -1,7 +1,7 @@
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/Users/andreaguatemala/tmdb',
+        'NAME': '/dev/shm/ectc-tmdb',
     }
 }
 
