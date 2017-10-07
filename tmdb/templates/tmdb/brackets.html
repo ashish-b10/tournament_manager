@@ -22,6 +22,7 @@
   </div>
   {% endif %}
   <a class="btn btn-primary" href="{%url 'tmdb:bracket_printable' tournament_division.tournament.slug tournament_division.division.slug %}">Print bracket (svg)</a>
+  <a class="btn btn-primary" href="{%url 'tmdb:bracket_printable_pdf' tournament_division.tournament.slug tournament_division.division.slug %}">Print bracket (pdf)</a>
   <div id="bracket_container">
   {% spaceless %}
   {% for bracket_column in bracket_columns %}

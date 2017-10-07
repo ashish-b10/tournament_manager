@@ -14,7 +14,7 @@ from tmdb import models
 from collections import defaultdict
 import datetime
 
-from tmdb.util.match_sheet import create_match_sheets
+from tmdb.util.bracket_pdf import create_bracket_pdf
 from tmdb.util.bracket_svg import SvgBracket
 
 def blue_team_text(team_match):
@@ -48,6 +48,19 @@ def bracket_printable(request, tournament_slug, division_slug):
     response = '<html><body>%s</body></html>' %(bracket.tostring(
             encoding="unicode"),)
     return HttpResponse(response, content_type="image/svg+xml")
+
+def bracket_printable_pdf(request, tournament_slug, division_slug):
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    matches = models.TeamMatch.objects.filter(division=tournament_division)
+    filename = "%s %s.pdf" %(str(tournament_division.tournament),
+            str(tournament_division))
+    filename = filename.lower().replace(' ', '_')
+    bracket_pdf = create_bracket_pdf(matches)
+
+    response = HttpResponse(bracket_pdf, content_type="application/pdf")
+    response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
+    return response
 
 def bracket(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)

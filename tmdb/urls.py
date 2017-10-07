@@ -153,8 +153,13 @@ urlpatterns = [
             views.bracket_view.bracket, name='bracket'),
     url(tournament_division_base
             + r'/bracket/*'
-            + r'/printed/*$',
+            + r'/svg/*$',
             views.bracket_view.bracket_printable, name='bracket_printable'),
+    url(tournament_division_base
+            + r'/bracket/*'
+            + r'/pdf/*$',
+            views.bracket_view.bracket_printable_pdf,
+            name='bracket_printable_pdf'),
 
     # miscellaneous functionality
     url(r'^create_headtable_user/*$',
