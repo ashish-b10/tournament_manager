@@ -17,16 +17,6 @@ import datetime
 from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
-def blue_team_text(team_match):
-    if team_match.blue_team is None:
-        return None
-    return team_match.blue_team.bracket_str()
-
-def red_team_text(team_match):
-    if team_match.red_team is None:
-        return None
-    return team_match.red_team.bracket_str()
-
 @permission_required("tmdb.change_teammatch")
 def update_teammatch_status(request, tournament_slug, division_slug, match_num):
     tournament_division = get_object_or_404(models.TournamentDivision,
