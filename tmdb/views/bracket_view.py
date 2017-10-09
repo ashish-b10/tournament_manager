@@ -138,7 +138,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
             team_registration.seed = int(request.POST['seed'])
             team_registration.save()
             tournament_division = team_registration.tournament_division
-            models.TeamMatch.create_matches_from_slots(tournament_division)
+            tournament_division.create_matches_from_slots()
             return HttpResponseRedirect(reverse("tmdb:bracket", args=(
                     tournament_division.tournament.slug,
                     tournament_division.division.slug,)))
