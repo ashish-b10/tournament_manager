@@ -42,7 +42,9 @@ function render_updated_display() {
 function add_filter_options() {
     var filterDiv = document.getElementById('filters')
     var filter_division = document.createElement('select');
-    var divisions = ["", "Women's A", "Women's B", "Women's C", "Men's A", "Men's B", "Men's C"];
+    var divisions_objs = Object.values(tmdb_vars.tournament_data.tmdb_division);
+    var division_ids = divisions_objs.map(x => x.pk);
+    var divisions = division_ids.map(render_division_name).sort();
     filterDiv.append(filter_division);
 
     for (var div=0; div<divisions.length; div++) {
