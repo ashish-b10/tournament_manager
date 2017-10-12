@@ -31,6 +31,7 @@ function createObjectElem(elem_type, elem_content) {
 }
 
 function render_initial_display() {
+  add_filter_options();
   render_full_display();
 }
 
@@ -38,7 +39,30 @@ function render_updated_display() {
   render_full_display();
 }
 
-function render_full_display(division_name="Women's A") {
+function add_filter_options() {
+    var filterDiv = document.getElementById('filters')
+    var filter_division = document.createElement('select');
+    var divisions = ["", "Women's A", "Women's B", "Women's C", "Men's A", "Men's B", "Men's C"];
+    filterDiv.append(filter_division);
+
+    for (var div=0; div<divisions.length; div++) {
+        var option = document.createElement("option");
+        option.value = divisions[div];
+        option.text = divisions[div];
+        filter_division.appendChild(option);
+    }
+
+    $('select').on('change', function(e) {
+        var selected_division = $(e.currentTarget).val();
+        on_filter_change(selected_division);
+    });
+}
+
+function on_filter_change(selected_division) {
+    render_full_display(selected_division);
+}
+
+function render_full_display(division_name="") {
   var match_queues = document.getElementsByClassName("division-queue");
   for (var i = 0; i < match_queues.length; ++i) {
     match_queue = match_queues[i];
