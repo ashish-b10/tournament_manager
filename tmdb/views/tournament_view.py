@@ -1,9 +1,3 @@
-"""
-Tournament View
-
-Last Updated: 07-09-2017
-"""
-
 import json
 
 from django.shortcuts import redirect, render, get_object_or_404
@@ -247,7 +241,8 @@ def tournament_schools(request, tournament_slug):
         tournament=tournament).order_by('school__name')
     context = {
         'tournament': tournament,
-        'school_registrations': school_registrations
+        'all_schools_imported': all(s.imported for s in school_registrations),
+        'school_registrations': school_registrations,
     }
     return render(request, 'tmdb/tournament_schools.html', context)
 

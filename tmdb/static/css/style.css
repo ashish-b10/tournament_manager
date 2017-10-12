@@ -1,5 +1,13 @@
 body {
-	padding-top: 50px;
+  padding-top: 50px;
+}
+
+.errorlist {
+  font-weight: bold;
+  color: red;
+  border-color: red;
+  border-width: 2px;
+  border-style: solid;
 }
 
 /*

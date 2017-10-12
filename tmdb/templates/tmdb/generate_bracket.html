@@ -1,0 +1,10 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+<h2>Creating bracket for {{tournament_division}}</h2>
+<form action="{% url 'tmdb:create_tournament_division_matches' tournament.slug tournament_division.division.slug %}" method="post">
+  {%csrf_token%}
+  {{generate_bracket_form.as_p}}
+  <button class="btn btn-primary" input type="submit">Generate Bracket</button>
+</form>
+{% endblock %}

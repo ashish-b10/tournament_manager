@@ -14,7 +14,7 @@ class TournamentEditForm(forms.ModelForm):
         exclude = ['slug', 'imported']
 
     def save(self, *args, **kwargs):
-        super().save()
+        super().save(*args, **kwargs)
         if self.cleaned_data['import_field']:
             self.instance.import_school_registrations()
 
@@ -145,6 +145,31 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['seed'].widget.attrs['readonly'] = True
+
+class TournamentDivisionBracketGenerateForm(forms.ModelForm):
+    confirm_delete_matches = forms.BooleanField(
+            required=False, initial=False, widget=forms.HiddenInput())
+
+    class Meta:
+        model = models.TournamentDivision
+        fields = []
+
+    def clean(self):
+        cleaned_data = super(
+                TournamentDivisionBracketGenerateForm, self).clean()
+        confirm_delete_matches = cleaned_data['confirm_delete_matches']
+        if confirm_delete_matches:
+            return
+        num_existing_matches = models.TeamMatch.objects.filter(
+                division=self.instance).count()
+        if not num_existing_matches:
+            return
+        self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
+        raise forms.ValidationError("There are already %d matches in this division. Generating the bracket for this division WILL DELETE THESE MATCHES AND ALL OF THEIR RESULTS. Check the confirm box to continue" %(num_existing_matches))
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.instance.create_matches_from_slots()
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())

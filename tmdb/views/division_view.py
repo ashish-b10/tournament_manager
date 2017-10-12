@@ -1,14 +1,8 @@
-"""
-Division View
-
-Last Updated: 07-09-2017
-"""
-
 import json
 
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core import serializers
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import models as auth_models
@@ -31,10 +25,13 @@ def division_seedings(request, tournament_slug, division_slug):
             'team__school__name', 'team__number')
     unimported_schools = models.SchoolRegistration.objects.filter(
             tournament=tournament_division.tournament, imported=False)
+    generate_bracket_form = forms.TournamentDivisionBracketGenerateForm(
+            instance=tournament_division)
     context = {
+        'generate_bracket_form': generate_bracket_form,
+        'team_registrations': team_registrations,
         'tournament': tournament_division.tournament,
         'tournament_division': tournament_division,
-        'team_registrations': team_registrations,
         'unimported_schools': unimported_schools,
     }
     return render(request, 'tmdb/tournament_division_seedings.html', context)
@@ -89,11 +86,21 @@ def division_points(request, tournament_slug, division_slug, team_slug):
 
 @permission_required(["tmdb.add_teammatch", "tmdb.delete_teammatch"])
 def create_tournament_division_matches(request, tournament_slug, division_slug):
-    if request.method != "POST":
-        return HttpResponse("Invalid operation: %s on %s" %(request.method,
-                request.get_full_path()), status=400)
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
-    models.TeamMatch.create_matches_from_slots(tournament_division)
-    return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
-            args=(tournament_slug,)))
+    if request.method == "POST":
+        generate_bracket_form = forms.TournamentDivisionBracketGenerateForm(
+                request.POST, instance=tournament_division)
+        if generate_bracket_form.is_valid():
+            generate_bracket_form.save()
+            return HttpResponseRedirect(reverse('tmdb:bracket',
+                    args=(tournament_slug, division_slug)))
+    else:
+        generate_bracket_form = forms.TournamentDivisionBracketGenerateForm(
+                instance=tournament_division)
+    context = {
+        'generate_bracket_form': generate_bracket_form,
+        'tournament': tournament_division.tournament,
+        'tournament_division': tournament_division,
+    }
+    return render(request, 'tmdb/generate_bracket.html', context)
