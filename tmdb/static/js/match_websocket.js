@@ -439,7 +439,11 @@ function start_teammatch_websocket(tournament_slug, tournament_json_url) {
   if (tmdb_vars.match_update_ws != null) {
     return;
   }
-  var ws_url = "ws://" + window.location.host + "/tmdb/tournament/" + tournament_slug + "/match_updates/";
+  var ws_proto = "wss://"
+  if (window.location.protocol == "http:") {
+    ws_proto = "ws://"
+  }
+  var ws_url = ws_proto + window.location.host + "/tmdb/tournament/" + tournament_slug + "/match_updates/";
   tmdb_vars.tournament_data.tournament_slug = tournament_slug;
   tmdb_vars.initial_tournament_data_url = window.location.protocol + "//" + window.location.host + tournament_json_url;
   console.log("Opening connection to " + ws_url);
