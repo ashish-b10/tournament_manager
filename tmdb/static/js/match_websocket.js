@@ -36,11 +36,162 @@ function createObjectElem(elem_type, elem_content) {
 }
 
 function render_initial_display() {
+  add_filter_options();
+  set_show_all_filter();
   render_full_display();
 }
 
 function render_updated_display() {
   render_full_display();
+}
+
+function set_show_all_filter() {
+  tmdb_vars.team_match_filter = function(team_match) {
+    return true;
+  }
+}
+
+function set_active_matches_filter() {
+  tmdb_vars.team_match_filter = function(team_match) {
+    var match_status = evaluate_status(team_match);
+    if (match_status['match_status_code'] == 1) {
+      return true;
+    }
+    if (match_status['match_status_code'] == 2) {
+      return true;
+    }
+  }
+}
+
+function set_ring_number_filter() {
+  var filter_value_div = document.getElementById('filter_value');
+  var filter_value_type = document.createElement('input');
+  filter_value_type.setAttribute('id', 'ring_number_filter');
+  filter_value_type.setAttribute('type', 'number');
+  $(filter_value_type).on('change', function(e) {
+    var filter_ring_number = $(e.currentTarget).val();
+    if (typeof parseInt(filter_ring_number) == 'number') {
+      tmdb_vars.team_match_filter = function(team_match) {
+        return team_match.fields.ring_number == filter_ring_number;
+      }
+    } else {
+      set_show_all_filter();
+    }
+    render_full_display();
+  });
+  filter_value_div.appendChild(filter_value_type);
+}
+
+function set_division_filter() {
+  var filter_value_div = document.getElementById('filter_value');
+  var filter_value_type = document.createElement('select');
+  filter_value_div.appendChild(filter_value_type);
+
+  var division_objs = Object.values(tmdb_vars.tournament_data.tmdb_division);
+  var division_names = division_objs.map(x => x.pk).map(render_division_name).sort();
+
+  var option = document.createElement('option');
+  option.value = '';
+  option.text = '---';
+  filter_value_type.appendChild(option);
+
+  for (var division_num = 0; division_num < division_names.length; division_num++) {
+    var option = document.createElement('option');
+    option.value = division_names[division_num];
+    option.text = division_names[division_num];
+    filter_value_type.appendChild(option);
+  }
+
+  $(filter_value_type).on('change', function(e) {
+    var selected_division = $(e.currentTarget).find(":selected").val();
+    if (selected_division == '') {
+      set_show_all_filter();
+      render_full_display();
+      return;
+    }
+    tmdb_vars.team_match_filter = function(team_match) {
+      return get_division(team_match) == selected_division;
+    }
+    render_full_display();
+  });
+}
+
+function set_school_filter() {
+  var filter_value_div = document.getElementById('filter_value');
+  var filter_value_type = document.createElement('select');
+  filter_value_div.appendChild(filter_value_type);
+
+  var school_objs = Object.values(tmdb_vars.tournament_data.tmdb_schoolregistration);
+  var school_names = school_objs.map(x => x.pk).map(render_school_name).sort();
+
+  var option = document.createElement('option');
+  option.value = '';
+  option.text = '---';
+  filter_value_type.appendChild(option);
+
+  for (var school_num = 0; school_num < school_names.length; school_num++) {
+    var option = document.createElement('option');
+    option.value = school_names[school_num];
+    option.text = school_names[school_num];
+    filter_value_type.appendChild(option);
+  }
+
+  $(filter_value_type).on('change', function(e) {
+    var selected_school = $(e.currentTarget).find(":selected").val();
+    if (selected_school == '') {
+      set_show_all_filter();
+      render_full_display();
+      return;
+    }
+    tmdb_vars.team_match_filter = function(team_match) {
+      var blue_school_name = get_school_name_from_team_registration(
+          team_match.fields.blue_team);
+      if (blue_school_name == selected_school) {
+        return true;
+      }
+      var red_school_name = get_school_name_from_team_registration(
+          team_match.fields.red_team);
+      if (red_school_name == selected_school) {
+        return true;
+      }
+    }
+    render_full_display();
+  });
+}
+
+function add_filter_options() {
+  var filter_div = document.getElementById('filter_type');
+  var filter_type_elem = document.createElement('select');
+  filter_div.append(filter_type_elem);
+  tmdb_vars.team_match_filters = {
+    "show_all": set_show_all_filter,
+    "active_matches": set_active_matches_filter,
+    "by_ring": set_ring_number_filter,
+    "by_division": set_division_filter,
+    "by_school": set_school_filter,
+  };
+  var filter_order = [
+    ["Show all", "show_all"],
+    ["Active matches", "active_matches"],
+    ["By ring", "by_ring"],
+    ["By division", "by_division"],
+    ["By school", "by_school"],
+  ];
+  for (var filter_num = 0; filter_num < filter_order.length; filter_num++) {
+    var option = document.createElement("option");
+    option.value = filter_order[filter_num][1];
+    option.text = filter_order[filter_num][0];
+    filter_type_elem.appendChild(option);
+  }
+
+  $('#filter_type').on('change', function(e) {
+    var filter_value_div = document.getElementById('filter_value');
+    filter_value_div.innerHTML = '';
+    var selected_filter_val = $(e.currentTarget).find(":selected").val();
+    var selected_filter = tmdb_vars.team_match_filters[selected_filter_val];
+    selected_filter();
+    render_full_display();
+  });
 }
 
 function render_full_display() {
@@ -63,7 +214,6 @@ function render_full_display() {
     match_queue_row.appendChild(createTextElem("th", "Ring No."));
     match_queue_row.appendChild(createTextElem("th", "Winning Team"));
     match_queue_row.appendChild(createTextElem("th", "Status"));
-    match_queue_row.appendChild(createTextElem("th", "Match Sheet"));
     var team_matches = Object.values(
         tmdb_vars.tournament_data.tmdb_teammatch);
     team_matches = team_matches.sort(function(team_match1, team_match2) {
@@ -71,7 +221,7 @@ function render_full_display() {
     });
     var match_queue_table_body = document.createElement("tbody");
     match_queue_table.appendChild(match_queue_table_body);
-    team_matches.map(function(team_match) {
+    team_matches.filter(tmdb_vars.team_match_filter).map(function(team_match) {
       match_queue_row = document.createElement("tr");
       match_queue_table_body.appendChild(match_queue_row);
       match_queue_row.append(createTextElem("td", team_match.fields.number));
@@ -82,9 +232,26 @@ function render_full_display() {
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
-      match_queue_row.append(createObjectElem("td", render_match_sheet(team_match)));
     });
   }
+}
+
+function get_division(match) {
+  if (match == null) {
+    return null;
+  }
+  var team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[match.fields.blue_team];
+  if (team_registration == null) {
+     team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[match.fields.red_team];
+     if (team_registration == null) {
+        return null;
+     }
+  }
+  var team_id = team_registration.fields.team;
+  var team = tmdb_vars.tournament_data.tmdb_team[team_id];
+  var division_id = team.fields.division;
+  var division_str = render_division_name(division_id);
+  return division_str + "";
 }
 
 function render_round_num(team_match) {
@@ -314,4 +481,14 @@ function on_winning_team_changed(element, team_match_pk) {
     team_match.fields.winning_team = null;
   }
   tmdb_vars.match_update_ws.send(JSON.stringify([team_match]));
+}
+
+function get_school_name_from_team_registration(team_registration_id) {
+  if (team_registration_id == null) {
+    return null;
+  }
+  var team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[team_registration_id];
+  var team_id = team_registration.fields.team;
+  var team = tmdb_vars.tournament_data.tmdb_team[team_id];
+  return render_school_name(team.fields.school);
 }

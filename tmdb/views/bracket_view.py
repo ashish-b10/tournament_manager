@@ -14,8 +14,18 @@ from tmdb import models
 from collections import defaultdict
 import datetime
 
-from tmdb.util.match_sheet import create_match_sheets
+from tmdb.util.bracket_pdf import create_bracket_pdf
 from tmdb.util.bracket_svg import SvgBracket
+
+def blue_team_text(team_match):
+    if team_match.blue_team is None:
+        return None
+    return team_match.blue_team.bracket_str()
+
+def red_team_text(team_match):
+    if team_match.red_team is None:
+        return None
+    return team_match.red_team.bracket_str()
 
 def bracket_printable(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -38,6 +48,19 @@ def bracket_printable(request, tournament_slug, division_slug):
     response = '<html><body>%s</body></html>' %(bracket.tostring(
             encoding="unicode"),)
     return HttpResponse(response, content_type="image/svg+xml")
+
+def bracket_printable_pdf(request, tournament_slug, division_slug):
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    matches = models.TeamMatch.objects.filter(division=tournament_division)
+    filename = "%s %s.pdf" %(str(tournament_division.tournament),
+            str(tournament_division))
+    filename = filename.lower().replace(' ', '_')
+    bracket_pdf = create_bracket_pdf(matches)
+
+    response = HttpResponse(bracket_pdf, content_type="application/pdf")
+    response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
+    return response
 
 def bracket(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -107,6 +130,9 @@ def get_lowest_bye_seed(tournament_division):
 
 @permission_required("tmdb.add_teammatch")
 def add_team_to_bracket(request, tournament_slug, division_slug):
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    context = {}
     if request.method == 'POST':
         form = forms.TeamRegistrationBracketSeedingForm(request.POST)
         if form.is_valid():
@@ -114,8 +140,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
                     pk=request.POST['team_registration'])
             team_registration.seed = int(request.POST['seed'])
             team_registration.save()
-            tournament_division = team_registration.tournament_division
-            models.TeamMatch.create_matches_from_slots(tournament_division)
+            team_registration.tournament_division.create_matches_from_slots()
             return HttpResponseRedirect(reverse("tmdb:bracket", args=(
                     tournament_division.tournament.slug,
                     tournament_division.division.slug,)))
@@ -140,11 +165,9 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
         form.fields['team_registration'].queryset = \
                 models.TeamRegistration.get_teams_without_assigned_slot(
                         tournament_division)
-    context = {
-            'tournament_division': tournament_division,
-            'tournament': tournament_division.tournament,
-            'existing_team': existing_team,
-            'new_seed': new_seed,
-            'form': form,
-    }
+        context['existing_team'] = existing_team
+        context['new_seed'] = new_seed
+    context['tournament_division'] = tournament_division
+    context['tournament'] = tournament_division.tournament
+    context['form'] = form
     return render(request, 'tmdb/modify_team_registration_seed.html', context)

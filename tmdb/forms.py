@@ -140,11 +140,28 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
     seed = forms.IntegerField()
     team_registration = forms.ModelChoiceField(
             queryset=models.TeamRegistration.objects.all())
+    confirm_delete_matches = forms.BooleanField(
+            required=False, initial=False, widget=forms.HiddenInput())
     readonly_fields = ('seed',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['seed'].widget.attrs['readonly'] = True
+
+    def clean(self):
+        cleaned_data = super(
+                TeamRegistrationBracketSeedingForm, self).clean()
+        confirm_delete_matches = cleaned_data['confirm_delete_matches']
+        if confirm_delete_matches:
+            return
+        team_registration = self.cleaned_data['team_registration']
+        division = team_registration.tournament_division
+        num_existing_matches = models.TeamMatch.objects.filter(
+                division=division, winning_team__isnull=False).count()
+        if not num_existing_matches:
+            return
+        self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
+        raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(division.division), num_existing_matches))
 
 class TournamentDivisionBracketGenerateForm(forms.ModelForm):
     confirm_delete_matches = forms.BooleanField(
@@ -161,11 +178,11 @@ class TournamentDivisionBracketGenerateForm(forms.ModelForm):
         if confirm_delete_matches:
             return
         num_existing_matches = models.TeamMatch.objects.filter(
-                division=self.instance).count()
+                division=self.instance, winning_team__isnull=False).count()
         if not num_existing_matches:
             return
         self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
-        raise forms.ValidationError("There are already %d matches in this division. Generating the bracket for this division WILL DELETE THESE MATCHES AND ALL OF THEIR RESULTS. Check the confirm box to continue" %(num_existing_matches))
+        raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(self.instance.division), num_existing_matches))
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
