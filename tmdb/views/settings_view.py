@@ -119,8 +119,6 @@ def get_lowest_bye_seed(tournament_division):
         return max_seed
     return max(seeds)
 
-
-
 @permission_required("tmdb.add_teammatch")
 def add_team_to_bracket(request, tournament_slug, division_slug):
     if request.method == 'POST':
@@ -175,22 +173,17 @@ def registration_credentials(request):
     template_name = 'tmdb/configuration_setting.html'
     context = {"setting_name": "Registration Import Credentials"}
     setting_key = models.ConfigurationSetting.REGISTRATION_CREDENTIALS
-    existing_value = models.ConfigurationSetting.objects.filter(
+    existing_setting = models.ConfigurationSetting.objects.filter(
             key=setting_key).first()
     if request.method == 'POST':
         form = forms.ConfigurationSetting(request.POST,
-                instance=existing_value)
+                instance=existing_setting)
         context['form'] = form
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('tmdb:index'))
     else:
-        if existing_value is not None:
-            value = existing_value.value
-        else:
-            value = None
-        form = forms.ConfigurationSetting(initial={'key': setting_key,
-                'value': value})
+        form = forms.ConfigurationSetting(initial={'key': setting_key,})
     context['form'] = form
     return render(request, 'tmdb/configuration_setting.html', context)
 
