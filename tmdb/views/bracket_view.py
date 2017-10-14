@@ -130,6 +130,9 @@ def get_lowest_bye_seed(tournament_division):
 
 @permission_required("tmdb.add_teammatch")
 def add_team_to_bracket(request, tournament_slug, division_slug):
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    context = {}
     if request.method == 'POST':
         form = forms.TeamRegistrationBracketSeedingForm(request.POST)
         if form.is_valid():
@@ -137,8 +140,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
                     pk=request.POST['team_registration'])
             team_registration.seed = int(request.POST['seed'])
             team_registration.save()
-            tournament_division = team_registration.tournament_division
-            tournament_division.create_matches_from_slots()
+            team_registration.tournament_division.create_matches_from_slots()
             return HttpResponseRedirect(reverse("tmdb:bracket", args=(
                     tournament_division.tournament.slug,
                     tournament_division.division.slug,)))
@@ -163,11 +165,9 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
         form.fields['team_registration'].queryset = \
                 models.TeamRegistration.get_teams_without_assigned_slot(
                         tournament_division)
-    context = {
-            'tournament_division': tournament_division,
-            'tournament': tournament_division.tournament,
-            'existing_team': existing_team,
-            'new_seed': new_seed,
-            'form': form,
-    }
+        context['existing_team'] = existing_team
+        context['new_seed'] = new_seed
+    context['tournament_division'] = tournament_division
+    context['tournament'] = tournament_division.tournament
+    context['form'] = form
     return render(request, 'tmdb/modify_team_registration_seed.html', context)
