@@ -214,6 +214,7 @@ function render_full_display() {
     match_queue_row.appendChild(createTextElem("th", "Ring No."));
     match_queue_row.appendChild(createTextElem("th", "Winning Team"));
     match_queue_row.appendChild(createTextElem("th", "Status"));
+    match_queue_row.appendChild(createTextElem("th", "Match Sheet"));
     var team_matches = Object.values(
         tmdb_vars.tournament_data.tmdb_teammatch);
     team_matches = team_matches.sort(function(team_match1, team_match2) {
@@ -232,6 +233,7 @@ function render_full_display() {
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
+      match_queue_row.append(createObjectElem("td", render_match_sheet(team_match)));
     });
   }
 }
@@ -359,6 +361,7 @@ function render_match_sheet(team_match) {
   hyperlink.className += "btn btn-primary";
   hyperlink.href = "/tmdb/match_sheet?team_match_pk=" + team_match.pk;
   hyperlink.innerHTML = "Print";
+  hyperlink.target = "_blank";
   return hyperlink;
 }
 
