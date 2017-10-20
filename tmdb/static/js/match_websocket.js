@@ -239,6 +239,8 @@ function render_full_display() {
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
+      var match_status = evaluate_status(team_match);
+      match_queue_row.className = match_status['match_status_css_class'];
     });
   }
 }
@@ -375,6 +377,7 @@ function render_match_sheet(team_match) {
 function evaluate_status(team_match) {
   if (team_match.fields.winning_team != null) {
     return {
+        match_status_css_class: 'team_match_complete',
         match_status_code: 4,
         match_status_text: "Complete"
     };
@@ -382,11 +385,13 @@ function evaluate_status(team_match) {
   if (team_match.fields.ring_number != null) {
     if (team_match.fields.at_ring) {
       return {
+          match_status_css_class: 'team_match_at_ring',
           match_status_code: 3,
           match_status_text: "At ring " + team_match.fields.ring_number
       };
     } else {
       return {
+          match_status_css_class: 'team_match_sent_to_ring',
           match_status_code: 2,
           match_status_text: "Sent to ring " + team_match.fields.ring_number
       };
@@ -394,11 +399,13 @@ function evaluate_status(team_match) {
   }
   if (team_match.fields.in_holding) {
     return {
+        match_status_css_class: 'team_match_in_holding',
         match_status_code: 1,
         match_status_text: "Report to holding"
     };
   }
   return {
+      match_status_css_class: 'team_match_not_started',
       match_status_code: 0,
       match_status_text: ""
   };
