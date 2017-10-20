@@ -265,7 +265,7 @@ def _draw_match(match, match_positions):
     drawing_canvas = canvas.Canvas(drawing_layer, pagesize=letter)
     drawing_canvas.setFont('Helvetica', 8)
     right_align = (((2**(match.round_num-1))-1) < match.round_slot) and match.round_num > 1
-    if (match.round_num == 0 and match.round_slot == 0):
+    if (match.round_num == 0 and match.round_slot == 0 and match.winning_team):
         text = "%s" %(str(match.winning_team),)
         position = match_positions[(match.round_num, match.round_slot, 'winning_team')]
         _draw_text(drawing_canvas, position, text, False)
