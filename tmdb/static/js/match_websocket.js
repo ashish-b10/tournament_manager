@@ -240,16 +240,7 @@ function get_division(match) {
   if (match == null) {
     return null;
   }
-  var team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[match.fields.blue_team];
-  if (team_registration == null) {
-     team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[match.fields.red_team];
-     if (team_registration == null) {
-        return null;
-     }
-  }
-  var team_id = team_registration.fields.team;
-  var team = tmdb_vars.tournament_data.tmdb_team[team_id];
-  var division_id = team.fields.division;
+  var division_id = match.fields.division;
   var division_str = render_division_name(division_id);
   return division_str + "";
 }
