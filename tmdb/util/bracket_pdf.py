@@ -269,7 +269,7 @@ def _get_template(filename):
 
 def _draw_matches(output_pdf, matches):
     matches = list(matches)
-    if len(matches) > 32:
+    if len(matches) > 31:
         match_positions = match_positions_64
         base_layer_filename = _get_template('64teamsingleseeded.pdf')
     else:
