@@ -223,7 +223,6 @@ match_positions_64 = {
 }
 
 def _draw_text(drawing_canvas, position, text, right_align=False):
-    print(text)
     x, y, color = position
     drawing_canvas.setFillColor(color)
     if right_align:
@@ -313,8 +312,8 @@ def _draw_positions(output_pdf, bracket_size):
 def create_bracket_pdf(matches):
     output_pdf = PdfFileWriter()
 
-    #_draw_matches(output_pdf, matches)
-    _draw_positions(output_pdf, 64)
+    _draw_matches(output_pdf, matches)
+    # _draw_positions(output_pdf, 64)
     output_stream = BytesIO()
     output_pdf.write(output_stream)
     output_stream.flush()
