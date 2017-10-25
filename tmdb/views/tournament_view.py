@@ -132,7 +132,7 @@ json_fields = {
                     'alternate1', 'alternate2', 'team', 'tournament_division',
                     'points', 'seed',),
     'team_match': ('id', 'blue_team', 'red_team', 'winning_team', 'division',
-                    'in_holding', 'number', 'ring_assignment_time',
+                    'in_holding', 'at_ring', 'number', 'ring_assignment_time',
                     'ring_number', 'round_num', 'round_slot',),
 }
 

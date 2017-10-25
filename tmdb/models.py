@@ -655,6 +655,7 @@ class TeamMatch(models.Model):
     winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
             related_name="winning_team")
     in_holding = models.BooleanField(default=False)
+    at_ring = models.BooleanField(default=False)
 
     class Meta:
         unique_together = (
