@@ -125,8 +125,9 @@ function set_school_filter() {
   var filter_value_type = document.createElement('select');
   filter_value_div.appendChild(filter_value_type);
 
-  var school_objs = Object.values(tmdb_vars.tournament_data.tmdb_schoolregistration);
-  var school_names = school_objs.map(x => x.pk).map(render_school_name).sort();
+  var school_reg_objs = Object.values(tmdb_vars.tournament_data.tmdb_schoolregistration);
+  var school_ids = school_reg_objs.map(x => x.fields.school);
+  var school_names = school_ids.map(render_school_name).sort();
 
   var option = document.createElement('option');
   option.value = '';
