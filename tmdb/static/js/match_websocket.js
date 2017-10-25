@@ -251,9 +251,11 @@ function get_division(match) {
   if (match == null) {
     return null;
   }
-  var division_id = match.fields.division;
-  var division_str = render_division_name(division_id);
-  return division_str + "";
+  var tournament_division = tmdb_vars.tournament_data.tmdb_tournamentdivision[match.fields.division];
+  var division = tmdb_vars.tournament_data.tmdb_division[tournament_division.fields.division];
+  var tournamentdivision_id = match.fields.division;
+  var division_str = render_division_name(tournament_division.fields.division);
+return division_str + "";
 }
 
 function render_round_num(team_match) {
