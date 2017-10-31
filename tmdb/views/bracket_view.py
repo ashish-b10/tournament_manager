@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import models as auth_models
 from django.contrib import messages
+from django import forms as django_forms
 
 from tmdb import forms
 from tmdb import models
@@ -127,7 +128,6 @@ def get_lowest_bye_seed(tournament_division):
         return max_seed
     return max(seeds)
 
-
 @permission_required("tmdb.add_teammatch")
 def add_team_to_bracket(request, tournament_slug, division_slug):
     tournament_division = get_object_or_404(models.TournamentDivision,
@@ -136,11 +136,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
     if request.method == 'POST':
         form = forms.TeamRegistrationBracketSeedingForm(request.POST)
         if form.is_valid():
-            team_registration = models.TeamRegistration.objects.get(
-                    pk=request.POST['team_registration'])
-            team_registration.seed = int(request.POST['seed'])
-            team_registration.save()
-            team_registration.tournament_division.create_matches_from_slots()
+            form.save()
             return HttpResponseRedirect(reverse("tmdb:bracket", args=(
                     tournament_division.tournament.slug,
                     tournament_division.division.slug,)))
@@ -171,3 +167,28 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
     context['tournament'] = tournament_division.tournament
     context['form'] = form
     return render(request, 'tmdb/modify_team_registration_seed.html', context)
+
+@permission_required("tmdb.add_teammatch")
+def remove_team_from_bracket(request, tournament_slug, division_slug):
+    tournament_division = get_object_or_404(models.TournamentDivision,
+            tournament__slug=tournament_slug, division__slug=division_slug)
+    team_registration_pk = request.GET.get('team_registration')
+    team_registration = get_object_or_404(models.TeamRegistration,
+            pk=team_registration_pk)
+    if request.method == 'POST':
+        form = forms.TeamRegistrationSeedingForm(request.POST,
+                instance=team_registration)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('tmdb:bracket',
+                    args=(tournament_slug, division_slug,)))
+    else:
+        form = forms.TeamRegistrationSeedingForm(initial={'seed': None})
+        form.fields['seed'].widget = django_forms.HiddenInput()
+    context = {
+        'form': form,
+        'team_registration': team_registration,
+        'tournament': tournament_division.tournament,
+        'tournament_division': tournament_division,
+    }
+    return render(request, 'tmdb/division_seeding_delete.html', context)

@@ -66,5 +66,10 @@
 }
 
 .add_match_link {
+  background-color: lightgreen;
+}
+
+.delete_match_link {
+  float: right;
   background-color: orange;
 }
