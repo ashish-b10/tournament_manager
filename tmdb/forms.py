@@ -135,13 +135,13 @@ class TeamRegistrationPointsForm(forms.ModelForm):
                 *args, **kwargs)
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
-            return
+            return cleaned_data
         tournament_division = self.instance.tournament_division
         num_existing_matches = models.TeamMatch.objects.filter(
                 division=tournament_division,
                 winning_team__isnull=False).count()
         if not num_existing_matches:
-            return
+            return cleaned_data
         self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
         raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(tournament_division), num_existing_matches))
 
@@ -163,13 +163,13 @@ class TeamRegistrationSeedingForm(forms.ModelForm):
                 *args, **kwargs)
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
-            return
+            return cleaned_data
         tournament_division = self.instance.tournament_division
         num_existing_matches = models.TeamMatch.objects.filter(
                 division=tournament_division,
                 winning_team__isnull=False).count()
         if not num_existing_matches:
-            return
+            return cleaned_data
         self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
         raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(tournament_division), num_existing_matches))
 
@@ -194,13 +194,13 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
                 TeamRegistrationBracketSeedingForm, self).clean()
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
-            return
+            return cleaned_data
         team_registration = self.cleaned_data['team_registration']
         division = team_registration.tournament_division
         num_existing_matches = models.TeamMatch.objects.filter(
                 division=division, winning_team__isnull=False).count()
         if not num_existing_matches:
-            return
+            return cleaned_data
         self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
         raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(division.division), num_existing_matches))
 
@@ -223,11 +223,11 @@ class TournamentDivisionBracketGenerateForm(forms.ModelForm):
                 TournamentDivisionBracketGenerateForm, self).clean()
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
-            return
+            return cleaned_data
         num_existing_matches = models.TeamMatch.objects.filter(
                 division=self.instance, winning_team__isnull=False).count()
         if not num_existing_matches:
-            return
+            return cleaned_data
         self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
         raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(self.instance.division), num_existing_matches))
 
