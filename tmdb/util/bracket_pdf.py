@@ -18,7 +18,6 @@ bracket_32_rounds = {
     'round_3_right_x': 23.7,
     'round_4_right_x': 27
     }
-
 bracket_32_positions = {
     (0, 0, 'winning_team'): (14, 1, 'black'),
 
@@ -109,8 +108,7 @@ bracket_64_rounds = {
     'round_4_right_x': 24.6,
     'round_5_right_x': 27.1
 }
-
-bracket_positions_64 = {
+bracket_64_positions = {
     (0, 0, 'winning_team'): (14, 1, 'black'),
 
     (0, 0, 'blue'): (bracket_64_rounds['round_0_left_x'], 10.45, 'blue'),
@@ -342,21 +340,60 @@ def _draw_match(match, match_positions):
         align = 'right'
 
     if match.round_num == 0 and match.round_slot == 0 and match.winning_team:
-        text = "%s" %(str(match.winning_team),)
+        text = "%s" %(match.winning_teambracket_str(),)
         position = match_positions[(match.round_num, match.round_slot, 'winning_team')]
         _draw_text(drawing_canvas, position, text, 'center')
 
     if match.blue_team:
         match_positions_key = (match.round_num, match.round_slot, 'blue')
         position = match_positions[match_positions_key]
-        team_text = "%s" %(str(match.blue_team),)
+        team_text = "%s" %(match.blue_team.bracket_str(),)
         _draw_text(drawing_canvas, position, team_text, align)
     if match.red_team:
         match_positions_key = (match.round_num, match.round_slot, 'red')
         position = match_positions[match_positions_key]
-        team_text = "%s" %(str(match.red_team),)
+        team_text = "%s" %(match.red_team.bracket_str(),)
         _draw_text(drawing_canvas, position, team_text, align)
+
+    match_number_position = get_match_number_position(match, match_positions, align)
+    _draw_text(drawing_canvas, match_number_position, str(match.number), align)
+
     return PdfFileReader(BytesIO(drawing_canvas.getpdfdata())).getPage(0)
+
+
+def get_match_number_position(match, match_positions, align):
+
+    """
+    Gets the match number position.
+    Averages the positions of the red and blue teams and adds an offset depending on alignment
+
+    :param match: TeamMatch object
+    :param match_positions: Dictionary of match positions
+    :param align: string Alignment
+    :return match_position: position tuple
+    """
+    x_offset = 0
+    y_offset = 0
+
+    round_num = match.round_num
+    round_slot = match.round_slot
+
+    blue_x, blue_y, _ = match_positions[(round_num, round_slot, 'blue')]
+    red_x, red_y, _ = match_positions[(round_num, round_slot, 'red')]
+
+    if align == 'right':
+        x_offset = -1
+    elif align == 'left':
+        x_offset = 1
+
+    if round_num < 2:
+        y_offset = 1
+
+    match_x = (blue_x + red_x)/2.0
+    match_y = (blue_y + red_y)/2.0
+    match_position = match_x + x_offset, match_y + y_offset, 'black'
+
+    return match_position
 
 def _draw_title(division, tournament):
     title = '%s %s' %(division.__str__(), tournament.__str__())
@@ -387,8 +424,8 @@ def _get_template(filename):
 
 def _draw_matches(output_pdf, matches):
     matches = list(matches)
-    if len(matches) > 32:
-        match_positions = bracket_positions_64
+    if len(matches) > 31:
+        match_positions = bracket_64_positions
         base_layer_filename = _get_template('64teamsingleseeded.pdf')
     else:
         match_positions = bracket_32_positions
@@ -424,7 +461,7 @@ def _draw_positions(output_pdf, bracket_size):
         match_positions = bracket_32_positions
         base_layer_filename = _get_template('32teamsingleseeded.pdf')
     elif bracket_size == 64:
-        match_positions = bracket_positions_64
+        match_positions = bracket_64_positions
         base_layer_filename = _get_template('64teamsingleseeded.pdf')
     else:
         raise ArgumentError('bracket_size=%d must be 32 or 64' %(bracket_size))
@@ -438,9 +475,9 @@ def _draw_positions(output_pdf, bracket_size):
 def create_bracket_pdf(matches):
     output_pdf = PdfFileWriter()
 
-    #_draw_matches(output_pdf, matches)
-    _draw_positions(output_pdf, 32)
-    _draw_positions(output_pdf, 64)
+    _draw_matches(output_pdf, matches)
+    # _draw_positions(output_pdf, 32)
+    # _draw_positions(output_pdf, 64)
     output_stream = BytesIO()
     output_pdf.write(output_stream)
     output_stream.flush()
