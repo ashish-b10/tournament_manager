@@ -317,7 +317,6 @@ bracket_64_positions = {
 }
 
 def _draw_text(drawing_canvas, position, text, align='left'):
-    # print(text, align)
     x, y, color = position
     drawing_canvas.setFillColor(color)
     if align == 'center':

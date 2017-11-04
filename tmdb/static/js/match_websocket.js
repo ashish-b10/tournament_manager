@@ -125,8 +125,9 @@ function set_school_filter() {
   var filter_value_type = document.createElement('select');
   filter_value_div.appendChild(filter_value_type);
 
-  var school_objs = Object.values(tmdb_vars.tournament_data.tmdb_schoolregistration);
-  var school_names = school_objs.map(x => x.pk).map(render_school_name).sort();
+  var school_reg_objs = Object.values(tmdb_vars.tournament_data.tmdb_schoolregistration);
+  var school_ids = school_reg_objs.map(x => x.fields.school);
+  var school_names = school_ids.map(render_school_name).sort();
 
   var option = document.createElement('option');
   option.value = '';
@@ -220,6 +221,7 @@ function render_full_display() {
     match_queue_row.appendChild(createTextElem("th", "Ring No."));
     match_queue_row.appendChild(createTextElem("th", "Winning Team"));
     match_queue_row.appendChild(createTextElem("th", "Status"));
+    match_queue_row.appendChild(createTextElem("th", "Match Sheet"));
     var team_matches = Object.values(
         tmdb_vars.tournament_data.tmdb_teammatch);
     team_matches = team_matches.sort(function(team_match1, team_match2) {
@@ -239,6 +241,7 @@ function render_full_display() {
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
+      match_queue_row.append(createObjectElem("td", render_match_sheet(team_match)));
       var match_status = evaluate_status(team_match);
       match_queue_row.className = match_status['match_status_css_class'];
     });
@@ -249,9 +252,11 @@ function get_division(match) {
   if (match == null) {
     return null;
   }
-  var division_id = match.fields.division;
-  var division_str = render_division_name(division_id);
-  return division_str + "";
+  var tournament_division = tmdb_vars.tournament_data.tmdb_tournamentdivision[match.fields.division];
+  var division = tmdb_vars.tournament_data.tmdb_division[tournament_division.fields.division];
+  var tournamentdivision_id = match.fields.division;
+  var division_str = render_division_name(tournament_division.fields.division);
+return division_str + "";
 }
 
 function render_round_num(team_match) {
@@ -371,6 +376,7 @@ function render_match_sheet(team_match) {
   hyperlink.className += "btn btn-primary";
   hyperlink.href = "/tmdb/match_sheet?team_match_pk=" + team_match.pk;
   hyperlink.innerHTML = "Print";
+  hyperlink.target = "_blank";
   return hyperlink;
 }
 
