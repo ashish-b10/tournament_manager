@@ -339,7 +339,7 @@ def _draw_match(match, match_positions):
         align = 'right'
 
     if match.round_num == 0 and match.round_slot == 0 and match.winning_team:
-        text = "%s" %(match.winning_teambracket_str(),)
+        text = "%s" %(match.winning_team.bracket_str(),)
         position = match_positions[(match.round_num, match.round_slot, 'winning_team')]
         _draw_text(drawing_canvas, position, text, 'center')
 
