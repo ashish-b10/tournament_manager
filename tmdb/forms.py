@@ -140,6 +140,7 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
     seed = forms.IntegerField()
     team_registration = forms.ModelChoiceField(
             queryset=models.TeamRegistration.objects.all())
+    existing_team = forms.ModelChoiceField(queryset=models.TeamRegistration.objects.all(), widget=forms.HiddenInput())
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
     readonly_fields = ('seed',)
@@ -147,6 +148,31 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['seed'].widget.attrs['readonly'] = True
+
+    def is_valid(self):
+        """
+        Check if the TeamRegistrationBracketSeedingForm is valid
+        Assigning a team to fight against the same school is invalid
+        Assigning a one person team to fight a team that does not have the same weight is invalid
+
+        :return bool : False if for is not valid
+        :raises ValidationError : When weights do not match
+        :raises ValidationError : When a team is assigned to fight another team from the same school
+        """
+
+        team_registration = models.TeamRegistration.objects.get(pk=self.data['team_registration'])
+        existing_team_registration = models.TeamRegistration.objects.get(pk=self.data['existing_team'])
+
+        team_string = team_registration.get_team_composition()
+        existing_team_string = existing_team_registration.get_team_composition()
+
+        if team_string not in existing_team_string:
+            raise forms.ValidationError('Cannot match a %s team with a %s team' % (team_string, existing_team_string))
+
+        if team_registration.team.school == existing_team_registration.team.school:
+            raise forms.ValidationError('Cannot match two teams from the same school')
+
+        return True
 
     def clean(self):
         cleaned_data = super(
