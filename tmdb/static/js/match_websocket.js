@@ -293,10 +293,10 @@ function render_team_registration(team_registration_id) {
 }
 
 function render_team_composition(team_registration) {
-    var lightweight = "L" if team_registration.lightweight else ""
-    var middleweight = "M" if team_registration.middleweight else ""
-    var heavyweight = "H" if team_registration.heavyweight else ""
-    if not lightweight and not middleweight and not heavyweight:
+    var lightweight = team_registration.lightweight ? "L" :  ""
+    var middleweight = team_registration.middleweight ? "M" :  ""
+    var heavyweight = team_registration.heavyweight ? "H" :  ""
+    if !(lightweight || middleweight || heavyweight)
         return ""
     return "(" + lightweight + middleweight + heavyweight + ")"
 }
