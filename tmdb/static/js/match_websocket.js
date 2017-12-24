@@ -275,7 +275,7 @@ function render_blue_team_name(team_match) {
 }
 
 function render_red_team_name(team_match) {
-  return render_team_registration(team_match.fields.red_team;
+  return render_team_registration(team_match.fields.red_team);
 }
 
 function render_team_registration(team_registration_id) {
@@ -288,7 +288,17 @@ function render_team_registration(team_registration_id) {
   var school_str = render_school_name(team.fields.school);
   var division_id = team.fields.division;
   var division_str = render_division_name(division_id);
-  return school_str + " " + division_str + team.fields.number + "(" + self.get_team_composition() + ")"
+  var team_composition = render_team_composition(team_registration)
+  return school_str + " " + division_str + team.fields.number + team_composition
+}
+
+function render_team_composition(team_registration) {
+    lightweight = "L" if self.lightweight else ""
+    middleweight = "M" if self.middleweight else ""
+    heavyweight = "H" if self.heavyweight else ""
+    if not lightweight and not middleweight and not heavyweight:
+        return ""
+    return "(" + lightweight + middleweight + heavyweight + ")"
 }
 
 function render_division_name(division_id) {
