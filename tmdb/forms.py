@@ -227,13 +227,13 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
         matches with results already recorded."""
         confirm_delete_matches = self.cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
-            return cleaned_data
+            return
         team_registration = self.cleaned_data['team_registration']
         division = team_registration.tournament_division
         num_existing_matches = models.TeamMatch.objects.filter(
                 division=division, winning_team__isnull=False).count()
         if not num_existing_matches:
-            return cleaned_data
+            return
         self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
         raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(division.division), num_existing_matches))
 
