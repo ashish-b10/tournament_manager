@@ -149,35 +149,42 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['seed'].widget.attrs['readonly'] = True
 
-    def is_valid(self):
-        """
-        Check if the TeamRegistrationBracketSeedingForm is valid
-        Assigning a team to fight against the same school is invalid
-        Assigning a one person team to fight a team that does not have the same weight is invalid
-
-        :return bool : False if for is not valid
-        :raises ValidationError : When weights do not match
-        :raises ValidationError : When a team is assigned to fight another team from the same school
-        """
-
-        team_registration = models.TeamRegistration.objects.get(pk=self.data['team_registration'])
-        existing_team_registration = models.TeamRegistration.objects.get(pk=self.data['existing_team'])
-
-        team_string = team_registration.get_team_composition()
-        existing_team_string = existing_team_registration.get_team_composition()
-
-        if team_string not in existing_team_string:
-            raise forms.ValidationError('Cannot match a %s team with a %s team' % (team_string, existing_team_string))
-
-        if team_registration.team.school == existing_team_registration.team.school:
-            raise forms.ValidationError('Cannot match two teams from the same school')
-
-        return True
-
     def clean(self):
         cleaned_data = super(
                 TeamRegistrationBracketSeedingForm, self).clean()
-        confirm_delete_matches = cleaned_data['confirm_delete_matches']
+        self.validate_schools()
+        self.validate_weight_classes()
+        self.validate_confirm_delete_matches()
+        return cleaned_data
+
+    def validate_weight_classes(self):
+        """
+        Raise a ValidationError if both teams do not have a competitor from a
+        common weight class. (e.g. (L) vs (MH))
+        """
+        existing_team = self.cleaned_data['existing_team']
+        new_team = self.cleaned_data['team_registration']
+        if existing_team.lightweight and new_team.lightweight:
+            return
+        if existing_team.middleweight and new_team.middleweight:
+            return
+        if existing_team.heavyweight and new_team.heavyweight:
+            return
+        raise forms.ValidationError('Cannot match %s with %s (no competitors in the same weight class)' %(str(existing_team), str(new_team),))
+
+    def validate_schools(self):
+        """Raise a ValidationError if both teams come from the same school."""
+        existing_team = self.cleaned_data['existing_team']
+        new_team = self.cleaned_data['team_registration']
+        if existing_team.team.school != new_team.team.school:
+            return
+        raise forms.ValidationError(
+                "Cannot match two teams from the same school")
+
+    def validate_confirm_delete_matches(self):
+        """Raise a ValidationError if changing the bracket this way will delete
+        matches with results already recorded."""
+        confirm_delete_matches = self.cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
             return
         team_registration = self.cleaned_data['team_registration']

@@ -135,21 +135,17 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
     context = {}
 
     if request.method == 'POST':
-
         form = forms.TeamRegistrationBracketSeedingForm(request.POST)
+        if form.is_valid():
+            team_registration = models.TeamRegistration.objects.get(pk=request.POST['team_registration'])
+            team_registration.seed = int(request.POST['seed'])
+            team_registration.save()
+            team_registration.tournament_division.create_matches_from_slots()
 
-        # Exit early if form is not valid
-        if not form.is_valid():
-            return
-
-        team_registration = models.TeamRegistration.objects.get(pk=request.POST['team_registration'])
-        team_registration.seed = int(request.POST['seed'])
-        team_registration.save()
-        team_registration.tournament_division.create_matches_from_slots()
-
-        return HttpResponseRedirect(reverse("tmdb:bracket", args=(
-                tournament_division.tournament.slug,
-                    tournament_division.division.slug,)))
+            return HttpResponseRedirect(reverse("tmdb:bracket", args=(
+                    tournament_division.tournament.slug,
+                        tournament_division.division.slug,)))
+        context = form.cleaned_data
     else:
         side = request.GET.get('side')
         round_number = request.GET.get('round_num')
@@ -169,12 +165,12 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
             raise ValueError("side was `%s`, must be `upper` or `lower`" %(side,))
         new_seed = 2**(int(round_number) + 2) - existing_team.seed + 1
         form = forms.TeamRegistrationBracketSeedingForm(initial={'seed': new_seed, 'existing_team': existing_team.id})
-        form.fields['team_registration'].queryset = \
-                models.TeamRegistration.get_teams_without_assigned_slot(
-                        tournament_division)
         context['existing_team'] = existing_team
-        context['new_seed'] = new_seed
+        context['seed'] = new_seed
 
+    form.fields['team_registration'].queryset = \
+            models.TeamRegistration.get_teams_without_assigned_slot(
+                    tournament_division)
     context['tournament_division'] = tournament_division
     context['tournament'] = tournament_division.tournament
     context['form'] = form
