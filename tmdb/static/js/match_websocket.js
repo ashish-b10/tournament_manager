@@ -460,9 +460,13 @@ function on_websocket_open() {
 }
 
 function on_websocket_close() {
-  setInterval(function() {
+  tmdb_vars.match_update_ws.send = function() {
+    alert("Operation failed. The connection to the server has been lost. Please reload the page.");
+    render_updated_display();
+  }
+  setTimeout(function() {
     alert("Lost connection to " + tmdb_vars.match_update_ws.url + "\n\nPlease reload the page.");
-  }, 3500);
+  }, 5000);
 }
 
 function start_teammatch_websocket(tournament_slug, tournament_json_url) {
