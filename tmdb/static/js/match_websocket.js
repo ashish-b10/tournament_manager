@@ -289,15 +289,20 @@ function render_team_registration(team_registration_id) {
   var division_id = team.fields.division;
   var division_str = render_division_name(division_id);
   var team_composition = render_team_composition(team_registration)
-  return school_str + " " + division_str + team.fields.number + team_composition
+  var team_display = school_str + " " + division_str + team.fields.number;
+  if (team_composition) {
+    team_display = team_display + " " + team_composition;
+  }
+  return team_display;
 }
 
 function render_team_composition(team_registration) {
-    var lightweight = team_registration.lightweight ? "L" :  ""
-    var middleweight = team_registration.middleweight ? "M" :  ""
-    var heavyweight = team_registration.heavyweight ? "H" :  ""
-    if !(lightweight || middleweight || heavyweight)
+    var lightweight = team_registration.fields.lightweight ? "L" :  ""
+    var middleweight = team_registration.fields.middleweight ? "M" :  ""
+    var heavyweight = team_registration.fields.heavyweight ? "H" :  ""
+    if (!(lightweight || middleweight || heavyweight)) {
         return ""
+    }
     return "(" + lightweight + middleweight + heavyweight + ")"
 }
 
