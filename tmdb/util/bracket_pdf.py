@@ -316,6 +316,7 @@ bracket_64_positions = {
     # (5, 31, 'red'): (bracket_64_rounds['round_5_right_x'], 21.1, 'red'),
 }
 
+
 def _draw_text(drawing_canvas, position, text, align='left'):
     x, y, color = position
     drawing_canvas.setFillColor(color)
@@ -417,9 +418,11 @@ def _draw_title(division, tournament):
     _draw_text(drawing_canvas, (14, 20.5, 'black'), title, 'center')
     return PdfFileReader(BytesIO(drawing_canvas.getpdfdata())).getPage(0)
 
+
 def _get_template(filename):
     this_directory = os.path.dirname(__file__)
     return os.path.join(this_directory, filename)
+
 
 def _draw_matches(output_pdf, matches):
     matches = list(matches)
@@ -436,6 +439,7 @@ def _draw_matches(output_pdf, matches):
     for match in matches:
         base_layer.mergePage(_draw_match(match, match_positions))
     output_pdf.addPage(base_layer)
+
 
 def _draw_position(position):
     align = 'left'

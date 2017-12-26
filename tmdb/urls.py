@@ -123,6 +123,11 @@ urlpatterns = [
             + r'/bracket/*'
             + r'/add_team/*$',
             views.bracket_view.add_team_to_bracket, name='add_team_to_bracket'),
+    url(tournament_division_base
+            + r'/bracket/*'
+            + r'/remove_team/*$',
+            views.bracket_view.remove_team_from_bracket,
+            name='remove_team_from_bracket'),
 
     # list of team matches
     url(tournament_base

@@ -560,13 +560,16 @@ class TeamRegistration(models.Model):
         unique_together = (('tournament_division', 'team'),
                 ('tournament_division', 'seed'),)
 
-    def __get_competitors_str(self):
+    def get_team_composition(self):
         lightweight = "L" if self.lightweight else ""
         middleweight = "M" if self.middleweight else ""
         heavyweight = "H" if self.heavyweight else ""
         if not lightweight and not middleweight and not heavyweight:
             return ""
-        return "(" + lightweight + middleweight + heavyweight + ")"
+        return lightweight + middleweight + heavyweight
+
+    def __get_competitors_str(self):
+        return "(" + self.get_team_composition() + ")"
 
     def get_competitors_ids(self):
         competitors = []
