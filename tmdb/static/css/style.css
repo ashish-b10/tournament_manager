@@ -1,5 +1,25 @@
 body {
-	padding-top: 50px;
+  padding-top: 50px;
+}
+
+.team_match_at_ring {
+  background-color: cyan !important;
+}
+
+.team_match_sent_to_ring {
+  background-color: lightblue !important;
+}
+
+.team_match_in_holding {
+  background-color: lightskyblue !important;
+}
+
+.errorlist {
+  font-weight: bold;
+  color: red;
+  border-color: red;
+  border-width: 2px;
+  border-style: solid;
 }
 
 /*

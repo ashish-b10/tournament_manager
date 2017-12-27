@@ -1,9 +1,3 @@
-"""
-Tournament View
-
-Last Updated: 07-09-2017
-"""
-
 import json
 
 from django.shortcuts import redirect, render, get_object_or_404
@@ -138,7 +132,7 @@ json_fields = {
                     'alternate1', 'alternate2', 'team', 'tournament_division',
                     'points', 'seed',),
     'team_match': ('id', 'blue_team', 'red_team', 'winning_team', 'division',
-                    'in_holding', 'number', 'ring_assignment_time',
+                    'in_holding', 'at_ring', 'number', 'ring_assignment_time',
                     'ring_number', 'round_num', 'round_slot',),
 }
 
@@ -247,7 +241,8 @@ def tournament_schools(request, tournament_slug):
         tournament=tournament).order_by('school__name')
     context = {
         'tournament': tournament,
-        'school_registrations': school_registrations
+        'all_schools_imported': all(s.imported for s in school_registrations),
+        'school_registrations': school_registrations,
     }
     return render(request, 'tmdb/tournament_schools.html', context)
 

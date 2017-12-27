@@ -1,0 +1,13 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+<h2>Delete From Bracket</h2>
+<p>Are you sure you want to remove <b>{{team_registration}}</b> from the bracket for their division?</p>
+<form action="{%url 'tmdb:remove_team_from_bracket' tournament.slug tournament_division.division.slug %}?team_registration={{team_registration.pk}}" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Delete Team"/>
+</form>
+{% endblock %}
+
+

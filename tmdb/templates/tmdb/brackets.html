@@ -21,7 +21,8 @@
   <p>The lowest seed with a first round bye is {{lowest_bye_seed}}.</p>
   </div>
   {% endif %}
-  <a class="btn btn-primary" href="{%url 'tmdb:bracket_printable' tournament_division.tournament.slug tournament_division.division.slug %}">Print bracket</a>
+  <a class="btn btn-primary" href="{%url 'tmdb:bracket_printable' tournament_division.tournament.slug tournament_division.division.slug %}">Print bracket (svg)</a>
+  <a class="btn btn-primary" href="{%url 'tmdb:bracket_printable_pdf' tournament_division.tournament.slug tournament_division.division.slug %}">Print bracket (pdf)</a>
   <div id="bracket_container">
   {% spaceless %}
   {% for bracket_column in bracket_columns %}
@@ -35,6 +36,7 @@
             {% if bracket_cell.pk %}
             <div class="upper_team_bracket_cell_text">
               {% if bracket_cell.blue_team %}
+              <a class="delete_match_link" title="Delete team" href="{%url 'tmdb:remove_team_from_bracket' tournament.slug tournament_division.division.slug %}?team_registration={{bracket_cell.blue_team.pk}}">[X]</a>
               <a class="add_match_link" title="Add match" href="{%url 'tmdb:add_team_to_bracket' tournament.slug tournament_division.division.slug %}?round_num={{bracket_cell.round_num}}&round_slot={{bracket_cell.round_slot}}&side=upper">&#x21e6</a>{{bracket_cell.blue_team.bracket_str|default_if_none:""}}
               {% else %}<br/>
               {% endif %}
@@ -48,6 +50,7 @@
           {% if bracket_cell.pk %}
           <div class="lower_team_bracket_cell_text">
               {% if bracket_cell.red_team %}
+              <a class="delete_match_link" title="Delete team" href="{%url 'tmdb:remove_team_from_bracket' tournament.slug tournament_division.division.slug %}?team_registration={{bracket_cell.red_team.pk}}">[X]</a>
               <a class="add_match_link" title="Add match" href="{%url 'tmdb:add_team_to_bracket' tournament.slug tournament_division.division.slug %}?round_num={{bracket_cell.round_num}}&round_slot={{bracket_cell.round_slot}}&side=lower">&#x21e6</a>{{bracket_cell.red_team.bracket_str|default_if_none:""}}
               {% else %}<br/>
               {% endif %}

@@ -123,6 +123,11 @@ urlpatterns = [
             + r'/bracket/*'
             + r'/add_team/*$',
             views.bracket_view.add_team_to_bracket, name='add_team_to_bracket'),
+    url(tournament_division_base
+            + r'/bracket/*'
+            + r'/remove_team/*$',
+            views.bracket_view.remove_team_from_bracket,
+            name='remove_team_from_bracket'),
 
     # list of team matches
     url(tournament_base
@@ -153,8 +158,13 @@ urlpatterns = [
             views.bracket_view.bracket, name='bracket'),
     url(tournament_division_base
             + r'/bracket/*'
-            + r'/printed/*$',
+            + r'/svg/*$',
             views.bracket_view.bracket_printable, name='bracket_printable'),
+    url(tournament_division_base
+            + r'/bracket/*'
+            + r'/pdf/*$',
+            views.bracket_view.bracket_printable_pdf,
+            name='bracket_printable_pdf'),
 
     # miscellaneous functionality
     url(r'^create_headtable_user/*$',

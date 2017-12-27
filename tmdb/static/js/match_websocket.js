@@ -5,6 +5,11 @@
 tmdb_vars = {};
 tmdb_vars.tournament_data = {};
 
+function delete_tourament_datum(datum) {
+  datum.model = datum.model.replace(".", "_");
+  delete tmdb_vars.tournament_data[datum.model][datum.pk];
+}
+
 function store_tournament_datum(datum) {
   datum.model = datum.model.replace(".", "_");
   if (datum.model == "tmdb_tournament") {
@@ -35,13 +40,168 @@ function createObjectElem(elem_type, elem_content) {
 }
 
 function render_initial_display() {
-//  render_full_display();
-
-
+  add_filter_options();
+  set_show_all_filter();
+  render_full_display();
 }
 
 function render_updated_display() {
   render_full_display();
+}
+
+function set_show_all_filter() {
+  tmdb_vars.team_match_filter = function(team_match) {
+    return true;
+  }
+}
+
+function set_active_matches_filter() {
+  tmdb_vars.team_match_filter = function(team_match) {
+    var match_status = evaluate_status(team_match);
+    if (match_status['match_status_code'] == 1) {
+      return true;
+    }
+    if (match_status['match_status_code'] == 2) {
+      return true;
+    }
+    if (match_status['match_status_code'] == 3) {
+      return true;
+    }
+    return false;
+  }
+}
+
+function set_ring_number_filter() {
+  var filter_value_div = document.getElementById('filter_value');
+  var filter_value_type = document.createElement('input');
+  filter_value_type.setAttribute('id', 'ring_number_filter');
+  filter_value_type.setAttribute('type', 'number');
+  $(filter_value_type).on('change', function(e) {
+    var filter_ring_number = $(e.currentTarget).val();
+    if (typeof parseInt(filter_ring_number) == 'number') {
+      tmdb_vars.team_match_filter = function(team_match) {
+        return team_match.fields.ring_number == filter_ring_number;
+      }
+    } else {
+      set_show_all_filter();
+    }
+    render_full_display();
+  });
+  filter_value_div.appendChild(filter_value_type);
+}
+
+function set_division_filter() {
+  var filter_value_div = document.getElementById('filter_value');
+  var filter_value_type = document.createElement('select');
+  filter_value_div.appendChild(filter_value_type);
+
+  var division_objs = Object.values(tmdb_vars.tournament_data.tmdb_division);
+  var division_names = division_objs.map(x => x.pk).map(render_division_name).sort();
+
+  var option = document.createElement('option');
+  option.value = '';
+  option.text = '---';
+  filter_value_type.appendChild(option);
+
+  for (var division_num = 0; division_num < division_names.length; division_num++) {
+    var option = document.createElement('option');
+    option.value = division_names[division_num];
+    option.text = division_names[division_num];
+    filter_value_type.appendChild(option);
+  }
+
+  $(filter_value_type).on('change', function(e) {
+    var selected_division = $(e.currentTarget).find(":selected").val();
+    if (selected_division == '') {
+      set_show_all_filter();
+      render_full_display();
+      return;
+    }
+    tmdb_vars.team_match_filter = function(team_match) {
+      return get_division(team_match) == selected_division;
+    }
+    render_full_display();
+  });
+}
+
+function set_school_filter() {
+  var filter_value_div = document.getElementById('filter_value');
+  var filter_value_type = document.createElement('select');
+  filter_value_div.appendChild(filter_value_type);
+
+  var school_reg_objs = Object.values(tmdb_vars.tournament_data.tmdb_schoolregistration);
+  var school_ids = school_reg_objs.map(x => x.fields.school);
+  var school_names = school_ids.map(render_school_name).sort();
+
+  var option = document.createElement('option');
+  option.value = '';
+  option.text = '---';
+  filter_value_type.appendChild(option);
+
+  for (var school_num = 0; school_num < school_names.length; school_num++) {
+    var option = document.createElement('option');
+    option.value = school_names[school_num];
+    option.text = school_names[school_num];
+    filter_value_type.appendChild(option);
+  }
+
+  $(filter_value_type).on('change', function(e) {
+    var selected_school = $(e.currentTarget).find(":selected").val();
+    if (selected_school == '') {
+      set_show_all_filter();
+      render_full_display();
+      return;
+    }
+    tmdb_vars.team_match_filter = function(team_match) {
+      var blue_school_name = get_school_name_from_team_registration(
+          team_match.fields.blue_team);
+      if (blue_school_name == selected_school) {
+        return true;
+      }
+      var red_school_name = get_school_name_from_team_registration(
+          team_match.fields.red_team);
+      if (red_school_name == selected_school) {
+        return true;
+      }
+      return false;
+    }
+    render_full_display();
+  });
+}
+
+function add_filter_options() {
+  var filter_div = document.getElementById('filter_type');
+  var filter_type_elem = document.createElement('select');
+  filter_div.append(filter_type_elem);
+  tmdb_vars.team_match_filters = {
+    "show_all": set_show_all_filter,
+    "active_matches": set_active_matches_filter,
+    "by_ring": set_ring_number_filter,
+    "by_division": set_division_filter,
+    "by_school": set_school_filter,
+  };
+  var filter_order = [
+    ["Show all", "show_all"],
+    ["Active matches", "active_matches"],
+    ["By ring", "by_ring"],
+    ["By division", "by_division"],
+    ["By school", "by_school"],
+  ];
+  for (var filter_num = 0; filter_num < filter_order.length; filter_num++) {
+    var option = document.createElement("option");
+    option.value = filter_order[filter_num][1];
+    option.text = filter_order[filter_num][0];
+    filter_type_elem.appendChild(option);
+  }
+
+  $('#filter_type').on('change', function(e) {
+    var filter_value_div = document.getElementById('filter_value');
+    filter_value_div.innerHTML = '';
+    var selected_filter_val = $(e.currentTarget).find(":selected").val();
+    var selected_filter = tmdb_vars.team_match_filters[selected_filter_val];
+    selected_filter();
+    render_full_display();
+  });
 }
 
 function render_full_display() {
@@ -61,6 +221,7 @@ function render_full_display() {
     match_queue_row.appendChild(createTextElem("th", "Blue Team"));
     match_queue_row.appendChild(createTextElem("th", "Red Team"));
     match_queue_row.appendChild(createTextElem("th", "In Holding?"));
+    match_queue_row.appendChild(createTextElem("th", "At Ring?"));
     match_queue_row.appendChild(createTextElem("th", "Ring No."));
     match_queue_row.appendChild(createTextElem("th", "Winning Team"));
     match_queue_row.appendChild(createTextElem("th", "Status"));
@@ -72,7 +233,7 @@ function render_full_display() {
     });
     var match_queue_table_body = document.createElement("tbody");
     match_queue_table.appendChild(match_queue_table_body);
-    team_matches.map(function(team_match) {
+    team_matches.filter(tmdb_vars.team_match_filter).map(function(team_match) {
       match_queue_row = document.createElement("tr");
       match_queue_table_body.appendChild(match_queue_row);
       match_queue_row.append(createTextElem("td", team_match.fields.number));
@@ -80,12 +241,26 @@ function render_full_display() {
       match_queue_row.append(createTextElem("td", render_blue_team_name(team_match)));
       match_queue_row.append(createTextElem("td", render_red_team_name(team_match)));
       match_queue_row.append(createObjectElem("td", render_in_holding(team_match)));
+      match_queue_row.append(createObjectElem("td", render_at_ring(team_match)));
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
       match_queue_row.append(createObjectElem("td", render_match_sheet(team_match)));
+      var match_status = evaluate_status(team_match);
+      match_queue_row.className = match_status['match_status_css_class'];
     });
   }
+}
+
+function get_division(match) {
+  if (match == null) {
+    return null;
+  }
+  var tournament_division = tmdb_vars.tournament_data.tmdb_tournamentdivision[match.fields.division];
+  var division = tmdb_vars.tournament_data.tmdb_division[tournament_division.fields.division];
+  var tournamentdivision_id = match.fields.division;
+  var division_str = render_division_name(tournament_division.fields.division);
+return division_str + "";
 }
 
 function render_round_num(team_match) {
@@ -117,7 +292,22 @@ function render_team_registration(team_registration_id) {
   var school_str = render_school_name(team.fields.school);
   var division_id = team.fields.division;
   var division_str = render_division_name(division_id);
-  return school_str + " " + division_str + team.fields.number;
+  var team_composition = render_team_composition(team_registration)
+  var team_display = school_str + " " + division_str + team.fields.number;
+  if (team_composition) {
+    team_display = team_display + " " + team_composition;
+  }
+  return team_display;
+}
+
+function render_team_composition(team_registration) {
+    var lightweight = team_registration.fields.lightweight ? "L" :  ""
+    var middleweight = team_registration.fields.middleweight ? "M" :  ""
+    var heavyweight = team_registration.fields.heavyweight ? "H" :  ""
+    if (!(lightweight || middleweight || heavyweight)) {
+        return ""
+    }
+    return "(" + lightweight + middleweight + heavyweight + ")"
 }
 
 function render_division_name(division_id) {
@@ -143,6 +333,18 @@ function render_in_holding(team_match) {
   check_box.checked = team_match.fields.in_holding;
   check_box.onclick = function() {
     on_in_holding_changed(this, team_match.pk);
+  };
+  return check_box;
+}
+
+function render_at_ring(team_match) {
+  var check_box = document.createElement("input");
+  check_box.type = "checkbox";
+  check_box.name = "at_ring";
+  check_box.value = team_match.pk;
+  check_box.checked = team_match.fields.at_ring;
+  check_box.onclick = function() {
+    on_at_ring_changed(this, team_match.pk);
   };
   return check_box;
 }
@@ -193,29 +395,42 @@ function render_match_sheet(team_match) {
   hyperlink.className += "btn btn-primary";
   hyperlink.href = "/tmdb/match_sheet?team_match_pk=" + team_match.pk;
   hyperlink.innerHTML = "Print";
+  hyperlink.target = "_blank";
   return hyperlink;
 }
 
 function evaluate_status(team_match) {
   if (team_match.fields.winning_team != null) {
     return {
-        match_status_code: 3,
+        match_status_css_class: 'team_match_complete',
+        match_status_code: 4,
         match_status_text: "Complete"
     };
   }
   if (team_match.fields.ring_number != null) {
-    return {
-        match_status_code: 2,
-        match_status_text: "At ring " + team_match.fields.ring_number
-    };
+    if (team_match.fields.at_ring) {
+      return {
+          match_status_css_class: 'team_match_at_ring',
+          match_status_code: 3,
+          match_status_text: "At ring " + team_match.fields.ring_number
+      };
+    } else {
+      return {
+          match_status_css_class: 'team_match_sent_to_ring',
+          match_status_code: 2,
+          match_status_text: "Sent to ring " + team_match.fields.ring_number
+      };
+    }
   }
   if (team_match.fields.in_holding) {
     return {
+        match_status_css_class: 'team_match_in_holding',
         match_status_code: 1,
         match_status_text: "Report to holding"
     };
   }
   return {
+      match_status_css_class: 'team_match_not_started',
       match_status_code: 0,
       match_status_text: ""
   };
@@ -224,12 +439,20 @@ function evaluate_status(team_match) {
 function handle_message(msg) {
   console.log(msg);
   var data = JSON.parse(msg.data);
+  if ('update' in data) {
+    var update_data = JSON.parse(data['update']);
+    update_data.map(store_tournament_datum);
+  }
+  if ('delete' in data) {
+    var delete_data = JSON.parse(data['delete']);
+    delete_data.map(delete_tourament_datum);
+  }
   if ('error' in data) {
-    alert(data['error']);
+    var error_data = JSON.parse(data['error']);
+    alert(error_data);
     render_updated_display();
     return
   }
-  data.map(store_tournament_datum);
   render_updated_display();
 }
 
@@ -256,16 +479,24 @@ function on_websocket_open() {
 }
 
 function on_websocket_close() {
-  setInterval(function() {
+  tmdb_vars.match_update_ws.send = function() {
+    alert("Operation failed. The connection to the server has been lost. Please reload the page.");
+    render_updated_display();
+  }
+  setTimeout(function() {
     alert("Lost connection to " + tmdb_vars.match_update_ws.url + "\n\nPlease reload the page.");
-  }, 3500);
+  }, 5000);
 }
 
 function start_teammatch_websocket(tournament_slug, tournament_json_url) {
   if (tmdb_vars.match_update_ws != null) {
     return;
   }
-  var ws_url = "ws://" + window.location.host + "/tmdb/tournament/" + tournament_slug + "/match_updates/";
+  var ws_proto = "wss://"
+  if (window.location.protocol == "http:") {
+    ws_proto = "ws://"
+  }
+  var ws_url = ws_proto + window.location.host + "/tmdb/tournament/" + tournament_slug + "/match_updates/";
   tmdb_vars.tournament_data.tournament_slug = tournament_slug;
   tmdb_vars.initial_tournament_data_url = window.location.protocol + "//" + window.location.host + tournament_json_url;
   console.log("Opening connection to " + ws_url);
@@ -281,6 +512,15 @@ function on_in_holding_changed(element, team_match_pk) {
   team_match.pk = team_match_pk;
   team_match.fields = {};
   team_match.fields.in_holding = element.checked;
+  tmdb_vars.match_update_ws.send(JSON.stringify([team_match]));
+}
+
+function on_at_ring_changed(element, team_match_pk) {
+  var team_match = {};
+  team_match.model = 'tmdb.teammatch';
+  team_match.pk = team_match_pk;
+  team_match.fields = {};
+  team_match.fields.at_ring = element.checked;
   tmdb_vars.match_update_ws.send(JSON.stringify([team_match]));
 }
 
@@ -307,4 +547,14 @@ function on_winning_team_changed(element, team_match_pk) {
     team_match.fields.winning_team = null;
   }
   tmdb_vars.match_update_ws.send(JSON.stringify([team_match]));
+}
+
+function get_school_name_from_team_registration(team_registration_id) {
+  if (team_registration_id == null) {
+    return null;
+  }
+  var team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[team_registration_id];
+  var team_id = team_registration.fields.team;
+  var team = tmdb_vars.tournament_data.tmdb_team[team_id];
+  return render_school_name(team.fields.school);
 }
