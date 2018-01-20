@@ -37,7 +37,6 @@
             </ul>
           <ul class="nav navbar-nav pull-left">
               <li class="active"><a href="{% url 'tmdb:index' %}">Overview <span class="sr-only">(current)</span></a></li>
-              <li><a href="#">Reports</a></li>
               <li><a href="#">Analytics</a></li>
               <li><a href="#">League Standings</a></li>
           </ul>
@@ -51,6 +50,7 @@
 
     <script type="text/javascript" src="{{ STATIC_URL }} /static/js/jquery-1.11.3.min.js"> </script>
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"> </script>
+    <script type="text/javascript" src="{% static 'js/tournament_dashboard.js' %}"></script>
     {% block script %} {% endblock %}
 
   </body>
