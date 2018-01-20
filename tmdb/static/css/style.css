@@ -45,7 +45,7 @@ body {
     left: 0;
     z-index: 1000;
     display: block;
-    padding: 20px;
+    padding: 10px;
     overflow-x: hidden;
     overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
     background-color: #f5f5f5;
@@ -79,20 +79,11 @@ body {
 /* Shrinking the sidebar from 250px to 80px and center aligning its content*/
 #mainNav.active {
     min-width: 50px;
-    max-width: 50px;
+    max-width: 70px;
     text-align: center;
 }
 
 /* Toggling the sidebar header content, hide the big heading [h3] and showing the small heading [strong] and vice versa*/
-#mainNav .sidebar-header strong {
-    display: none;
-}
-#mainNav.active .sidebar-header h3 {
-    display: none;
-}
-#mainNav.active .sidebar-header strong {
-    display: block;
-}
 
 #mainNav ul li a {
     text-align: left;
@@ -101,7 +92,7 @@ body {
 #mainNav.active ul li a {
     padding: 15px 10px;
     text-align: center;
-    font-size: 0.85em;
+    font-size: 0.75em;
 }
 
 #mainNav.active ul li a i {
@@ -111,10 +102,13 @@ body {
     margin-bottom: 5px;
 }
 
-/* Same dropdown links padding*/
-#mainNav.active ul ul a {
-    padding: 10px !important;
+#mainNav.active ul li a .nav-link-text{
+    margin-right:  0;
+    display: block;
+    font-size: 1em;
+    margin-bottom: 5px;
 }
+
 
 /*
  * Main content

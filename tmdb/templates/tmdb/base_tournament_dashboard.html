@@ -4,37 +4,32 @@
   <div class="row">
       <nav class="col-sm-2 col-md-2 hidden-xs-down bg-faded sidebar" id="mainNav">
           <ul class="nav nav-pills flex-column navbar-sidebar">
-            <li class="nav-item" data-toggle="collapse" data-placement="right" title="Dashboard">
+            <li class="nav-item">
               <a class="nav-link" href="{% url 'tmdb:tournament_dashboard' tournament.slug %}">
                 <i class="glyphicon glyphicon-home"></i>
-                <span class="nav-link-text">Dashboard</span>
+                <span class="nav-link-text">Home</span>
               </a></li>
-            <li class="nav-item" data-toggle="collapse" data-placement="right" title="Divisions">
+            <li class="nav-item">
               <a href="">
                 <i class="glyphicon glyphicon-th-list"></i>
                 <span class="nav-link-text">Divisions</span>
               </a></li>
-            <li class="nav-item" data-toggle="collapse" data-placement="right" title="Matches">
+            <li class="nav-item">
               <a href="{% url 'tmdb:match_list' tournament.slug %}">
                 <i class="glyphicon glyphicon-tasks"></i>
                 <span class="nav-link-text">Matches</span>
               </a></li>
-            <li class="nav-item" data-toggle="collapse" data-placement="right" title="Schools">
+            <li class="nav-item">
               <a href="{% url 'tmdb:tournament_schools' tournament.slug %}">
-                <i class="glyphicon glyphicon-chevron-left"></i>
+                <i class="glyphicon glyphicon-apple"></i>
                 <span class="nav-link-text">Schools</span>
                 </a></li>
-            <li class="nav-item" data-toggle="collapse" data-placement="right" title="All Teams">
-              <a href="{% url 'tmdb:team_list' tournament.slug %}">
-                <i class="glyphicon glyphicon-chevron-left"></i>
-                <span class="nav-link-text">All Teams</span>
-              </a></li>
-            <li class="nav-item" data-toggle="collapse" data-placement="right" title="Bracket">
+            <li class="nav-item">
               <a href="">
                 <i class="glyphicon glyphicon-equalizer"></i>
                 <span class="nav-link-text">Bracket</span>
               </a></li>
-            <li class="nav-item" data-toggle="collapse" data-placement="right" title="Standings">
+            <li class="nav-item">
               <a href="">
                 <i class="glyphicon glyphicon-stats"></i>
                 <span class="nav-link-text">Standings</span>
@@ -43,8 +38,8 @@
 
           <br>
           <a class="nav-link text-center" id="sidenavToggler">
-            <i class="glyphicon glyphicon-chevron-left"></i>
-            <span class="nav-link-text"> Collapse</span>
+            <i class="glyphicon glyphicon-resize-full"></i>
+            <span class="nav-link-text"> Resize</span>
           </a>
       </nav>
 
