@@ -2,17 +2,47 @@
 
 {% block main-content %}
   <div class="row">
-      <nav class="col-sm-2 col-md-2 hidden-xs-down bg-faded sidebar">
-        <ul class="nav nav-pills flex-column">
-          <li class="nav-item"><a class="nav-link" href="{% url 'tmdb:tournament_dashboard' tournament.slug %}">Current Dashboard</a></li>
-          <li class="nav-item"><a href="">Divisions</a></li>
-          <li class="nav-item"><a href="{% url 'tmdb:match_list' tournament.slug %}">Matches</a></li>
-          <li class="nav-item"><a href="{% url 'tmdb:tournament_schools' tournament.slug %}">Schools</a></li>
-          <li class="nav-item"><a href="{% url 'tmdb:team_list' tournament.slug %}">All Teams</a></li>
-          <li class="nav-item"><a href="">Bracket View</a></li>
-          <li class="nav-item"><a href="">Standings</a></li>
-        </ul>
+      <nav class="col-sm-2 col-md-2 hidden-xs-down bg-faded sidebar" id="mainNav">
+          <ul class="nav nav-pills flex-column navbar-sidebar">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'tmdb:tournament_dashboard' tournament.slug %}">
+                <i class="glyphicon glyphicon-home"></i>
+                <span class="nav-link-text">Home</span>
+              </a></li>
+            <li class="nav-item">
+              <a href="">
+                <i class="glyphicon glyphicon-th-list"></i>
+                <span class="nav-link-text">Divisions</span>
+              </a></li>
+            <li class="nav-item">
+              <a href="{% url 'tmdb:match_list' tournament.slug %}">
+                <i class="glyphicon glyphicon-tasks"></i>
+                <span class="nav-link-text">Matches</span>
+              </a></li>
+            <li class="nav-item">
+              <a href="{% url 'tmdb:tournament_schools' tournament.slug %}">
+                <i class="glyphicon glyphicon-apple"></i>
+                <span class="nav-link-text">Schools</span>
+                </a></li>
+            <li class="nav-item">
+              <a href="">
+                <i class="glyphicon glyphicon-equalizer"></i>
+                <span class="nav-link-text">Bracket</span>
+              </a></li>
+            <li class="nav-item">
+              <a href="">
+                <i class="glyphicon glyphicon-stats"></i>
+                <span class="nav-link-text">Standings</span>
+              </a></li>
+          </ul>
+
+          <br>
+          <a class="nav-link text-center" id="sidenavToggler">
+            <i class="glyphicon glyphicon-resize-full"></i>
+            <span class="nav-link-text"> Resize</span>
+          </a>
       </nav>
+
     <div class="col-sm-9 col-md-10">
       {% block content %} {% endblock %}
     </div>
