@@ -222,7 +222,7 @@ def tournament_school_import(request, tournament_slug, school_slug=None):
             continue
         try:
             school_reg.import_competitors_and_teams(reimport=reimport)
-        except Exception as e:
+        except models.SchoolValidationError as e:
             err_msg = "Error importing %s: %s" %(school_reg.school.name,
                     str(e))
             err_msgs.append(err_msg)
