@@ -1,3 +1,5 @@
+from collections import Counter
+
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
@@ -356,8 +358,8 @@ class SchoolRegistration(models.Model):
                         tournament_division=tournament_division, team=team)[0]
                 self.save_team_roster(team_reg, roster, competitors)
 
-    def drop_competitors_and_teams(self):
-        if not self.imported:
+    def drop_competitors_and_teams(self, force=False):
+        if not self.imported and not force:
             raise IntegrityError(("%s is not imported" %(self)
                     + " - and must be imported before it is dropped"))
 
@@ -369,19 +371,70 @@ class SchoolRegistration(models.Model):
         self.save()
 
     def import_competitors_and_teams(self, reimport=False):
-        if reimport and self.imported:
-            self.drop_competitors_and_teams()
-
-        if self.imported:
+        if self.imported and not reimport:
             raise IntegrityError(("%s is already imported" %(self.school)
                     + " and will not be reimported"))
 
+        self.drop_competitors_and_teams(force=True)
         school_extracted_data = self.download_school_registration()
+        self.validate_school_extracted_data(school_extracted_data)
         competitors = self.save_extracted_competitors(
                 school_extracted_data.extracted_competitors)
         self.save_extracted_teams(school_extracted_data.teams, competitors)
         self.imported = True
         self.save()
+
+    def validate_school_extracted_data(self, extracted_data):
+        SchoolRegistrationError.objects.filter(
+                school_registration=self).delete()
+        errors = []
+        errors += self.validate_unique_competitor_names(extracted_data)
+        errors += self.validate_belt_ranks_and_sexes(extracted_data)
+        if not errors:
+            return
+        for error in errors:
+            error.save()
+        raise IntegrityError("There are errors in %s's registration spreadsheet - correct the errors in their spreadsheet and reimport." %(self.school,))
+
+    def validate_unique_competitor_names(self, extracted_data):
+        name_counts = Counter(i['name']
+                for i in extracted_data.extracted_competitors)
+        duplicate_names = [(name, count) for name,count in name_counts.items()
+                if count > 1]
+        errors = []
+        for name,count in duplicate_names:
+            error_text = "Competitor named `%s` was listed %d times on the 'Weigh-Ins' sheet. Remove the duplicate entries or change the names." %(
+                    name, count,)
+            errors.append(SchoolRegistrationError(school_registration=self,
+                    error_text=error_text))
+        return errors
+
+    def validate_belt_ranks_and_sexes(self, extracted_data):
+        errors = []
+        belt_ranks = ', '.join(
+                BeltRankField.BELT_RANK_VALUES.keys())
+        sex_values = ', '.join(SexField.SEX_LABELS.keys())
+        for competitor in extracted_data.extracted_competitors:
+            try:
+                BeltRankField.value(competitor['rank'])
+            except KeyError:
+                error_text = "Invalid belt rank provdided for %s: `%s`. Edit column E of the Weigh-Ins sheet with a valid belt rank (%s)" %(
+                        competitor['name'], competitor['rank'], belt_ranks)
+                errors.append(SchoolRegistrationError(school_registration=self,
+                        error_text=error_text))
+
+            try:
+                SexField.label(competitor['sex'])
+            except KeyError:
+                error_text = "Invalid sex provided for %s: `%s`. Edit column G of the Weigh-Ins sheet with a valid sex (%s)" %(
+                        competitor['name'], competitor['sex'], sex_values)
+                errors.append(SchoolRegistrationError(school_registration=self,
+                        error_text=error_text))
+        return errors
+
+class SchoolRegistrationError(models.Model):
+    school_registration = models.ForeignKey(SchoolRegistration)
+    error_text = models.TextField()
 
 class Division(models.Model):
     sex = SexField()

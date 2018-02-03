@@ -28,7 +28,9 @@
       <td><a href="{% url 'tmdb:tournament_school' tournament.slug school_reg.school.slug %}">{{school_reg.school.name}}</a></td>
       <td><a href="{{school_reg.registration_doc_url}}">Google Docs Registration spreadsheet</a></td>
       <td>
-          {% if school_reg.imported %}
+          {% if school_reg.import_errors %}
+          <p><span style="color: red; font-weight: bold">ERROR</span></p>
+          {% elif school_reg.imported %}
           <p>Imported</p>
           {% else %}
           <p>Not Imported</p>
@@ -48,6 +50,11 @@
       </td>
 
     </tr>
+    {% for error in school_reg.import_errors %}
+    <tr>
+      <td colspan="4">{{error.error_text}}</td>
+    </tr>
+    {% endfor %}
   {% endfor %}
   </table>
 {% endblock %}
