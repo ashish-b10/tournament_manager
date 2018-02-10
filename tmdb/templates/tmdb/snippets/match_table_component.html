@@ -4,26 +4,7 @@
   <div id="filter_value" style="display: inline-block"></div>
 </div>
 
-<div class="division-queue">
-  <ul class="nav nav-tabs" role="tablist">
-    <li role="presentation" class="active">
-      <a href="#allDivisions" aria-controls="allDivisions" role="tab" data-toggle="tab">All Divisions</a>
-    </li>
-    {% for division, team_matches in matches_by_division %}
-      <li role="presentation">
-        <a href="#division-{{division.division.slug}}" aria-controls="division-{{division.division.slug}}" role="tab" data-toggle="tab">{{division}}</a>
-      </li>
-    {% endfor %}
-  </ul>
+{% include 'tmdb/snippets/match_list.html' with tournament=tournament team_matches=all_matches only %}
 
-  <div class="tab-content">
-    <div role="tabpanel" class="tab-pane active" id="allDivisions">
-      {% include 'tmdb/snippets/match_list.html' with tournament=tournament team_matches=all_matches only %}
-    </div>
-    {% for division, team_matches in matches_by_division %}
-    <div role="tabpanel" class="tab-pane" id="division-{{division.division.slug}}">
-      {% include 'tmdb/snippets/match_list.html' with tournament=tournament tournament_division=division team_matches=team_matches only %}
-    </div>
-    {% endfor %}
-  </div>
+<div class="division-queue">
 </div>
