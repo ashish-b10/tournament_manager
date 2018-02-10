@@ -3,7 +3,7 @@ body {
 }
 
 .team_match_at_ring {
-  background-color: cyan !important;
+  background-color: orange !important;
 }
 
 .team_match_sent_to_ring {
@@ -11,7 +11,11 @@ body {
 }
 
 .team_match_in_holding {
-  background-color: lightskyblue !important;
+  background-color: yellow !important;
+}
+
+.team_match_complete {
+    background-color: green !important;
 }
 
 .errorlist {
