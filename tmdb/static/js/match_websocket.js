@@ -166,6 +166,7 @@ function set_school_filter() {
 }
 
 function add_filter_options() {
+  document.getElementById('filter-label').innerHTML = "Filter matches:"
   var filter_div = document.getElementById('filter_type');
   var filter_type_elem = document.createElement('select');
   filter_div.append(filter_type_elem);
@@ -462,6 +463,8 @@ function on_websocket_open() {
   init_data_req.onreadystatechange = function() {
     if (init_data_req.readyState == 4 && init_data_req.status == 200) {
       store_initial_data(init_data_req.responseText);
+      // Hide the loader if the data has been loaded.
+      document.getElementById("loader").style = "display:none";
       render_initial_display();
       return;
     }
