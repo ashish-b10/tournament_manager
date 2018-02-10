@@ -349,6 +349,8 @@ function render_ring_number(team_match) {
   var text_field = document.createElement("input");
   text_field.type = "number";
   text_field.name = "ring_number";
+  text_field.min = 1;
+  text_field.max = 7;
   text_field.value = team_match.fields.ring_number;
   text_field.onchange = function() {
     on_ring_number_changed(this, team_match.pk);
