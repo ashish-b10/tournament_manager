@@ -15,7 +15,7 @@ body {
 }
 
 .team_match_complete {
-    background-color: green !important;
+    background-color: lightgreen !important;
 }
 
 .errorlist {
@@ -129,6 +129,13 @@ body {
 }
 .main .page-header {
   margin-top: 0;
+}
+
+/*
+ * Reduce the padding for the rows in the table.
+ */
+.table>tbody>tr>td {
+    padding: 5px !important;
 }
 
 #loader {
