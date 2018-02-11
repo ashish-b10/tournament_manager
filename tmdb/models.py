@@ -6,6 +6,9 @@ from itertools import product
 from django.template.defaultfilters import slugify
 
 from tmdb.util import BracketGenerator, SlotAssigner
+from .school_registration_validator import SchoolRegistrationValidator
+
+class SchoolValidationError(IntegrityError): pass
 
 class SexField(models.CharField):
     FEMALE = 'F'
@@ -356,8 +359,8 @@ class SchoolRegistration(models.Model):
                         tournament_division=tournament_division, team=team)[0]
                 self.save_team_roster(team_reg, roster, competitors)
 
-    def drop_competitors_and_teams(self):
-        if not self.imported:
+    def drop_competitors_and_teams(self, force=False):
+        if not self.imported and not force:
             raise IntegrityError(("%s is not imported" %(self)
                     + " - and must be imported before it is dropped"))
 
@@ -369,19 +372,33 @@ class SchoolRegistration(models.Model):
         self.save()
 
     def import_competitors_and_teams(self, reimport=False):
-        if reimport and self.imported:
-            self.drop_competitors_and_teams()
-
-        if self.imported:
+        if self.imported and not reimport:
             raise IntegrityError(("%s is already imported" %(self.school)
                     + " and will not be reimported"))
 
+        self.drop_competitors_and_teams(force=True)
         school_extracted_data = self.download_school_registration()
+        self.validate_school_extracted_data(school_extracted_data)
         competitors = self.save_extracted_competitors(
                 school_extracted_data.extracted_competitors)
         self.save_extracted_teams(school_extracted_data.teams, competitors)
         self.imported = True
         self.save()
+
+    def validate_school_extracted_data(self, extracted_data):
+        SchoolRegistrationError.objects.filter(
+                school_registration=self).delete()
+        errors = SchoolRegistrationValidator(self, extracted_data).validate()
+        if not errors:
+            return
+        for error in errors:
+            error.save()
+        raise SchoolValidationError("There are errors in %s's registration spreadsheet - correct the errors in their spreadsheet and reimport." %(self.school,))
+
+
+class SchoolRegistrationError(models.Model):
+    school_registration = models.ForeignKey(SchoolRegistration)
+    error_text = models.TextField()
 
 class Division(models.Model):
     sex = SexField()

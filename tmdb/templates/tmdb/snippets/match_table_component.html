@@ -1,10 +1,16 @@
-<div id="action-bar">
-  <label for="filters" style="display: inline-block">Filter matches</label>
-  <div id="filter_type" style="display: inline-block"></div>
-  <div id="filter_value" style="display: inline-block"></div>
-</div>
+<div id="content">
+    <div id="loader-wrapper">
+      <p>Loading match information...</p>
+      <div id="loader"></div>
+    </div>
+    <div id="action-bar">
+        <label for="filters" style="display: inline-block" id="filter-label"></label>
+        <div id="filter_type" style="display: inline-block"></div>
+        <div id="filter_value" style="display: inline-block"></div>
+    </div>
 
-{% include 'tmdb/snippets/match_list.html' with tournament=tournament team_matches=all_matches only %}
+    {% include 'tmdb/snippets/match_list.html' with tournament=tournament team_matches=all_matches only %}
 
-<div class="division-queue">
+    <div class="division-queue">
+    </div>
 </div>
