@@ -221,7 +221,7 @@ function render_full_display() {
     match_queue_row.appendChild(createTextElem("th", "Ring No."));
     match_queue_row.appendChild(createTextElem("th", "Winning Team"));
     match_queue_row.appendChild(createTextElem("th", "Status"));
-    match_queue_row.appendChild(createTextElem("th", "Match Sheet"));
+//    match_queue_row.appendChild(createTextElem("th", "Match Sheet"));
     var team_matches = Object.values(
         tmdb_vars.tournament_data.tmdb_teammatch);
     team_matches = team_matches.sort(function(team_match1, team_match2) {
@@ -241,7 +241,7 @@ function render_full_display() {
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
-      match_queue_row.append(createObjectElem("td", render_match_sheet(team_match)));
+//      match_queue_row.append(createObjectElem("td", render_match_sheet(team_match)));
       var match_status = evaluate_status(team_match);
       match_queue_row.className = match_status['match_status_css_class'];
     });
@@ -349,6 +349,8 @@ function render_ring_number(team_match) {
   var text_field = document.createElement("input");
   text_field.type = "number";
   text_field.name = "ring_number";
+  text_field.min = 1;
+  text_field.max = 7;
   text_field.value = team_match.fields.ring_number;
   text_field.onchange = function() {
     on_ring_number_changed(this, team_match.pk);
@@ -361,6 +363,7 @@ function render_winning_team(team_match) {
   var option = document.createElement("option");
   option.value = '';
   option.innerHTML = "---";
+  select_menu.style = "width:200px;";
   select_menu.appendChild(option);
   if (team_match.fields.blue_team != null) {
     option = document.createElement("option");
