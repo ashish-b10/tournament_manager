@@ -465,7 +465,7 @@ function on_websocket_open() {
     if (init_data_req.readyState == 4 && init_data_req.status == 200) {
       store_initial_data(init_data_req.responseText);
       // Hide the loader if the data has been loaded.
-      document.getElementById("loader").style = "display:none";
+      document.getElementById("loader-wrapper").style = "display:none";
       render_initial_display();
       return;
     }
