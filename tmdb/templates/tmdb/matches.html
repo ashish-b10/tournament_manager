@@ -2,10 +2,5 @@
 
 {% block content %}
   <h2>Matches at {{tournament}}</h2>
-  {% include "tmdb/snippets/match_table_component.html" with tournament=tournament matches_by_division=matches_by_division all_matches=all_matches only %}
-{% endblock %}
-
-{% block script %}
-{% load static %}
-    <script src="{% static 'js/match_websocket.js' %}"></script>
+  {% include "tmdb/snippets/match_table_component.html" with tournament=tournament only %}
 {% endblock %}

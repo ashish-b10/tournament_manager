@@ -1,4 +1,3 @@
-{% if team_matches %}
 <div class="form-horizontal">
   <script type="text/javascript">
     window.addEventListener("load", function() {
@@ -6,8 +5,8 @@
     });
   </script>
 </div>
-{% else %}
-<div>
-No matches are available
-</div>
-{% endif %}
+
+{% block script %}
+{% load static %}
+    <script src="{% static 'js/match_websocket.js' %}"></script>
+{% endblock %}

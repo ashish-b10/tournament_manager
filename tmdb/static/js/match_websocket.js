@@ -36,8 +36,8 @@ function createObjectElem(elem_type, elem_content) {
 }
 
 function render_initial_display() {
-  add_filter_options();
-  set_show_all_filter();
+  // Hide the loader if the data has been loaded.
+  document.getElementById("loader-wrapper").style = "display:none";
   render_full_display();
 }
 
@@ -166,7 +166,11 @@ function set_school_filter() {
 }
 
 function add_filter_options() {
-  document.getElementById('filter-label').innerHTML = "Filter matches:"
+  var filter_label = document.getElementById('filter-label');
+  if (filter_label.innerHTML != "") {
+    return;
+  }
+  filter_label.innerHTML = "Filter matches:"
   var filter_div = document.getElementById('filter_type');
   var filter_type_elem = document.createElement('select');
   filter_div.append(filter_type_elem);
@@ -199,6 +203,8 @@ function add_filter_options() {
     selected_filter();
     render_full_display();
   });
+
+  set_show_all_filter();
 }
 
 function render_full_display() {
@@ -206,6 +212,17 @@ function render_full_display() {
   for (var i = 0; i < match_queues.length; ++i) {
     match_queue = match_queues[i];
     match_queue.innerHTML = '';
+
+    if (tmdb_vars.tournament_data.tmdb_teammatch === undefined) {
+      var empty_match_list = createTextElem("div", "No matches have been created for this tournament.");
+      empty_match_list.className += "alert alert-warning";
+      match_queue.appendChild(empty_match_list);
+      continue;
+    }
+    var team_matches = Object.values(
+        tmdb_vars.tournament_data.tmdb_teammatch);
+
+    add_filter_options();
     var match_queue_table = document.createElement("table");
     match_queue_table.className += "table match_table table";
     match_queue.appendChild(match_queue_table);
@@ -222,9 +239,6 @@ function render_full_display() {
     match_queue_row.appendChild(createTextElem("th", "Ring No."));
     match_queue_row.appendChild(createTextElem("th", "Winning Team"));
     match_queue_row.appendChild(createTextElem("th", "Status"));
-//    match_queue_row.appendChild(createTextElem("th", "Match Sheet"));
-    var team_matches = Object.values(
-        tmdb_vars.tournament_data.tmdb_teammatch);
     team_matches = team_matches.sort(function(team_match1, team_match2) {
       return team_match1.fields.number - team_match2.fields.number;
     });
@@ -242,7 +256,6 @@ function render_full_display() {
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
-//      match_queue_row.append(createObjectElem("td", render_match_sheet(team_match)));
       var match_status = evaluate_status(team_match);
       match_queue_row.className = match_status['match_status_css_class'];
     });
@@ -391,15 +404,6 @@ function render_status(team_match) {
   return match_status.match_status_text;
 }
 
-function render_match_sheet(team_match) {
-  var hyperlink = document.createElement("a");
-  hyperlink.className += "btn btn-primary";
-  hyperlink.href = "/tmdb/match_sheet?team_match_pk=" + team_match.pk;
-  hyperlink.innerHTML = "Print";
-  hyperlink.target = "_blank";
-  return hyperlink;
-}
-
 function evaluate_status(team_match) {
   if (team_match.fields.winning_team != null) {
     return {
@@ -464,8 +468,6 @@ function on_websocket_open() {
   init_data_req.onreadystatechange = function() {
     if (init_data_req.readyState == 4 && init_data_req.status == 200) {
       store_initial_data(init_data_req.responseText);
-      // Hide the loader if the data has been loaded.
-      document.getElementById("loader-wrapper").style = "display:none";
       render_initial_display();
       return;
     }

@@ -48,31 +48,10 @@ def update_teammatch_status(request, tournament_slug, division_slug, match_num):
 
 def matches(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    tournament_divisions = models.TournamentDivision.objects.filter(
-            tournament__slug=tournament_slug)
-
-    all_matches = []
-    matches_by_division = []
-    for division in tournament_divisions:
-        team_matches = models.TeamMatch.objects.filter(
-                division=division).order_by('number')
-        matches_by_division.append((division, team_matches))
-        all_matches += team_matches
-
     context = {
         'tournament': tournament,
-        'tournament_divisions': tournament_divisions,
-        'all_matches': all_matches,
-        'matches_by_division': matches_by_division,
     }
     return render(request, 'tmdb/matches.html', context)
-
-def _match_sheet_reponse(matches, filename):
-    sheet = create_match_sheets(matches)
-
-    response = HttpResponse(sheet, content_type="application/pdf")
-    response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
-    return response
 
 def match_sheet(request, tournament_slug, division_slug, match_number=None):
     tournament_division = get_object_or_404(models.TournamentDivision,
@@ -85,7 +64,11 @@ def match_sheet(request, tournament_slug, division_slug, match_number=None):
     else:
         matches = models.TeamMatch.objects.filter(
                 division=tournament_division).order_by('number')
-    return _match_sheet_reponse(matches, filename)
+    sheet = create_match_sheets(matches)
+
+    response = HttpResponse(sheet, content_type="application/pdf")
+    response['Content-Disposition'] = 'attachment; filename=%s' %(filename,)
+    return response
 
 def _match_sheet_filename(tournament_slug, division_slug, match_number=None):
     filename = "%s-%s" %(tournament_slug, division_slug)
@@ -95,11 +78,3 @@ def _match_sheet_filename(tournament_slug, division_slug, match_number=None):
         filename += "-matches.pdf"
 
     return filename
-
-def match_sheet_by_pk(request):
-    match = models.TeamMatch.objects.get(pk=request.GET['team_match_pk'])
-    tournament_slug = match.division.tournament.slug
-    division_slug = match.division.division.slug
-    filename = _match_sheet_filename(tournament_slug, division_slug,
-            match.number)
-    return _match_sheet_reponse([match], filename)

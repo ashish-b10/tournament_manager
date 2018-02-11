@@ -133,9 +133,6 @@ urlpatterns = [
     url(tournament_base
             + r'/matches/*$',
             views.team_match_view.matches, name='match_list'),
-    url(tournament_division_base
-            + r'/matches/*$',
-            views.team_match_view.matches, name='match_list'),
     url(tournament_division_match_base
             + r'/update_status/*$',
             views.team_match_view.update_teammatch_status, name='update_teammatch_status'),
@@ -149,8 +146,6 @@ urlpatterns = [
     url(tournament_division_base
             + r'/match_sheets/*$',
             views.team_match_view.match_sheet, name='match_sheet'),
-    url(r'^match_sheet/*$',
-            views.team_match_view.match_sheet_by_pk),
 
     # bracket views
     url(tournament_division_base
