@@ -207,7 +207,7 @@ function render_full_display() {
     match_queue = match_queues[i];
     match_queue.innerHTML = '';
     var match_queue_table = document.createElement("table");
-    match_queue_table.className += "table table-striped match_table table";
+    match_queue_table.className += "table match_table table";
     match_queue.appendChild(match_queue_table);
     var match_queue_table_header = document.createElement("thead");
     match_queue_table.appendChild(match_queue_table_header);
