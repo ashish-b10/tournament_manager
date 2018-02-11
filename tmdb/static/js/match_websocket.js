@@ -267,7 +267,8 @@ function render_round_num(team_match) {
     return "Semi-Finals";
   if (round_num == 2)
     return "Quarter-Finals";
-  return "Round of " + 2**round_num;
+   // Added 1 because round numbers start at 0, not 1
+  return "Round of " + 2**(round_num + 1);
 }
 
 function render_blue_team_name(team_match) {
