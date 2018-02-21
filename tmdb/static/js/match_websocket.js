@@ -1,5 +1,8 @@
 tmdb_vars = {};
 tmdb_vars.tournament_data = {};
+tmdb_vars_REPORT_STATUS_EMPTY_VALUE = 0;
+tmdb_vars_REPORT_STATUS_HOLDING_VALUE = 1;
+tmdb_vars_REPORT_STATUS_AT_RING_VALUE = 2;
 
 function delete_tourament_datum(datum) {
   datum.model = datum.model.replace(".", "_");
@@ -234,8 +237,7 @@ function render_full_display() {
     match_queue_row.appendChild(createTextElem("th", "Round"));
     match_queue_row.appendChild(createTextElem("th", "Blue Team"));
     match_queue_row.appendChild(createTextElem("th", "Red Team"));
-    match_queue_row.appendChild(createTextElem("th", "In Holding?"));
-    match_queue_row.appendChild(createTextElem("th", "At Ring?"));
+    match_queue_row.appendChild(createTextElem("th", "Report Status"));
     match_queue_row.appendChild(createTextElem("th", "Ring No."));
     match_queue_row.appendChild(createTextElem("th", "Winning Team"));
     match_queue_row.appendChild(createTextElem("th", "Status"));
@@ -251,8 +253,7 @@ function render_full_display() {
       match_queue_row.append(createTextElem("td", render_round_num(team_match)));
       match_queue_row.append(createTextElem("td", render_blue_team_name(team_match)));
       match_queue_row.append(createTextElem("td", render_red_team_name(team_match)));
-      match_queue_row.append(createObjectElem("td", render_in_holding(team_match)));
-      match_queue_row.append(createObjectElem("td", render_at_ring(team_match)));
+      match_queue_row.append(createObjectElem("td", render_report_status(team_match)));
       match_queue_row.append(createObjectElem("td", render_ring_number(team_match)));
       match_queue_row.append(createObjectElem("td", render_winning_team(team_match)));
       match_queue_row.append(createTextElem("td", render_status(team_match)));
@@ -336,28 +337,38 @@ function render_school_name(school_id) {
   return school.fields.name;
 }
 
-function render_in_holding(team_match) {
-  var check_box = document.createElement("input");
-  check_box.type = "checkbox";
-  check_box.name = "in_holding";
-  check_box.value = team_match.pk;
-  check_box.checked = team_match.fields.in_holding;
-  check_box.onclick = function() {
-    on_in_holding_changed(this, team_match.pk);
-  };
-  return check_box;
-}
+function render_report_status(team_match) {
+  var select_menu = document.createElement("select");
+  var empty_option = document.createElement("option");
+  var holding_option = document.createElement("option");
+  var at_ring_option = document.createElement("option");
 
-function render_at_ring(team_match) {
-  var check_box = document.createElement("input");
-  check_box.type = "checkbox";
-  check_box.name = "at_ring";
-  check_box.value = team_match.pk;
-  check_box.checked = team_match.fields.at_ring;
-  check_box.onclick = function() {
-    on_at_ring_changed(this, team_match.pk);
+  empty_option.value = tmdb_vars_REPORT_STATUS_EMPTY_VALUE;
+  holding_option.value = tmdb_vars_REPORT_STATUS_HOLDING_VALUE;
+  at_ring_option.value = tmdb_vars_REPORT_STATUS_AT_RING_VALUE;
+
+  empty_option.innerHTML = "---";
+  holding_option.innerHTML = "To holding";
+  at_ring_option.innerHTML = "At ring";
+
+  select_menu.style = "width: 120px";
+  select_menu.appendChild(empty_option);
+  select_menu.appendChild(holding_option);
+  select_menu.appendChild(at_ring_option);
+
+  if (team_match.fields.at_ring) {
+    select_menu.value = tmdb_vars_REPORT_STATUS_AT_RING_VALUE;
+  } else if (team_match.fields.in_holding) {
+    select_menu.value = tmdb_vars_REPORT_STATUS_HOLDING_VALUE;
+  } else {
+    select_menu.value = tmdb_vars_REPORT_STATUS_EMPTY_VALUE;
+  }
+
+  select_menu.name = "report_status";
+  select_menu.onchange = function() {
+    on_report_status_changed(this, team_match.pk);
   };
-  return check_box;
+  return select_menu;
 }
 
 function render_ring_number(team_match) {
@@ -511,21 +522,13 @@ function start_teammatch_websocket(tournament_slug, tournament_json_url) {
   tmdb_vars.match_update_ws.onclose = on_websocket_close;
 }
 
-function on_in_holding_changed(element, team_match_pk) {
+function on_report_status_changed(element, team_match_pk) {
   var team_match = {};
   team_match.model = 'tmdb.teammatch';
   team_match.pk = team_match_pk;
   team_match.fields = {};
-  team_match.fields.in_holding = element.checked;
-  tmdb_vars.match_update_ws.send(JSON.stringify([team_match]));
-}
-
-function on_at_ring_changed(element, team_match_pk) {
-  var team_match = {};
-  team_match.model = 'tmdb.teammatch';
-  team_match.pk = team_match_pk;
-  team_match.fields = {};
-  team_match.fields.at_ring = element.checked;
+  team_match.fields.in_holding = (element.value >= tmdb_vars_REPORT_STATUS_HOLDING_VALUE);
+  team_match.fields.at_ring = (element.value >= tmdb_vars_REPORT_STATUS_AT_RING_VALUE);
   tmdb_vars.match_update_ws.send(JSON.stringify([team_match]));
 }
 
