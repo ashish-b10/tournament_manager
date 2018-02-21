@@ -4,6 +4,12 @@ tmdb_vars_REPORT_STATUS_EMPTY_VALUE = 0;
 tmdb_vars_REPORT_STATUS_HOLDING_VALUE = 1;
 tmdb_vars_REPORT_STATUS_AT_RING_VALUE = 2;
 
+tmdb_vars_MATCH_STATUS_CODE_SENT_NOT_STARTED = 3
+tmdb_vars_MATCH_STATUS_CODE_SENT_IN_HOLDING  = 4
+tmdb_vars_MATCH_STATUS_CODE_SENT_TO_RING  = 5
+tmdb_vars_MATCH_STATUS_CODE_AT_RING  = 6
+tmdb_vars_MATCH_STATUS_CODE_COMPLETE = 7
+
 function delete_tourament_datum(datum) {
   datum.model = datum.model.replace(".", "_");
   delete tmdb_vars.tournament_data[datum.model][datum.pk];
@@ -57,13 +63,13 @@ function set_show_all_filter() {
 function set_active_matches_filter() {
   tmdb_vars.team_match_filter = function(team_match) {
     var match_status = evaluate_status(team_match);
-    if (match_status['match_status_code'] == 1) {
+    if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_SENT_IN_HOLDING) {
       return true;
     }
-    if (match_status['match_status_code'] == 2) {
+    if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_SENT_TO_RING) {
       return true;
     }
-    if (match_status['match_status_code'] == 3) {
+    if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_AT_RING) {
       return true;
     }
     return false;
@@ -368,6 +374,12 @@ function render_report_status(team_match) {
   select_menu.onchange = function() {
     on_report_status_changed(this, team_match.pk);
   };
+
+  var match_status = evaluate_status(team_match);
+  if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_COMPLETE) {
+    select_menu.disabled = true;
+  }
+
   return select_menu;
 }
 
@@ -380,6 +392,11 @@ function render_ring_number(team_match) {
   text_field.value = team_match.fields.ring_number;
   text_field.onchange = function() {
     on_ring_number_changed(this, team_match.pk);
+  }
+
+  var match_status = evaluate_status(team_match);
+  if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_COMPLETE) {
+    text_field.disabled = true;
   }
   return text_field;
 }
@@ -419,7 +436,7 @@ function evaluate_status(team_match) {
   if (team_match.fields.winning_team != null) {
     return {
         match_status_css_class: 'team_match_complete',
-        match_status_code: 4,
+        match_status_code: tmdb_vars_MATCH_STATUS_CODE_COMPLETE,
         match_status_text: "Complete"
     };
   }
@@ -427,13 +444,13 @@ function evaluate_status(team_match) {
     if (team_match.fields.at_ring) {
       return {
           match_status_css_class: 'team_match_at_ring',
-          match_status_code: 3,
+          match_status_code: tmdb_vars_MATCH_STATUS_CODE_AT_RING,
           match_status_text: "At ring " + team_match.fields.ring_number
       };
     } else {
       return {
           match_status_css_class: 'team_match_sent_to_ring',
-          match_status_code: 2,
+          match_status_code: tmdb_vars_MATCH_STATUS_CODE_SENT_TO_RING,
           match_status_text: "Sent to ring " + team_match.fields.ring_number
       };
     }
@@ -441,13 +458,13 @@ function evaluate_status(team_match) {
   if (team_match.fields.in_holding) {
     return {
         match_status_css_class: 'team_match_in_holding',
-        match_status_code: 1,
+        match_status_code: tmdb_vars_MATCH_STATUS_CODE_SENT_IN_HOLDING,
         match_status_text: "Report to holding"
     };
   }
   return {
       match_status_css_class: 'team_match_not_started',
-      match_status_code: 0,
+      match_status_code: tmdb_vars_MATCH_STATUS_CODE_SENT_NOT_STARTED,
       match_status_text: ""
   };
 }
