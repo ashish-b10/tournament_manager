@@ -172,6 +172,7 @@ def tournament_json(request, tournament_slug):
     msg_json = json.dumps(msg)
     return HttpResponse(msg_json, content_type="application/json")
 
+@login_required
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
@@ -248,6 +249,7 @@ def attach_school_registration_import_errors(school_registrations):
         except AttributeError:
             school_registration.import_errors = [import_error]
 
+@login_required
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school_registrations = models.SchoolRegistration.objects.filter(
