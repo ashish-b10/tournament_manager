@@ -452,14 +452,14 @@ function evaluate_status(team_match) {
         match_status_text: "Complete"
     };
   }
-  if (team_match.fields.competing) {
-    return {
-        match_status_css_class: 'team_match_competing',
-        match_status_code: 5,
-        match_status_text: "Competing at ring " + team_match.fields.ring_number
-    };
-  }
   if (team_match.fields.ring_number != null) {
+    if (team_match.fields.competing) {
+      return {
+          match_status_css_class: 'team_match_competing',
+          match_status_code: 5,
+          match_status_text: "Competing at ring " + team_match.fields.ring_number
+      };
+    }
     if (team_match.fields.at_ring) {
       return {
           match_status_css_class: 'team_match_at_ring',
