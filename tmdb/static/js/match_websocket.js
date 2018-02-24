@@ -3,13 +3,13 @@ tmdb_vars.tournament_data = {};
 tmdb_vars_REPORT_STATUS_EMPTY_VALUE = 0;
 tmdb_vars_REPORT_STATUS_HOLDING_VALUE = 1;
 tmdb_vars_REPORT_STATUS_AT_RING_VALUE = 2;
-tmdb_vars_REPORT_STATUS_COMPETING_VALUE = 8;
+tmdb_vars_REPORT_STATUS_COMPETING_VALUE = 3;
 
-tmdb_vars_MATCH_STATUS_CODE_SENT_NOT_STARTED = 3
-tmdb_vars_MATCH_STATUS_CODE_SENT_IN_HOLDING  = 4
-tmdb_vars_MATCH_STATUS_CODE_SENT_TO_RING  = 5
-tmdb_vars_MATCH_STATUS_CODE_AT_RING  = 6
-tmdb_vars_MATCH_STATUS_CODE_COMPLETE = 7
+tmdb_vars_MATCH_STATUS_CODE_SENT_NOT_STARTED = 4;
+tmdb_vars_MATCH_STATUS_CODE_SENT_IN_HOLDING  = 5;
+tmdb_vars_MATCH_STATUS_CODE_SENT_TO_RING  = 6;
+tmdb_vars_MATCH_STATUS_CODE_AT_RING  = 7;
+tmdb_vars_MATCH_STATUS_CODE_COMPLETE = 8;
 
 function delete_tourament_datum(datum) {
   datum.model = datum.model.replace(".", "_");
