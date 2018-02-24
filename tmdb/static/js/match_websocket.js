@@ -3,6 +3,7 @@ tmdb_vars.tournament_data = {};
 tmdb_vars_REPORT_STATUS_EMPTY_VALUE = 0;
 tmdb_vars_REPORT_STATUS_HOLDING_VALUE = 1;
 tmdb_vars_REPORT_STATUS_AT_RING_VALUE = 2;
+tmdb_vars_REPORT_STATUS_COMPETING_VALUE = 8;
 
 tmdb_vars_MATCH_STATUS_CODE_SENT_NOT_STARTED = 3
 tmdb_vars_MATCH_STATUS_CODE_SENT_IN_HOLDING  = 4
@@ -70,6 +71,9 @@ function set_active_matches_filter() {
       return true;
     }
     if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_AT_RING) {
+      return true;
+    }
+    if (match_status['match_status_code'] == 5) {
       return true;
     }
     return false;
@@ -348,25 +352,33 @@ function render_report_status(team_match) {
   var empty_option = document.createElement("option");
   var holding_option = document.createElement("option");
   var at_ring_option = document.createElement("option");
+  var competing_option = document.createElement("option");
 
   empty_option.value = tmdb_vars_REPORT_STATUS_EMPTY_VALUE;
   holding_option.value = tmdb_vars_REPORT_STATUS_HOLDING_VALUE;
   at_ring_option.value = tmdb_vars_REPORT_STATUS_AT_RING_VALUE;
+  competing_option.value = tmdb_vars_REPORT_STATUS_COMPETING_VALUE;
 
   empty_option.innerHTML = "---";
   holding_option.innerHTML = "To holding";
   at_ring_option.innerHTML = "At ring";
+  competing_option.innerHTML = "Competing";
 
   select_menu.style = "width: 120px";
   select_menu.appendChild(empty_option);
   select_menu.appendChild(holding_option);
   select_menu.appendChild(at_ring_option);
+  select_menu.appendChild(competing_option);
+
 
   if (team_match.fields.at_ring) {
     select_menu.value = tmdb_vars_REPORT_STATUS_AT_RING_VALUE;
   } else if (team_match.fields.in_holding) {
     select_menu.value = tmdb_vars_REPORT_STATUS_HOLDING_VALUE;
-  } else {
+  } else if (team_match.fields.competing) {
+    select_menu.value = tmdb_vars_REPORT_STATUS_COMPETING_VALUE;
+  }
+  else {
     select_menu.value = tmdb_vars_REPORT_STATUS_EMPTY_VALUE;
   }
 
@@ -438,6 +450,13 @@ function evaluate_status(team_match) {
         match_status_css_class: 'team_match_complete',
         match_status_code: tmdb_vars_MATCH_STATUS_CODE_COMPLETE,
         match_status_text: "Complete"
+    };
+  }
+  if (team_match.fields.competing) {
+    return {
+        match_status_css_class: 'team_match_competing',
+        match_status_code: 5,
+        match_status_text: "Competing at ring " + team_match.fields.ring_number
     };
   }
   if (team_match.fields.ring_number != null) {
@@ -546,6 +565,7 @@ function on_report_status_changed(element, team_match_pk) {
   team_match.fields = {};
   team_match.fields.in_holding = (element.value >= tmdb_vars_REPORT_STATUS_HOLDING_VALUE);
   team_match.fields.at_ring = (element.value >= tmdb_vars_REPORT_STATUS_AT_RING_VALUE);
+  team_match.fields.competing = (element.value >= tmdb_vars_REPORT_STATUS_COMPETING_VALUE);
   tmdb_vars.match_update_ws.send(JSON.stringify([team_match]));
 }
 
