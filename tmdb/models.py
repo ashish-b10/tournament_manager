@@ -676,6 +676,7 @@ class TeamMatch(models.Model):
             related_name="winning_team")
     in_holding = models.BooleanField(default=False)
     at_ring = models.BooleanField(default=False)
+    competing = models.BooleanField(default=False)
 
     class Meta:
         unique_together = (
@@ -689,6 +690,8 @@ class TeamMatch(models.Model):
     def status(self):
         if self.winning_team:
                 return "Complete"
+        elif self.competing:
+                return 'Competing'
         elif self.ring_number:
                 return "At ring " + str(self.ring_number)
         elif self.in_holding:
