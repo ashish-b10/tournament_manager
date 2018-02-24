@@ -64,6 +64,9 @@ function set_show_all_filter() {
 function set_active_matches_filter() {
   tmdb_vars.team_match_filter = function(team_match) {
     var match_status = evaluate_status(team_match);
+     if (match_status['match_status_code'] == tmdb_vars_REPORT_STATUS_COMPETING_VALUE) {
+        return true;
+     }
     if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_SENT_IN_HOLDING) {
       return true;
     }
@@ -71,9 +74,6 @@ function set_active_matches_filter() {
       return true;
     }
     if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_AT_RING) {
-      return true;
-    }
-    if (match_status['match_status_code'] == 5) {
       return true;
     }
     return false;
@@ -371,12 +371,12 @@ function render_report_status(team_match) {
   select_menu.appendChild(competing_option);
 
 
-  if (team_match.fields.at_ring) {
+  if (team_match.fields.competing) {
+      select_menu.value = tmdb_vars_REPORT_STATUS_COMPETING_VALUE;
+  } else if (team_match.fields.at_ring) {
     select_menu.value = tmdb_vars_REPORT_STATUS_AT_RING_VALUE;
   } else if (team_match.fields.in_holding) {
     select_menu.value = tmdb_vars_REPORT_STATUS_HOLDING_VALUE;
-  } else if (team_match.fields.competing) {
-    select_menu.value = tmdb_vars_REPORT_STATUS_COMPETING_VALUE;
   }
   else {
     select_menu.value = tmdb_vars_REPORT_STATUS_EMPTY_VALUE;
