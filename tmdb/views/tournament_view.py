@@ -133,7 +133,7 @@ json_fields = {
                     'points', 'seed',),
     'team_match': ('id', 'blue_team', 'red_team', 'winning_team', 'division',
                     'in_holding', 'at_ring', 'number', 'ring_assignment_time',
-                    'ring_number', 'round_num', 'round_slot',),
+                    'ring_number', 'round_num', 'round_slot', 'competing',),
 }
 
 def tournament_json(request, tournament_slug):
