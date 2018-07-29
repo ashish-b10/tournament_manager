@@ -25,8 +25,8 @@ def team_registration_delete(request, tournament_slug, school_slug,
     division = get_object_or_404(models.Division, slug=division_slug)
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament=tournament, division=division)
-    team = get_object_or_404(models.Team, school=school, division=division,
-            number=team_number)
+    team = get_object_or_404(models.SparringTeam, school=school,
+            division=division, number=team_number)
     team_registration = get_object_or_404(models.SparringTeamRegistration,
             tournament_division=tournament_division, team=team)
     context = {
@@ -59,8 +59,8 @@ def team_registration_change(request, tournament_slug, school_slug,
     division = get_object_or_404(models.Division, slug=division_slug)
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament=tournament, division=division)
-    team = get_object_or_404(models.Team, school=school, division=division,
-            number=team_number)
+    team = get_object_or_404(models.SparringTeam, school=school,
+            division=division, number=team_number)
     instance = get_object_or_404(models.SparringTeamRegistration,
             tournament_division=tournament_division, team=team)
     template_name = 'tmdb/team_registration_add_change.html'

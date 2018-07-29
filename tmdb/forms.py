@@ -58,7 +58,7 @@ class SparringTeamRegistrationForm(forms.ModelForm):
             self.fields['team'].widget = forms.HiddenInput()
             used_competitors -= set(kwargs['instance'].get_competitors_ids())
         else:
-            self.fields['team'].queryset = models.Team.objects.filter(
+            self.fields['team'].queryset = models.SparringTeam.objects.filter(
                 school=school_registration.school,
                 registrations=None).order_by('division', 'number')
 

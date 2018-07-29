@@ -2,7 +2,7 @@
 
 __all__ = ["BracketGenerator"]
 
-class Team():
+class SparringTeam():
     def __init__(self, team_name = None):
         if isinstance(team_name, str):
             self.team_name = lambda: team_name
@@ -185,7 +185,7 @@ class BracketGenerator():
                     continue
                 team_name, seed_num = line.split(',')
                 seed_num = int(seed_num)
-                seeds[seed_num] = Team(team_name)
+                seeds[seed_num] = SparringTeam(team_name)
         return BracketGenerator(seeds, match_number_start_val=101)
 
     def pprint(self):

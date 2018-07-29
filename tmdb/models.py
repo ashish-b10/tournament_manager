@@ -237,7 +237,8 @@ class School(models.Model):
 
     def create_division_teams(self, division):
         for team_num in range(1,11):
-            team = Team(school=self, division=division, number=team_num)
+            team = SparringTeam(school=self, division=division,
+                    number=team_num)
             team.clean()
             team.save()
 
@@ -350,7 +351,7 @@ class SchoolRegistration(models.Model):
                 if not roster:
                     continue
                 roster = [r.strip() for r in roster]
-                team = Team.objects.get_or_create(school=self.school,
+                team = SparringTeam.objects.get_or_create(school=self.school,
                         division=division, number=team_num+1)[0]
                 tournament_division = TournamentDivision.objects.get(
                         tournament=self.tournament, division=division)
@@ -535,7 +536,7 @@ class Competitor(models.Model):
     class Meta:
         unique_together = (("name", "registration"),)
 
-class Team(models.Model):
+class SparringTeam(models.Model):
     school = models.ForeignKey(School)
     division = models.ForeignKey(Division)
     number = models.SmallIntegerField()
@@ -545,7 +546,7 @@ class Team(models.Model):
 
     def save(self, *args, **kwargs):
         self.slug = self.slugify()
-        super(Team, self).save(*args, **kwargs)
+        super(SparringTeam, self).save(*args, **kwargs)
 
     def slugify(self):
         return self.school.slug + '-' + self.division.slug + str(self.number)
@@ -559,7 +560,7 @@ class Team(models.Model):
 #TODO team.division must equal tournament_division.division
 class SparringTeamRegistration(models.Model):
     tournament_division = models.ForeignKey(TournamentDivision)
-    team = models.ForeignKey(Team)
+    team = models.ForeignKey(SparringTeam)
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
     points = models.PositiveIntegerField(null=True, blank=True)
     lightweight = models.ForeignKey(Competitor, null=True, blank=True,
@@ -639,8 +640,7 @@ class SparringTeamRegistration(models.Model):
                 'tournament_division__division', 'team__number')
 
 class SparringTeamMatch(models.Model):
-    """ A match between two (or more?) Teams in a Division. A SparringTeamMatch
-    can have multiple CompetitorMatches.
+    """A match between two SparringTeams in a Division.
 
     Attributes:
         division        The TournamentDivision that the match belongs to
@@ -655,8 +655,8 @@ class SparringTeamMatch(models.Model):
                         belong to in its round? 0 means top of the
                         bracket, 1 = second from the top of the round,
                         and (2**round_num - 1) = bottom of the round.
-        blue_team       The Team fighting in blue for this match
-        red_team        The Team fighting in red for this match
+        blue_team       The SparringTeam fighting in blue for this match
+        red_team        The SparringTeam fighting in red for this match
         ring_number     The number of the assigned ring
         ring_assignment_time
                         The time at which the ring was assigned
