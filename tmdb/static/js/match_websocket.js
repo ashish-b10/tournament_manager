@@ -11,6 +11,8 @@ tmdb_vars_MATCH_STATUS_CODE_SENT_TO_RING  = 6;
 tmdb_vars_MATCH_STATUS_CODE_AT_RING  = 7;
 tmdb_vars_MATCH_STATUS_CODE_COMPLETE = 8;
 
+tmdb_vars_MAX_NUM_RINGS = 9;
+
 function delete_tourament_datum(datum) {
   datum.model = datum.model.replace(".", "_");
   delete tmdb_vars.tournament_data[datum.model][datum.pk];
@@ -396,21 +398,35 @@ function render_report_status(team_match) {
 }
 
 function render_ring_number(team_match) {
-  var text_field = document.createElement("input");
-  text_field.type = "number";
-  text_field.name = "ring_number";
-  text_field.min = 1;
-  text_field.max = 7;
-  text_field.value = team_match.fields.ring_number;
-  text_field.onchange = function() {
+  var ring_field = document.createElement("select");
+  ring_field.style = "width:50px;"
+
+  var option = document.createElement("option");
+  option.value = '';
+  option.innerHTML = '---';
+  ring_field.appendChild(option);
+  ring_field.value = option.value;
+
+  for (var i=1; i<=tmdb_vars_MAX_NUM_RINGS; ++i) {
+    option = document.createElement("option");
+    option.value = i;
+    option.innerHTML = i;
+    ring_field.appendChild(option);
+  }
+
+  if (team_match.fields.ring_number) {
+    ring_field.value = team_match.fields.ring_number;
+  }
+
+  ring_field.onchange = function() {
     on_ring_number_changed(this, team_match.pk);
   }
 
   var match_status = evaluate_status(team_match);
   if (match_status['match_status_code'] == tmdb_vars_MATCH_STATUS_CODE_COMPLETE) {
-    text_field.disabled = true;
+    ring_field.disabled = true;
   }
-  return text_field;
+  return ring_field;
 }
 
 function render_winning_team(team_match) {
