@@ -1,7 +1,6 @@
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
-import decimal
 from itertools import product
 from django.template.defaultfilters import slugify
 
