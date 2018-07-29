@@ -19,7 +19,7 @@ from tmdb.util.bracket_svg import SvgBracket
 
 @permission_required("tmdb.change_teammatch")
 def update_teammatch_status(request, tournament_slug, division_slug, match_num):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     team_match = get_object_or_404(models.SparringTeamMatch,
             division=tournament_division, number=match_num)
@@ -55,7 +55,7 @@ def matches(request, tournament_slug):
     return render(request, 'tmdb/matches.html', context)
 
 def match_sheet(request, tournament_slug, division_slug, match_number=None):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     filename = _match_sheet_filename(tournament_slug, division_slug,
             match_number)

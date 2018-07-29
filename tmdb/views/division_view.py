@@ -18,14 +18,14 @@ from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
 def division_seedings(request, tournament_slug, division_slug):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     team_registrations = models.SparringTeamRegistration.objects.filter(
             tournament_division=tournament_division).order_by(
             'team__school__name', 'team__number')
     unimported_schools = models.SchoolRegistration.objects.filter(
             tournament=tournament_division.tournament, imported=False)
-    generate_bracket_form = forms.TournamentDivisionBracketGenerateForm(
+    generate_bracket_form = forms.TournamentSparringDivisionBracketGenerateForm(
             instance=tournament_division)
     context = {
         'generate_bracket_form': generate_bracket_form,
@@ -86,17 +86,17 @@ def division_points(request, tournament_slug, division_slug, team_slug):
 
 @permission_required(["tmdb.add_teammatch", "tmdb.delete_teammatch"])
 def create_tournament_division_matches(request, tournament_slug, division_slug):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     if request.method == "POST":
-        generate_bracket_form = forms.TournamentDivisionBracketGenerateForm(
+        generate_bracket_form = forms.TournamentSparringDivisionBracketGenerateForm(
                 request.POST, instance=tournament_division)
         if generate_bracket_form.is_valid():
             generate_bracket_form.save()
             return HttpResponseRedirect(reverse('tmdb:bracket',
                     args=(tournament_slug, division_slug)))
     else:
-        generate_bracket_form = forms.TournamentDivisionBracketGenerateForm(
+        generate_bracket_form = forms.TournamentSparringDivisionBracketGenerateForm(
                 instance=tournament_division)
     context = {
         'generate_bracket_form': generate_bracket_form,

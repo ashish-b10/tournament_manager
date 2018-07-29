@@ -30,7 +30,7 @@ def red_team_text(team_match):
 
 def bracket_printable(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament=tournament, division__slug=division_slug)
     matches, num_rounds = models.SparringTeamMatch.get_matches_by_round(
             tournament_division)
@@ -51,7 +51,7 @@ def bracket_printable(request, tournament_slug, division_slug):
     return HttpResponse(response, content_type="image/svg+xml")
 
 def bracket_printable_pdf(request, tournament_slug, division_slug):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     matches = models.SparringTeamMatch.objects.filter(
             division=tournament_division)
@@ -66,7 +66,7 @@ def bracket_printable_pdf(request, tournament_slug, division_slug):
 
 def bracket(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament=tournament, division__slug=division_slug)
     bracket_columns = []
     matches, num_rounds = models.SparringTeamMatch.get_matches_by_round(
@@ -131,7 +131,7 @@ def get_lowest_bye_seed(tournament_division):
 
 @permission_required("tmdb.add_teammatch")
 def add_team_to_bracket(request, tournament_slug, division_slug):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     context = {}
 
@@ -148,7 +148,8 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
         round_number = request.GET.get('round_num')
         round_slot = request.GET.get('round_slot')
 
-        tournament_division = get_object_or_404(models.TournamentDivision,
+        tournament_division = get_object_or_404(
+                models.TournamentSparringDivision,
                 tournament__slug=tournament_slug, division__slug=division_slug)
         existing_match = get_object_or_404(models.SparringTeamMatch,
                 division=tournament_division, round_num=round_number,
@@ -176,7 +177,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
 
 @permission_required("tmdb.add_teammatch")
 def remove_team_from_bracket(request, tournament_slug, division_slug):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     team_registration_pk = request.GET.get('team_registration')
     team_registration = get_object_or_404(models.SparringTeamRegistration,

@@ -75,7 +75,7 @@ class SparringTeamRegistrationForm(forms.ModelForm):
     def clean(self):
         tournament = self.cleaned_data['tournament']
         division = self.cleaned_data['team'].division
-        tournament_division = models.TournamentDivision.objects.get(
+        tournament_division = models.TournamentSparringDivision.objects.get(
                 tournament=tournament, division=division)
         self.cleaned_data['tournament_division'] = tournament_division
 
@@ -245,17 +245,17 @@ class SparringTeamRegistrationBracketSeedingForm(forms.Form):
         team_registration.save()
         team_registration.tournament_division.create_matches_from_slots()
 
-class TournamentDivisionBracketGenerateForm(forms.ModelForm):
+class TournamentSparringDivisionBracketGenerateForm(forms.ModelForm):
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = models.TournamentDivision
+        model = models.TournamentSparringDivision
         fields = []
 
     def clean(self):
         cleaned_data = super(
-                TournamentDivisionBracketGenerateForm, self).clean()
+                TournamentSparringDivisionBracketGenerateForm, self).clean()
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
             return cleaned_data

@@ -20,7 +20,8 @@ class ExportResults():
     def download_results(self):
 
         self.tournament = Tournament.objects.first()
-        self.divisions = TournamentDivision.objects.filter(tournament = self.tournament)
+        self.divisions = TournamentSparringDivision.objects.filter(
+                tournament=self.tournament)
 
         # for division in self.divisions:
         for division in self.divisions:

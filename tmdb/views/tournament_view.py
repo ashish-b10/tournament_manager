@@ -96,7 +96,7 @@ def tournament_import(request, tournament_slug):
 
 def tournament_dashboard(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    tournament_divisions = models.TournamentDivision.objects.filter(
+    tournament_divisions = models.TournamentSparringDivision.objects.filter(
             tournament=tournament).order_by(
             'division__sex', 'division__skill_level')
 
@@ -152,7 +152,8 @@ def tournament_json(request, tournament_slug):
             models.SparringTeam.objects.all(),
             json_fields['team']))
     msg.extend(model_to_json(
-            models.TournamentDivision.objects.filter(tournament=tournament),
+            models.TournamentSparringDivision.objects.filter(
+                    tournament=tournament),
             json_fields['tournament_division']))
     msg.extend(model_to_json(
             models.SchoolRegistration.objects.filter(tournament=tournament),

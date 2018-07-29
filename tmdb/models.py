@@ -149,7 +149,7 @@ class Tournament(models.Model):
                 division = Division(sex=sex, skill_level=skill_level)
                 division.clean()
                 division.save()
-            td = TournamentDivision(tournament=self, division=division)
+            td = TournamentSparringDivision(tournament=self, division=division)
             td.clean()
             td.save()
 
@@ -353,7 +353,7 @@ class SchoolRegistration(models.Model):
                 roster = [r.strip() for r in roster]
                 team = SparringTeam.objects.get_or_create(school=self.school,
                         division=division, number=team_num+1)[0]
-                tournament_division = TournamentDivision.objects.get(
+                tournament_division = TournamentSparringDivision.objects.get(
                         tournament=self.tournament, division=division)
                 team_reg = SparringTeamRegistration.objects.get_or_create(
                         tournament_division=tournament_division, team=team)[0]
@@ -405,7 +405,7 @@ class Division(models.Model):
     skill_level = DivisionLevelField()
     slug = models.SlugField(unique=True)
     tournaments = models.ManyToManyField('Tournament',
-            through='TournamentDivision')
+            through='TournamentSparringDivision')
 
     class Meta:
         unique_together = (("sex", "skill_level"),)
@@ -431,7 +431,7 @@ class Division(models.Model):
             start_val = 500
         return start_val + (100 if self.sex == SexField.FEMALE else 0) + 1
 
-class TournamentDivisionStatus():
+class TournamentSparringDivisionStatus():
     def __init__(self, num_matches, num_matches_completed):
         self.num_matches = num_matches
         self.num_matches_completed = num_matches_completed
@@ -442,7 +442,7 @@ class TournamentDivisionStatus():
         return "%d/%d matches completed" %(
                  self.num_matches_completed, self.num_matches,)
 
-class TournamentDivision(models.Model):
+class TournamentSparringDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
     division = models.ForeignKey(Division)
 
@@ -461,7 +461,8 @@ class TournamentDivision(models.Model):
         for match in matches:
             num_matches += 1
             num_matches_completed += bool(match.winning_team)
-        return TournamentDivisionStatus(num_matches, num_matches_completed)
+        return TournamentSparringDivisionStatus(num_matches,
+                num_matches_completed)
 
     def assign_slots_to_team_registrations(self):
         """
@@ -512,9 +513,9 @@ class TournamentDivision(models.Model):
             match.clean()
             match.save()
 
-class TournamentDivisionBeltRanks(models.Model):
+class TournamentSparringDivisionBeltRanks(models.Model):
     belt_rank = BeltRankField()
-    tournament_division = models.ForeignKey(TournamentDivision)
+    tournament_division = models.ForeignKey(TournamentSparringDivision)
 
 class Competitor(models.Model):
     """ A person who may compete in a tournament. """
@@ -541,7 +542,7 @@ class SparringTeam(models.Model):
     division = models.ForeignKey(Division)
     number = models.SmallIntegerField()
     slug = models.SlugField(unique=True)
-    registrations = models.ManyToManyField(TournamentDivision,
+    registrations = models.ManyToManyField(TournamentSparringDivision,
             through="SparringTeamRegistration")
 
     def save(self, *args, **kwargs):
@@ -559,7 +560,7 @@ class SparringTeam(models.Model):
 
 #TODO team.division must equal tournament_division.division
 class SparringTeamRegistration(models.Model):
-    tournament_division = models.ForeignKey(TournamentDivision)
+    tournament_division = models.ForeignKey(TournamentSparringDivision)
     team = models.ForeignKey(SparringTeam)
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
     points = models.PositiveIntegerField(null=True, blank=True)
@@ -643,7 +644,8 @@ class SparringTeamMatch(models.Model):
     """A match between two SparringTeams in a Division.
 
     Attributes:
-        division        The TournamentDivision that the match belongs to
+        division        The TournamentSparringDivision that the match is being
+                        fought in
         number          The match number (unique amongst all
                         SparringTeamMatches)
         round_num       Which round is this match in terms of distance
@@ -662,7 +664,7 @@ class SparringTeamMatch(models.Model):
                         The time at which the ring was assigned
         winning_team    The winner of the SparringTeamMatch
     """
-    division = models.ForeignKey(TournamentDivision)
+    division = models.ForeignKey(TournamentSparringDivision)
     number = models.PositiveIntegerField()
     round_num = models.SmallIntegerField()
     round_slot = models.IntegerField()

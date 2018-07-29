@@ -23,7 +23,7 @@ def team_registration_delete(request, tournament_slug, school_slug,
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
     division = get_object_or_404(models.Division, slug=division_slug)
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament=tournament, division=division)
     team = get_object_or_404(models.SparringTeam, school=school,
             division=division, number=team_number)
@@ -57,7 +57,7 @@ def team_registration_change(request, tournament_slug, school_slug,
     school_registration = get_object_or_404(models.SchoolRegistration,
             tournament=tournament, school=school)
     division = get_object_or_404(models.Division, slug=division_slug)
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament=tournament, division=division)
     team = get_object_or_404(models.SparringTeam, school=school,
             division=division, number=team_number)
@@ -105,7 +105,7 @@ def team_registration_add(request, tournament_slug, school_slug):
 
 def team_list(request, tournament_slug, division_slug=None):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    tournament_divisions = models.TournamentDivision.objects.filter(
+    tournament_divisions = models.TournamentSparringDivision.objects.filter(
             tournament__slug=tournament_slug)
     if division_slug is not None:
         division = get_object_or_404(models.Division, slug=division_slug)
