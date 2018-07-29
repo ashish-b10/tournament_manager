@@ -143,7 +143,7 @@ def tournament_json(request, tournament_slug):
             [tournament],
             json_fields['tournament']))
     msg.extend(model_to_json(
-            models.Division.objects.all(),
+            models.SparringDivision.objects.all(),
             json_fields['division']))
     msg.extend(model_to_json(
             models.School.objects.all(),

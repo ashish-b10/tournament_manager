@@ -25,7 +25,8 @@ class ExportResults():
 
         # for division in self.divisions:
         for division in self.divisions:
-            skill = DivisionLevelEnum.get(division.division.skill_level).label
+            skill = SparringDivisionLevelEnum.get(
+                    division.division.skill_level).label
             sex = SexEnum.get(division.division.sex).label
 
             final = SparringTeamMatch.objects.filter(

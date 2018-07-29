@@ -38,7 +38,7 @@ class SexField(models.CharField):
     def value(v):
         return SexField.SEX_VALUES[v.lower()]
 
-class DivisionLevelField(models.CharField):
+class SparringDivisionLevelField(models.CharField):
     A_TEAM_VAL = 'A'
     B_TEAM_VAL = 'B'
     C_TEAM_VAL = 'C'
@@ -53,22 +53,24 @@ class DivisionLevelField(models.CharField):
 
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 1
-        kwargs['choices'] = DivisionLevelField.DIVISION_LEVEL_CHOICES
+        kwargs['choices'] = SparringDivisionLevelField.DIVISION_LEVEL_CHOICES
         super().__init__(*args, **kwargs)
 
     def to_python(self, value):
-        if not value in DivisionLevelField.DIVISION_LEVEL_LABELS:
-            raise(ValidationError("Invalid DivisionLevelField value: "
+        if not value in SparringDivisionLevelField.DIVISION_LEVEL_LABELS:
+            raise(ValidationError("Invalid SparringDivisionLevelField value: "
                     + value))
         return value
 
     @staticmethod
     def label(l):
-        return DivisionLevelField.DIVISION_LEVEL_LABELS[l]
+        return SparringDivisionLevelField.DIVISION_LEVEL_LABELS[l]
 
     @staticmethod
     def value(v):
-        return DivisionLevelField.DIVISION_LEVEL_VALUES[v.lower()]
+        return SparringDivisionLevelField.DIVISION_LEVEL_VALUES[v.lower()]
+
+DivisionLevelField = SparringDivisionLevelField
 
 class BeltRankField(models.CharField):
     WHITE = 'WH'
@@ -141,12 +143,12 @@ class Tournament(models.Model):
 
     def create_divisions(self):
         sex_labels = SexField.SEX_LABELS
-        skill_labels = DivisionLevelField.DIVISION_LEVEL_LABELS
+        skill_labels = SparringDivisionLevelField.DIVISION_LEVEL_LABELS
         for sex, skill_level in product(sex_labels, skill_labels):
-            division = Division.objects.filter(sex=sex,
+            division = SparringDivision.objects.filter(sex=sex,
                     skill_level=skill_level).first()
             if division is None:
-                division = Division(sex=sex, skill_level=skill_level)
+                division = SparringDivision(sex=sex, skill_level=skill_level)
                 division.clean()
                 division.save()
             td = TournamentSparringDivision(tournament=self, division=division)
@@ -225,12 +227,12 @@ class School(models.Model):
 
     def create_teams(self):
         sex_labels = SexField.SEX_LABELS
-        skill_labels = DivisionLevelField.DIVISION_LEVEL_LABELS
+        skill_labels = SparringDivisionLevelField.DIVISION_LEVEL_LABELS
         for sex, skill_level in product(sex_labels, skill_labels):
-            division = Division.objects.filter(sex=sex,
+            division = SparringDivision.objects.filter(sex=sex,
                     skill_level=skill_level).first()
             if division is None:
-                division = Division(sex=sex, skill_level=skill_level)
+                division = SparringDivision(sex=sex, skill_level=skill_level)
                 division.clean()
                 division.save()
             self.create_division_teams(division)
@@ -301,25 +303,25 @@ class SchoolRegistration(models.Model):
         sex = skill = None
         if division_name == "Mens_A":
             sex = SexField.MALE
-            skill = DivisionLevelField.A_TEAM_VAL
+            skill = SparringDivisionLevelField.A_TEAM_VAL
         elif division_name == "Mens_B":
             sex = SexField.MALE
-            skill = DivisionLevelField.B_TEAM_VAL
+            skill = SparringDivisionLevelField.B_TEAM_VAL
         elif division_name == "Mens_C":
             sex = SexField.MALE
-            skill = DivisionLevelField.C_TEAM_VAL
+            skill = SparringDivisionLevelField.C_TEAM_VAL
         elif division_name == "Womens_A":
             sex = SexField.FEMALE
-            skill = DivisionLevelField.A_TEAM_VAL
+            skill = SparringDivisionLevelField.A_TEAM_VAL
         elif division_name == "Womens_B":
             sex = SexField.FEMALE
-            skill = DivisionLevelField.B_TEAM_VAL
+            skill = SparringDivisionLevelField.B_TEAM_VAL
         elif division_name == "Womens_C":
             sex = SexField.FEMALE
-            skill = DivisionLevelField.C_TEAM_VAL
+            skill = SparringDivisionLevelField.C_TEAM_VAL
         if sex is None or skill is None:
             raise ValueError("Invalid division supplied: %s" %(division_name,))
-        return Division.objects.get(sex=sex, skill_level = skill)
+        return SparringDivision.objects.get(sex=sex, skill_level = skill)
 
     def check_roster_competitors(self, team_registration, roster, competitors):
         competitor_names = {c for c in roster if c}
@@ -400,9 +402,9 @@ class SchoolRegistrationError(models.Model):
     school_registration = models.ForeignKey(SchoolRegistration)
     error_text = models.TextField()
 
-class Division(models.Model):
+class SparringDivision(models.Model):
     sex = SexField()
-    skill_level = DivisionLevelField()
+    skill_level = SparringDivisionLevelField()
     slug = models.SlugField(unique=True)
     tournaments = models.ManyToManyField('Tournament',
             through='TournamentSparringDivision')
@@ -412,7 +414,7 @@ class Division(models.Model):
 
     def save(self, *args, **kwargs):
         self.slug = self.slugify()
-        super(Division, self).save(*args, **kwargs)
+        super(SparringDivision, self).save(*args, **kwargs)
 
     def slugify(self):
         return slugify(str(self))
@@ -423,11 +425,11 @@ class Division(models.Model):
         return sex_name + " " + self.skill_level
 
     def match_number_start_val(self):
-        if self.skill_level == DivisionLevelField.A_TEAM_VAL:
+        if self.skill_level == SparringDivisionLevelField.A_TEAM_VAL:
             start_val = 100
-        elif self.skill_level == DivisionLevelField.B_TEAM_VAL:
+        elif self.skill_level == SparringDivisionLevelField.B_TEAM_VAL:
             start_val = 300
-        elif self.skill_level == DivisionLevelField.C_TEAM_VAL:
+        elif self.skill_level == SparringDivisionLevelField.C_TEAM_VAL:
             start_val = 500
         return start_val + (100 if self.sex == SexField.FEMALE else 0) + 1
 
@@ -444,7 +446,7 @@ class TournamentSparringDivisionStatus():
 
 class TournamentSparringDivision(models.Model):
     tournament = models.ForeignKey(Tournament)
-    division = models.ForeignKey(Division)
+    division = models.ForeignKey(SparringDivision)
 
     class Meta:
         unique_together = (('tournament', 'division'),)
@@ -539,7 +541,7 @@ class Competitor(models.Model):
 
 class SparringTeam(models.Model):
     school = models.ForeignKey(School)
-    division = models.ForeignKey(Division)
+    division = models.ForeignKey(SparringDivision)
     number = models.SmallIntegerField()
     slug = models.SlugField(unique=True)
     registrations = models.ManyToManyField(TournamentSparringDivision,
@@ -641,7 +643,7 @@ class SparringTeamRegistration(models.Model):
                 'tournament_division__division', 'team__number')
 
 class SparringTeamMatch(models.Model):
-    """A match between two SparringTeams in a Division.
+    """A match between two SparringTeams in a SparringDivision.
 
     Attributes:
         division        The TournamentSparringDivision that the match is being
