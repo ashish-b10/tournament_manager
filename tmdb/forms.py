@@ -107,7 +107,7 @@ class MatchForm(forms.ModelForm):
         return super(MatchForm, self).clean()
 
     class Meta:
-        model = models.TeamMatch
+        model = models.SparringTeamMatch
         fields = ['ring_number', 'ring_assignment_time', 'winning_team', 'in_holding']
 
 class ConfigurationSetting(forms.ModelForm):
@@ -137,7 +137,7 @@ class TeamRegistrationPointsForm(forms.ModelForm):
         if confirm_delete_matches:
             return cleaned_data
         tournament_division = self.instance.tournament_division
-        num_existing_matches = models.TeamMatch.objects.filter(
+        num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=tournament_division,
                 winning_team__isnull=False).count()
         if not num_existing_matches:
@@ -165,7 +165,7 @@ class TeamRegistrationSeedingForm(forms.ModelForm):
         if confirm_delete_matches:
             return cleaned_data
         tournament_division = self.instance.tournament_division
-        num_existing_matches = models.TeamMatch.objects.filter(
+        num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=tournament_division,
                 winning_team__isnull=False).count()
         if not num_existing_matches:
@@ -230,7 +230,7 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
             return
         team_registration = self.cleaned_data['team_registration']
         division = team_registration.tournament_division
-        num_existing_matches = models.TeamMatch.objects.filter(
+        num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=division, winning_team__isnull=False).count()
         if not num_existing_matches:
             return
@@ -257,7 +257,7 @@ class TournamentDivisionBracketGenerateForm(forms.ModelForm):
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
             return cleaned_data
-        num_existing_matches = models.TeamMatch.objects.filter(
+        num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=self.instance, winning_team__isnull=False).count()
         if not num_existing_matches:
             return cleaned_data

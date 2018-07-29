@@ -455,7 +455,7 @@ class TournamentDivision(models.Model):
         return "%s (%s)" %(self.division, self.tournament)
 
     def status(self):
-        matches = TeamMatch.objects.filter(division=self)
+        matches = SparringTeamMatch.objects.filter(division=self)
         num_matches = num_matches_completed = 0
         for match in matches:
             num_matches += 1
@@ -483,14 +483,14 @@ class TournamentDivision(models.Model):
         return teams
 
     def create_matches_from_slots(self):
-        TeamMatch.objects.filter(division=self).delete()
+        SparringTeamMatch.objects.filter(division=self).delete()
         seeded_teams = TeamRegistration.objects.filter(
                 tournament_division=self, seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
         start_val = self.division.match_number_start_val()
         bracket = BracketGenerator(seeds, match_number_start_val=start_val)
         for bracket_match in bracket:
-            match = TeamMatch(division=self,
+            match = SparringTeamMatch(division=self,
                     number=bracket_match.number,
                     round_num = bracket_match.round_num,
                     round_slot = bracket_match.round_slot)
@@ -637,14 +637,14 @@ class TeamRegistration(models.Model):
         return query_set.order_by('team__school__name',
                 'tournament_division__division', 'team__number')
 
-class TeamMatch(models.Model):
-    """ A match between two (or more?) Teams in a Division. A TeamMatch
+class SparringTeamMatch(models.Model):
+    """ A match between two (or more?) Teams in a Division. A SparringTeamMatch
     can have multiple CompetitorMatches.
 
     Attributes:
         division        The TournamentDivision that the match belongs to
         number          The match number (unique amongst all
-                        TeamMatches)
+                        SparringTeamMatches)
         round_num       Which round is this match in terms of distance
                         from the final? (0 means this match is the
                         final, 1 means this match is the semi-final,
@@ -659,7 +659,7 @@ class TeamMatch(models.Model):
         ring_number     The number of the assigned ring
         ring_assignment_time
                         The time at which the ring was assigned
-        winning_team    The winner of the TeamMatch
+        winning_team    The winner of the SparringTeamMatch
     """
     division = models.ForeignKey(TournamentDivision)
     number = models.PositiveIntegerField()
@@ -707,25 +707,28 @@ class TeamMatch(models.Model):
         return "Round of %d" %(1 << (self.round_num))
 
     def get_previous_round_matches(self):
-        upper_match_query = TeamMatch.objects.filter(division=self.division,
-                round_num=self.round_num + 1, round_slot=2*self.round_slot)
-        lower_match_query = TeamMatch.objects.filter(division=self.division,
-                round_num=self.round_num + 1, round_slot=2*self.round_slot + 1)
+        upper_match_query = SparringTeamMatch.objects.filter(
+                division=self.division, round_num=self.round_num + 1,
+                round_slot=2*self.round_slot)
+        lower_match_query = SparringTeamMatch.objects.filter(
+                division=self.division, round_num=self.round_num + 1,
+                round_slot=2*self.round_slot + 1)
         return [upper_match_query.first(), lower_match_query.first()]
 
     def get_next_round_match(self):
         try:
-            return TeamMatch.objects.get(division=self.division,
+            return SparringTeamMatch.objects.get(division=self.division,
                     round_num=self.round_num-1,
                     round_slot = self.round_slot / 2)
-        except TeamMatch.DoesNotExist:
+        except SparringTeamMatch.DoesNotExist:
             return None
 
     @staticmethod
     def get_matches_by_round(tournament_division):
         matches = {}
         num_rounds = 0
-        for match in TeamMatch.objects.filter(division=tournament_division):
+        for match in SparringTeamMatch.objects.filter(
+                division=tournament_division):
             matches[(match.round_num, match.round_slot)] = match
             num_rounds = max(num_rounds, match.round_num)
         return matches, num_rounds

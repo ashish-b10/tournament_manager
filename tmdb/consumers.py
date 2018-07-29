@@ -18,7 +18,7 @@ def create_message(message_type, message_content, dump_message_content=True):
         message_content = json.dumps(message_content)
     return {'text': json.dumps({message_type: message_content})}
 
-@receiver(post_save, sender=models.TeamMatch,
+@receiver(post_save, sender=models.SparringTeamMatch,
         dispatch_uid="update_team_match")
 def update_team_match(sender, instance, **kwargs):
     team_match_json = serializers.serialize('json', [instance],
@@ -28,7 +28,7 @@ def update_team_match(sender, instance, **kwargs):
     Group(group_name).send(create_message('update', team_match_json,
             dump_message_content=False), immediately=True)
 
-@receiver(post_delete, sender=models.TeamMatch,
+@receiver(post_delete, sender=models.SparringTeamMatch,
         dispatch_uid="delete_team_match")
 def delete_team_match(sender, instance, **kwargs):
     team_match_json = serializers.serialize('json', [instance], fields = [])

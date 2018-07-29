@@ -103,7 +103,7 @@ def tournament_dashboard(request, tournament_slug):
     all_matches = []
     matches_by_division = []
     for division in tournament_divisions:
-        team_matches = models.TeamMatch.objects.filter(
+        team_matches = models.SparringTeamMatch.objects.filter(
                 division=division).order_by('number')
         matches_by_division.append((division, team_matches))
         all_matches += team_matches
@@ -166,7 +166,8 @@ def tournament_json(request, tournament_slug):
                     tournament_division__tournament=tournament),
             json_fields['team_registration']))
     msg.extend(model_to_json(
-            models.TeamMatch.objects.filter(division__tournament=tournament),
+            models.SparringTeamMatch.objects.filter(
+                    division__tournament=tournament),
             json_fields['team_match']))
 
     msg_json = json.dumps(msg)
@@ -265,7 +266,8 @@ def tournament_schools(request, tournament_slug):
 def rings(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     matches_by_ring = defaultdict(list)
-    for match in models.TeamMatch.objects.filter(ring_number__isnull=False,
+    for match in models.SparringTeamMatch.objects.filter(
+            ring_number__isnull=False,
             division__tournament=tournament).order_by('-ring_assignment_time'):
         matches_by_ring[str(match.ring_number)].append(match)
     context = {

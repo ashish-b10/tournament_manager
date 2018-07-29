@@ -32,7 +32,7 @@ def bracket_printable(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament=tournament, division__slug=division_slug)
-    matches, num_rounds = models.TeamMatch.get_matches_by_round(
+    matches, num_rounds = models.SparringTeamMatch.get_matches_by_round(
             tournament_division)
     bracket_columns = []
     for round_num in reversed(range(num_rounds + 1)):
@@ -53,7 +53,8 @@ def bracket_printable(request, tournament_slug, division_slug):
 def bracket_printable_pdf(request, tournament_slug, division_slug):
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
-    matches = models.TeamMatch.objects.filter(division=tournament_division)
+    matches = models.SparringTeamMatch.objects.filter(
+            division=tournament_division)
     filename = "%s %s.pdf" %(str(tournament_division.tournament),
             str(tournament_division))
     filename = filename.lower().replace(' ', '_')
@@ -68,7 +69,7 @@ def bracket(request, tournament_slug, division_slug):
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament=tournament, division__slug=division_slug)
     bracket_columns = []
-    matches, num_rounds = models.TeamMatch.get_matches_by_round(
+    matches, num_rounds = models.SparringTeamMatch.get_matches_by_round(
             tournament_division)
     bracket_column_height = str(64 * 2**num_rounds) + "px"
     for round_num in reversed(range(num_rounds + 1)):
@@ -79,7 +80,7 @@ def bracket(request, tournament_slug, division_slug):
             key = (round_num, round_slot)
             cell_type = []
             if key not in matches:
-                match = models.TeamMatch()
+                match = models.SparringTeamMatch()
                 cell_type.append("bracket_cell_without_match")
             else:
                 match = matches[key]
@@ -110,7 +111,7 @@ def bracket(request, tournament_slug, division_slug):
 def get_lowest_bye_seed(tournament_division):
     team_registrations = models.TeamRegistration.objects.filter(
             tournament_division=tournament_division)
-    team_matches = models.TeamMatch.objects.filter(
+    team_matches = models.SparringTeamMatch.objects.filter(
             division=tournament_division).order_by('-round_num')
     if not team_matches:
         return 1
@@ -149,7 +150,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
 
         tournament_division = get_object_or_404(models.TournamentDivision,
                 tournament__slug=tournament_slug, division__slug=division_slug)
-        existing_match = get_object_or_404(models.TeamMatch,
+        existing_match = get_object_or_404(models.SparringTeamMatch,
                 division=tournament_division, round_num=round_number,
                 round_slot=round_slot)
 
