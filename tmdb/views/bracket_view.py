@@ -95,7 +95,7 @@ def bracket(request, tournament_slug, division_slug):
     if (0, 0) in matches:
         matches[(0, 0)].cell_type = "bracket_cell_with_match" \
                 + " bracket_finals_cell"
-    unassigned_teams = models.TeamRegistration.get_teams_without_assigned_slot(
+    unassigned_teams = models.SparringTeamRegistration.get_teams_without_assigned_slot(
             tournament_division)
 
     context = {
@@ -109,7 +109,7 @@ def bracket(request, tournament_slug, division_slug):
     return render(request, 'tmdb/brackets.html', context)
 
 def get_lowest_bye_seed(tournament_division):
-    team_registrations = models.TeamRegistration.objects.filter(
+    team_registrations = models.SparringTeamRegistration.objects.filter(
             tournament_division=tournament_division)
     team_matches = models.SparringTeamMatch.objects.filter(
             division=tournament_division).order_by('-round_num')
@@ -136,7 +136,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
     context = {}
 
     if request.method == 'POST':
-        form = forms.TeamRegistrationBracketSeedingForm(request.POST)
+        form = forms.SparringTeamRegistrationBracketSeedingForm(request.POST)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse("tmdb:bracket", args=(
@@ -161,12 +161,13 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
         else:
             raise ValueError("side was `%s`, must be `upper` or `lower`" %(side,))
         new_seed = 2**(int(round_number) + 2) - existing_team.seed + 1
-        form = forms.TeamRegistrationBracketSeedingForm(initial={'seed': new_seed, 'existing_team': existing_team.id})
+        form = forms.SparringTeamRegistrationBracketSeedingForm(
+                initial={'seed': new_seed, 'existing_team': existing_team.id})
         context['existing_team'] = existing_team
         context['seed'] = new_seed
 
     form.fields['team_registration'].queryset = \
-            models.TeamRegistration.get_teams_without_assigned_slot(
+            models.SparringTeamRegistration.get_teams_without_assigned_slot(
                     tournament_division)
     context['tournament_division'] = tournament_division
     context['tournament'] = tournament_division.tournament
@@ -178,17 +179,17 @@ def remove_team_from_bracket(request, tournament_slug, division_slug):
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     team_registration_pk = request.GET.get('team_registration')
-    team_registration = get_object_or_404(models.TeamRegistration,
+    team_registration = get_object_or_404(models.SparringTeamRegistration,
             pk=team_registration_pk)
     if request.method == 'POST':
-        form = forms.TeamRegistrationSeedingForm(request.POST,
+        form = forms.SparringTeamRegistrationSeedingForm(request.POST,
                 instance=team_registration)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('tmdb:bracket',
                     args=(tournament_slug, division_slug,)))
     else:
-        form = forms.TeamRegistrationSeedingForm(initial={'seed': None})
+        form = forms.SparringTeamRegistrationSeedingForm(initial={'seed': None})
         form.fields['seed'].widget = django_forms.HiddenInput()
     context = {
         'form': form,

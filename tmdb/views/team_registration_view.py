@@ -27,7 +27,7 @@ def team_registration_delete(request, tournament_slug, school_slug,
             tournament=tournament, division=division)
     team = get_object_or_404(models.Team, school=school, division=division,
             number=team_number)
-    team_registration = get_object_or_404(models.TeamRegistration,
+    team_registration = get_object_or_404(models.SparringTeamRegistration,
             tournament_division=tournament_division, team=team)
     context = {
         'school': school,
@@ -37,14 +37,14 @@ def team_registration_delete(request, tournament_slug, school_slug,
     }
     context['team_registration'] = team_registration
     if request.method == 'POST':
-        delete_form = forms.TeamRegistrationDeleteForm(request.POST,
+        delete_form = forms.SparringTeamRegistrationDeleteForm(request.POST,
                 instance=team_registration)
         if delete_form.is_valid():
             team_registration.delete()
             return HttpResponseRedirect(reverse("tmdb:tournament_school",
                     args=(tournament_slug, school_slug,)))
     else:
-        delete_form = forms.TeamRegistrationDeleteForm(
+        delete_form = forms.SparringTeamRegistrationDeleteForm(
                 instance=team_registration)
     context['delete_form'] = delete_form
     return render(request, 'tmdb/team_registration_delete.html', context)
@@ -61,7 +61,7 @@ def team_registration_change(request, tournament_slug, school_slug,
             tournament=tournament, division=division)
     team = get_object_or_404(models.Team, school=school, division=division,
             number=team_number)
-    instance = get_object_or_404(models.TeamRegistration,
+    instance = get_object_or_404(models.SparringTeamRegistration,
             tournament_division=tournament_division, team=team)
     template_name = 'tmdb/team_registration_add_change.html'
     context = {}
@@ -71,13 +71,13 @@ def team_registration_change(request, tournament_slug, school_slug,
     context['instance'] = instance
     used_competitors = []
     if request.method == 'POST':
-        edit_form = forms.TeamRegistrationForm(school_registration,
+        edit_form = forms.SparringTeamRegistrationForm(school_registration,
                 request.POST, instance=instance)
         if edit_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug, school_slug,)))
     else:
-        edit_form = forms.TeamRegistrationForm(school_registration,
+        edit_form = forms.SparringTeamRegistrationForm(school_registration,
                 instance=instance, initial={'tournament': tournament.pk})
     context['edit_form'] = edit_form
     return render(request, template_name, context)
@@ -92,13 +92,13 @@ def team_registration_add(request, tournament_slug, school_slug):
     context['tournament'] = tournament
     template_name = 'tmdb/team_registration_add_change.html'
     if request.method == 'POST':
-        add_form = forms.TeamRegistrationForm(school_registration,
+        add_form = forms.SparringTeamRegistrationForm(school_registration,
                 request.POST)
         if add_form.is_valid():
             add_form.save()
             return HttpResponseRedirect(reverse("tmdb:tournament_school", args=(tournament_slug,school_slug,)))
     else:
-        add_form = forms.TeamRegistrationForm(school_registration,
+        add_form = forms.SparringTeamRegistrationForm(school_registration,
                 initial={'tournament': tournament.pk})
     context['add_form'] = add_form
     return render(request, template_name, context)
@@ -113,8 +113,8 @@ def team_list(request, tournament_slug, division_slug=None):
 
     division_teams = []
     for tournament_division in tournament_divisions:
-        teams = models.TeamRegistration.order_queryset(
-                models.TeamRegistration.objects.filter(
+        teams = models.SparringTeamRegistration.order_queryset(
+                models.SparringTeamRegistration.objects.filter(
                         tournament_division=tournament_division))
         division_teams.append((tournament_division, teams))
 

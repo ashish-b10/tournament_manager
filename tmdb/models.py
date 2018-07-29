@@ -354,7 +354,7 @@ class SchoolRegistration(models.Model):
                         division=division, number=team_num+1)[0]
                 tournament_division = TournamentDivision.objects.get(
                         tournament=self.tournament, division=division)
-                team_reg = TeamRegistration.objects.get_or_create(
+                team_reg = SparringTeamRegistration.objects.get_or_create(
                         tournament_division=tournament_division, team=team)[0]
                 self.save_team_roster(team_reg, roster, competitors)
 
@@ -363,7 +363,7 @@ class SchoolRegistration(models.Model):
             raise IntegrityError(("%s is not imported" %(self)
                     + " - and must be imported before it is dropped"))
 
-        TeamRegistration.objects.filter(
+        SparringTeamRegistration.objects.filter(
                 tournament_division__tournament=self.tournament,
                 team__school=self.school).delete()
         Competitor.objects.filter(registration=self).delete()
@@ -467,7 +467,8 @@ class TournamentDivision(models.Model):
         Assigns all teams in tournament_division to a slot in the
         bracket.
         """
-        teams = TeamRegistration.objects.filter(tournament_division=self)
+        teams = SparringTeamRegistration.objects.filter(
+                tournament_division=self)
         teams = teams.order_by('team__number').order_by('team__school')
         teams = list(teams)
         slot_assigner = SlotAssigner(list(teams), 4,
@@ -484,7 +485,7 @@ class TournamentDivision(models.Model):
 
     def create_matches_from_slots(self):
         SparringTeamMatch.objects.filter(division=self).delete()
-        seeded_teams = TeamRegistration.objects.filter(
+        seeded_teams = SparringTeamRegistration.objects.filter(
                 tournament_division=self, seed__isnull=False)
         seeds = {team.seed:team for team in seeded_teams}
         start_val = self.division.match_number_start_val()
@@ -540,7 +541,7 @@ class Team(models.Model):
     number = models.SmallIntegerField()
     slug = models.SlugField(unique=True)
     registrations = models.ManyToManyField(TournamentDivision,
-            through="TeamRegistration")
+            through="SparringTeamRegistration")
 
     def save(self, *args, **kwargs):
         self.slug = self.slugify()
@@ -556,7 +557,7 @@ class Team(models.Model):
         return "%s %s%d" %(str(self.school), str(self.division), self.number,)
 
 #TODO team.division must equal tournament_division.division
-class TeamRegistration(models.Model):
+class SparringTeamRegistration(models.Model):
     tournament_division = models.ForeignKey(TournamentDivision)
     team = models.ForeignKey(Team)
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -625,7 +626,7 @@ class TeamRegistration(models.Model):
         """
         Returns a list of teams that do not have a slot in the bracket.
 
-        Currently, the condition for this is TeamRegistration.seed is
+        Currently, the condition for this is SparringTeamRegistration.seed is
         empty.
         """
         return cls.objects.filter(
@@ -665,14 +666,14 @@ class SparringTeamMatch(models.Model):
     number = models.PositiveIntegerField()
     round_num = models.SmallIntegerField()
     round_slot = models.IntegerField()
-    blue_team = models.ForeignKey(TeamRegistration, related_name="blue_team",
-            blank=True, null=True)
-    red_team = models.ForeignKey(TeamRegistration, related_name="red_team",
-            blank=True, null=True)
+    blue_team = models.ForeignKey(SparringTeamRegistration,
+            related_name="blue_team", blank=True, null=True)
+    red_team = models.ForeignKey(SparringTeamRegistration,
+            related_name="red_team", blank=True, null=True)
     ring_number = models.PositiveIntegerField(blank=True, null=True)
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
-    winning_team = models.ForeignKey(TeamRegistration, blank=True, null=True,
-            related_name="winning_team")
+    winning_team = models.ForeignKey(SparringTeamRegistration, blank=True,
+            null=True, related_name="winning_team")
     in_holding = models.BooleanField(default=False)
     at_ring = models.BooleanField(default=False)
     competing = models.BooleanField(default=False)

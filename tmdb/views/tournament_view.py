@@ -162,7 +162,7 @@ def tournament_json(request, tournament_slug):
                     registration__tournament=tournament),
             json_fields['competitor']))
     msg.extend(model_to_json(
-            models.TeamRegistration.objects.filter(
+            models.SparringTeamRegistration.objects.filter(
                     tournament_division__tournament=tournament),
             json_fields['team_registration']))
     msg.extend(model_to_json(
@@ -181,8 +181,8 @@ def tournament_school(request, tournament_slug, school_slug):
             tournament=tournament, school=school)
     competitors = models.Competitor.objects.filter(
             registration=school_registration).order_by('name')
-    team_registrations = models.TeamRegistration.order_queryset(
-            models.TeamRegistration.objects.filter(
+    team_registrations = models.SparringTeamRegistration.order_queryset(
+            models.SparringTeamRegistration.objects.filter(
                     tournament_division__tournament=tournament,
                     team__school=school))
     context = {

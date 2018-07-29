@@ -20,7 +20,7 @@ from tmdb.util.bracket_svg import SvgBracket
 def division_seedings(request, tournament_slug, division_slug):
     tournament_division = get_object_or_404(models.TournamentDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
-    team_registrations = models.TeamRegistration.objects.filter(
+    team_registrations = models.SparringTeamRegistration.objects.filter(
             tournament_division=tournament_division).order_by(
             'team__school__name', 'team__number')
     unimported_schools = models.SchoolRegistration.objects.filter(
@@ -38,20 +38,20 @@ def division_seedings(request, tournament_slug, division_slug):
 
 @permission_required('tmdb.change_teamregistration')
 def division_seeding(request, tournament_slug, division_slug, team_slug):
-    team_registration = get_object_or_404(models.TeamRegistration,
+    team_registration = get_object_or_404(models.SparringTeamRegistration,
             tournament_division__tournament__slug=tournament_slug,
             tournament_division__division__slug=division_slug,
             team__slug=team_slug)
     tournament_division = team_registration.tournament_division
     if request.method == 'POST':
-        edit_form = forms.TeamRegistrationSeedingForm(request.POST,
+        edit_form = forms.SparringTeamRegistrationSeedingForm(request.POST,
                 instance=team_registration)
         if edit_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse('tmdb:division_seedings',
                     args=(tournament_slug, division_slug,)))
     else:
-        edit_form = forms.TeamRegistrationSeedingForm(
+        edit_form = forms.SparringTeamRegistrationSeedingForm(
                 instance=team_registration)
     context = {
         'edit_form': edit_form,
@@ -62,20 +62,20 @@ def division_seeding(request, tournament_slug, division_slug, team_slug):
 
 @permission_required('tmdb.change_teamregistration')
 def division_points(request, tournament_slug, division_slug, team_slug):
-    team_registration = get_object_or_404(models.TeamRegistration,
+    team_registration = get_object_or_404(models.SparringTeamRegistration,
             tournament_division__tournament__slug=tournament_slug,
             tournament_division__division__slug=division_slug,
             team__slug=team_slug)
     tournament_division = team_registration.tournament_division
     if request.method == 'POST':
-        edit_form = forms.TeamRegistrationPointsForm(request.POST,
+        edit_form = forms.SparringTeamRegistrationPointsForm(request.POST,
                 instance=team_registration)
         if edit_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse('tmdb:division_seedings',
                     args=(tournament_slug, division_slug,)))
     else:
-        edit_form = forms.TeamRegistrationPointsForm(
+        edit_form = forms.SparringTeamRegistrationPointsForm(
                 instance=team_registration)
     context = {
         'edit_form': edit_form,

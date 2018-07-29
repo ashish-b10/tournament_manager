@@ -41,7 +41,8 @@ def update_teammatch_status(request, tournament_slug, division_slug, match_num):
             match_teams.append(team_match.blue_team.pk)
         if team_match.red_team is not None:
             match_teams.append(team_match.red_team.pk)
-        teams = models.TeamRegistration.objects.filter(pk__in=match_teams)
+        teams = models.SparringTeamRegistration.objects.filter(
+                pk__in=match_teams)
         team_match_form.fields['winning_team'].queryset = teams
     context['team_match_form'] = team_match_form
     return render(request, "tmdb/team_match_status_change.html", context)

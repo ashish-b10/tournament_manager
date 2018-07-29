@@ -28,12 +28,12 @@ class TournamentImportForm(forms.ModelForm):
         model = models.Tournament
         fields = []
 
-class TeamRegistrationDeleteForm(forms.ModelForm):
+class SparringTeamRegistrationDeleteForm(forms.ModelForm):
     class Meta:
-        model = models.TeamRegistration
+        model = models.SparringTeamRegistration
         fields = []
 
-class TeamRegistrationForm(forms.ModelForm):
+class SparringTeamRegistrationForm(forms.ModelForm):
     tournament = forms.ModelChoiceField(
             queryset=models.Tournament.objects.all())
 
@@ -49,7 +49,7 @@ class TeamRegistrationForm(forms.ModelForm):
                 self.fields[key].required = False
 
         used_competitors = set()
-        for i in models.TeamRegistration.objects.filter(
+        for i in models.SparringTeamRegistration.objects.filter(
                 team__school=school_registration.school,
                 tournament_division__tournament=school_registration.tournament):
             used_competitors.update(i.get_competitors_ids())
@@ -80,7 +80,7 @@ class TeamRegistrationForm(forms.ModelForm):
         self.cleaned_data['tournament_division'] = tournament_division
 
     class Meta:
-        model = models.TeamRegistration
+        model = models.SparringTeamRegistration
         exclude = ['seed', 'points']
 
 class SchoolCompetitorForm(forms.ModelForm):
@@ -122,16 +122,16 @@ class ConfigurationSetting(forms.ModelForm):
             'value': ''
         }
 
-class TeamRegistrationPointsForm(forms.ModelForm):
+class SparringTeamRegistrationPointsForm(forms.ModelForm):
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = models.TeamRegistration
+        model = models.SparringTeamRegistration
         fields = ['points']
 
     def clean(self, *args, **kwargs):
-        cleaned_data = super(TeamRegistrationPointsForm, self).clean(
+        cleaned_data = super(SparringTeamRegistrationPointsForm, self).clean(
                 *args, **kwargs)
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
@@ -150,16 +150,16 @@ class TeamRegistrationPointsForm(forms.ModelForm):
         self.instance.tournament_division.assign_slots_to_team_registrations()
         self.instance.tournament_division.create_matches_from_slots()
 
-class TeamRegistrationSeedingForm(forms.ModelForm):
+class SparringTeamRegistrationSeedingForm(forms.ModelForm):
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = models.TeamRegistration
+        model = models.SparringTeamRegistration
         fields = ['seed']
 
     def clean(self, *args, **kwargs):
-        cleaned_data = super(TeamRegistrationSeedingForm, self).clean(
+        cleaned_data = super(SparringTeamRegistrationSeedingForm, self).clean(
                 *args, **kwargs)
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
@@ -177,11 +177,13 @@ class TeamRegistrationSeedingForm(forms.ModelForm):
         super().save(*args, **kwargs)
         self.instance.tournament_division.create_matches_from_slots()
 
-class TeamRegistrationBracketSeedingForm(forms.Form):
+class SparringTeamRegistrationBracketSeedingForm(forms.Form):
     seed = forms.IntegerField()
     team_registration = forms.ModelChoiceField(
-            queryset=models.TeamRegistration.objects.all())
-    existing_team = forms.ModelChoiceField(queryset=models.TeamRegistration.objects.all(), widget=forms.HiddenInput())
+            queryset=models.SparringTeamRegistration.objects.all())
+    existing_team = forms.ModelChoiceField(
+            queryset=models.SparringTeamRegistration.objects.all(),
+            widget=forms.HiddenInput())
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
     readonly_fields = ('seed',)
@@ -192,7 +194,7 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
 
     def clean(self):
         cleaned_data = super(
-                TeamRegistrationBracketSeedingForm, self).clean()
+                SparringTeamRegistrationBracketSeedingForm, self).clean()
         self.validate_schools()
         self.validate_weight_classes()
         self.validate_confirm_delete_matches()
