@@ -44,7 +44,8 @@ class Command(BaseCommand):
                     self.stderr.write("Unable to open %s: %s" %(creds_file,e))
                 sys.exit(1)
             tmdb_config.objects.update_or_create(
-                    key=tmdb_config.REGISTRATION_CREDENTIALS, value=creds)
+                    key=tmdb_config.REGISTRATION_CREDENTIALS,
+                    defaults={'value': creds})
             if options['verbosity'] > 0:
                 self.stdout.write("Successfully imported credentials from "
                         + creds_file)
