@@ -122,8 +122,29 @@ class WeightField(models.DecimalField):
         kwargs['decimal_places'] = 1
         super(WeightField, self).__init__(*args, **kwargs)
 
+class Season(models.Model):
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def validate_start_end_date(self):
+        if self.end_date - self.start_date > 0:
+            return
+        raise IntegrityError("end_date %s is earlier than start_date %s" %(
+                str(end_date), str(start_date)))
+
+    def clean(self, *args, **kawrgs):
+        self.validate_start_end_date()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(Season, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return "%d-%d Season" %(self.start_date.year, self.end_date.year)
+
 class Tournament(models.Model):
     slug = models.SlugField(unique=True)
+    season = models.ForeignKey(Season)
     location = models.CharField(max_length=127)
     date = models.DateField()
     registration_doc_url = models.URLField(unique=True)
