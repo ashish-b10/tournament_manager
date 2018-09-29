@@ -23,7 +23,7 @@ def division_seedings(request, tournament_slug, division_slug):
     team_registrations = models.SparringTeamRegistration.objects.filter(
             tournament_division=tournament_division).order_by(
             'team__school__name', 'team__number')
-    unimported_schools = models.SchoolRegistration.objects.filter(
+    unimported_schools = models.SchoolTournamentRegistration.objects.filter(
             tournament=tournament_division.tournament, imported=False)
     generate_bracket_form = forms.TournamentSparringDivisionBracketGenerateForm(
             instance=tournament_division)

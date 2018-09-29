@@ -156,7 +156,8 @@ def tournament_json(request, tournament_slug):
                     tournament=tournament),
             json_fields['tournament_division']))
     msg.extend(model_to_json(
-            models.SchoolRegistration.objects.filter(tournament=tournament),
+            models.SchoolTournamentRegistration.objects.filter(
+                    tournament=tournament),
             json_fields['school_registration']))
     msg.extend(model_to_json(
             models.Competitor.objects.filter(
@@ -178,7 +179,7 @@ def tournament_json(request, tournament_slug):
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.SchoolRegistration,
+    school_registration = get_object_or_404(models.SchoolTournamentRegistration,
             tournament=tournament, school=school)
     competitors = models.Competitor.objects.filter(
             registration=school_registration).order_by('name')
@@ -208,10 +209,10 @@ def tournament_school_import(request, tournament_slug, school_slug=None):
         return HttpResponse("Invalid operation: %s on %s" %(request.method,
                 request.get_full_path()), status=400)
     if school_slug is None:
-        school_regs = models.SchoolRegistration.objects.filter(
+        school_regs = models.SchoolTournamentRegistration.objects.filter(
                 tournament__slug=tournament_slug)
     else:
-        school_reg = get_object_or_404(models.SchoolRegistration,
+        school_reg = get_object_or_404(models.SchoolTournamentRegistration,
                 tournament__slug = tournament_slug, school__slug=school_slug)
         school_regs = [school_reg]
     reimport = False
@@ -254,7 +255,7 @@ def attach_school_registration_import_errors(school_registrations):
 @login_required
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    school_registrations = models.SchoolRegistration.objects.filter(
+    school_registrations = models.SchoolTournamentRegistration.objects.filter(
         tournament=tournament).order_by('school__name')
     attach_school_registration_import_errors(school_registrations)
     context = {

@@ -54,7 +54,7 @@ def team_registration_change(request, tournament_slug, school_slug,
         division_slug, team_number):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.SchoolRegistration,
+    school_registration = get_object_or_404(models.SchoolTournamentRegistration,
             tournament=tournament, school=school)
     division = get_object_or_404(models.SparringDivision, slug=division_slug)
     tournament_division = get_object_or_404(models.TournamentSparringDivision,
@@ -85,7 +85,7 @@ def team_registration_change(request, tournament_slug, school_slug,
 @permission_required("tmdb.add_teamregistration")
 def team_registration_add(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    school_registration = models.SchoolRegistration.objects.get(
+    school_registration = models.SchoolTournamentRegistration.objects.get(
             school__slug=school_slug, tournament=tournament)
     context = {}
     context['school_registration'] = school_registration

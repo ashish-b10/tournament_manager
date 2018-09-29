@@ -188,7 +188,7 @@ class Tournament(models.Model):
             school_object = School(name=school.school_name)
             school_object.clean()
             school_object.save()
-        registration = SchoolRegistration(tournament=self,
+        registration = SchoolTournamentRegistration(tournament=self,
                 school=school_object,
                 registration_doc_url=school.registration_doc_url)
         registration.clean()
@@ -213,7 +213,7 @@ class Tournament(models.Model):
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
     tournaments = models.ManyToManyField('Tournament',
-            through='SchoolRegistration')
+            through='SchoolTournamentRegistration')
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
@@ -250,7 +250,7 @@ class School(models.Model):
     def __str__(self):
         return self.name
 
-class SchoolRegistration(models.Model):
+class SchoolTournamentRegistration(models.Model):
     tournament = models.ForeignKey(Tournament)
     school = models.ForeignKey(School)
     registration_doc_url = models.URLField(unique=True)
@@ -388,7 +388,7 @@ class SchoolRegistration(models.Model):
         self.save()
 
     def validate_school_extracted_data(self, extracted_data):
-        SchoolRegistrationError.objects.filter(
+        SchoolTournamentRegistrationError.objects.filter(
                 school_registration=self).delete()
         errors = SchoolRegistrationValidator(self, extracted_data).validate()
         if not errors:
@@ -398,8 +398,8 @@ class SchoolRegistration(models.Model):
         raise SchoolValidationError("There are errors in %s's registration spreadsheet - correct the errors in their spreadsheet and reimport." %(self.school,))
 
 
-class SchoolRegistrationError(models.Model):
-    school_registration = models.ForeignKey(SchoolRegistration)
+class SchoolTournamentRegistrationError(models.Model):
+    school_registration = models.ForeignKey(SchoolTournamentRegistration)
     error_text = models.TextField()
 
 class SparringDivision(models.Model):
@@ -525,7 +525,7 @@ class Competitor(models.Model):
     sex = SexField()
     belt_rank = BeltRankField()
     weight = WeightField(null=True, blank=True)
-    registration = models.ForeignKey(SchoolRegistration)
+    registration = models.ForeignKey(SchoolTournamentRegistration)
 
     def belt_rank_label(self):
         return BeltRankField.label(self.belt_rank)

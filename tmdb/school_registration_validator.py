@@ -25,7 +25,7 @@ class SchoolRegistrationValidator:
         for name,count in duplicate_names:
             error_text = "Competitor named `%s` was listed %d times on the 'Weigh-Ins' sheet. Remove the duplicate entries or change the names." %(
                     name, count,)
-            errors.append(models.SchoolRegistrationError(
+            errors.append(models.SchoolTournamentRegistrationError(
                     school_registration=self.school_registration,
                     error_text=error_text))
         return errors
@@ -41,7 +41,7 @@ class SchoolRegistrationValidator:
             except KeyError:
                 error_text = "Invalid belt rank provdided for %s: `%s`. Edit column E of the Weigh-Ins sheet with a valid belt rank (%s)" %(
                         competitor['name'], competitor['rank'], belt_ranks)
-                errors.append(models.SchoolRegistrationError(
+                errors.append(models.SchoolTournamentRegistrationError(
                         school_registration=self.school_registration,
                         error_text=error_text))
 
@@ -50,7 +50,7 @@ class SchoolRegistrationValidator:
             except KeyError:
                 error_text = "Invalid sex provided for %s: `%s`. Edit column G of the Weigh-Ins sheet with a valid sex (%s)" %(
                         competitor['name'], competitor['sex'], sex_values)
-                errors.append(models.SchoolRegistrationError(
+                errors.append(models.SchoolTournamentRegistrationError(
                         school_registration=self.school_registration,
                         error_text=error_text))
         return errors
@@ -67,7 +67,7 @@ class SchoolRegistrationValidator:
                         roster_name=roster_name,
                         team_name=team_name,
                         division_name=division_name)
-                errors.append(models.SchoolRegistrationError(
+                errors.append(models.SchoolTournamentRegistrationError(
                         school_registration=self.school_registration,
                         error_text = error_text))
         return errors
