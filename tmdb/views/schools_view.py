@@ -14,13 +14,16 @@ def school(request, school_slug):
     school = get_object_or_404(models.School, slug=school_slug)
     registrations = models.SchoolSeasonRegistration.objects.filter(
             school=school).order_by('season__start_date')
-    import pdb ; pdb.set_trace()
     context = {
             'school': school,
             'school_season_registrations': registrations,
     }
     return render(request, 'tmdb/school.html', context)
 
+@permission_required("tmdb.change_schoolseasonregistration")
+def school_season_change(request, school_slug, season_slug):
+    raise NotImplementedError()
+
 @permission_required("tmdb.change_school")
 def school_change(request, school_slug):
-    pass
+    raise NotImplementedError()

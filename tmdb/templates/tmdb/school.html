@@ -18,6 +18,9 @@
     <tr>
       <td>{{registration.season.start_date.year}} - {{registration.season.end_date.year}}</td>
       <td>{{registration.division}}</td>
+      {% if perms.tmdb.change_schoolseasonregistration %}
+      <td><a class="btn btn-primary" href="{%url 'tmdb:school_season_change' school.slug registration.season.slug %}">Edit</a></td>
+      {% endif %}
     <tr>
     {% endfor %}
   </table>
