@@ -125,6 +125,8 @@ class WeightField(models.DecimalField):
 class Season(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
+    schools = models.ManyToManyField('School',
+            through='SchoolSeasonRegistration')
 
     def validate_start_end_date(self):
         if self.end_date - self.start_date > 0:
@@ -233,9 +235,9 @@ class Tournament(models.Model):
 
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
-    tournaments = models.ManyToManyField('Tournament',
-            through='SchoolTournamentRegistration')
     slug = models.SlugField(unique=True)
+    seasons = models.ManyToManyField('Season',
+            through='SchoolSeasonRegistration')
 
     def save(self, *args, **kwargs):
         self.slug = self.slugify()
@@ -271,14 +273,22 @@ class School(models.Model):
     def __str__(self):
         return self.name
 
+class SchoolSeasonRegistration(models.Model):
+    school = models.ForeignKey(School)
+    season = models.ForeignKey(Season)
+    division = models.PositiveSmallIntegerField()
+
+    class Meta:
+        unique_together = (('season', 'school'),)
+
 class SchoolTournamentRegistration(models.Model):
     tournament = models.ForeignKey(Tournament)
-    school = models.ForeignKey(School)
+    school_season_registration = models.ForeignKey(SchoolSeasonRegistration)
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = (('tournament', 'school'),)
+        unique_together = (('tournament', 'school_season_registration'),)
 
     def __str__(self):
         return '%s/%s' %(self.tournament, self.school,)
