@@ -125,6 +125,7 @@ class WeightField(models.DecimalField):
 class Season(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
+    slug = models.SlugField(unique=True, blank=True, null=True)
     schools = models.ManyToManyField('School',
             through='SchoolSeasonRegistration')
 
@@ -139,7 +140,11 @@ class Season(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()
+        self.slug = self.slugify()
         return super(Season, self).save(*args, **kwargs)
+
+    def slugify(self):
+        return "%d-%d" %(self.start_date.year, self.end_date.year)
 
     def __str__(self):
         return "%d-%d Season" %(self.start_date.year, self.end_date.year)
