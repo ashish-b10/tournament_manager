@@ -300,7 +300,8 @@ class SchoolTournamentRegistration(models.Model):
         unique_together = (('tournament', 'school_season_registration'),)
 
     def __str__(self):
-        return '%s/%s' %(self.tournament, self.school,)
+        return '%s at %s' %(self.school_season_registration.school,
+                self.tournament)
 
     def download_school_registration(self):
         from ectc_registration import GoogleDocsDownloader

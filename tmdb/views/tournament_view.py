@@ -241,7 +241,7 @@ def tournament_school_import(request, tournament_slug, school_slug=None):
 
 def attach_school_registration_import_errors(school_registrations):
     school_registrations_by_id = {sr.pk:sr for sr in school_registrations}
-    import_errors = models.SchoolRegistrationError.objects.filter(
+    import_errors = models.SchoolTournamentRegistrationError.objects.filter(
         school_registration__in=[sr.pk for sr in school_registrations]
     )
     for import_error in import_errors:
@@ -256,7 +256,8 @@ def attach_school_registration_import_errors(school_registrations):
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school_registrations = models.SchoolTournamentRegistration.objects.filter(
-        tournament=tournament).order_by('school__name')
+            tournament=tournament).order_by(
+                    'school_season_registration__school__name')
     attach_school_registration_import_errors(school_registrations)
     context = {
         'tournament': tournament,
