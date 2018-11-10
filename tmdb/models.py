@@ -281,6 +281,10 @@ class SchoolSeasonRegistration(models.Model):
     class Meta:
         unique_together = (('season', 'school'),)
 
+    def __str__(self):
+        return "%s %s (Div. #%d)" %(str(self.school), str(self.season),
+                self.division)
+
 class SchoolTournamentRegistration(models.Model):
     tournament = models.ForeignKey(Tournament)
     school_season_registration = models.ForeignKey(SchoolSeasonRegistration)

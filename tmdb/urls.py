@@ -18,7 +18,17 @@ tournament_division_match_base = (tournament_division_base
             + r'/match/*'
             + r'/(?P<match_num>[0-9]+)/*')
 
+school_base = (r'^school/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*')
+
 urlpatterns = [
+    # school edit
+    url(r'^schools/*$', views.schools_view.schools, name='schools'),
+    url(school_base, views.schools_view.school, name='school'),
+    url(school_base
+            + r'/edit/*$',
+            views.schools_view.school_change, name='school_change'),
+
     # tournament create/edit/delete
     url(r'^tournaments/*$', views.tournament_view.tournaments, name='tournaments'),
     url(r'^tournaments/*'
@@ -40,9 +50,8 @@ urlpatterns = [
             views.tournament_view.tournament_import, name='tournament_import'),
 
     # tournament dashboard
-    url(tournament_base
-            + r'/dashboard/*$',
-            views.tournament_view.tournament_dashboard, name='tournament_dashboard'),
+    url(tournament_base, views.tournament_view.tournament_dashboard,
+            name='tournament_dashboard'),
     url(tournament_base
             + r'/rings/*$',
             views.tournament_view.rings, name='rings'),

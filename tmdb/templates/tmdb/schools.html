@@ -1,0 +1,33 @@
+{% extends "tmdb/base.html" %}
+
+{% load bootstrap %}
+
+{% block main-content %}
+
+  <div class="row page-header">
+    <h1 class="col-sm-5 col-md-5">ECTC Schools</h1>
+  </div>
+  {% if schools %}
+  <table class="table table-striped">
+    <thead>
+      <th>Name</th>
+      {% if perms.tmdb.change_school %}
+      <th>Edit</th>
+      {% endif %}
+    </thead>
+    <tbody>
+    {% for school in schools %}
+      <tr>
+        <td><a href="{% url 'tmdb:school' school.slug %}">{{school.name}}</a></td>
+        {% if perms.tmdb.change_school %}
+        <td><a class="btn btn-default" href="{% url 'tmdb:school_change' school.slug %}">Edit</a></td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <tr><td>No schools were found!</td></tr>
+  {% endif %}
+
+{% endblock %}
