@@ -11,7 +11,7 @@ from django.contrib import messages
 from tmdb import forms
 from tmdb import models
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import datetime
 
 from tmdb.util.match_sheet import create_match_sheets
@@ -19,8 +19,16 @@ from tmdb.util.bracket_svg import SvgBracket
 
 def tournaments(request, tournament_slug=None):
     today = datetime.date.today()
+    seasons = models.Season.objects.order_by('-start_date')
+    tournaments = models.Tournament.objects.order_by('-date')
+    seasons = OrderedDict()
+    for tournament in tournaments:
+        try:
+            seasons[tournament.season].append(tournament)
+        except KeyError:
+            seasons[tournament.season] = [tournament]
     context = {
-        'tournaments': models.Tournament.objects.order_by('-date')
+        'seasons': seasons,
     }
     return render(request, 'tmdb/tournaments.html', context)
 
