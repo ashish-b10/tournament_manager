@@ -60,7 +60,6 @@
                       <div class="modal-footer">
                         <form action="{% url 'tmdb:tournament_delete' tournament.slug %}" method="post">
                             {% csrf_token %}
-                            {{ delete_form }}
                             <button type="submit" class="btn btn-danger">Delete Tournament</button>
                         </form>
                       </div>
