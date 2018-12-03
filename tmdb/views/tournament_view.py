@@ -187,21 +187,23 @@ def tournament_json(request, tournament_slug):
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.SchoolTournamentRegistration,
-            tournament=tournament, school=school)
+    school_tournament_registration = get_object_or_404(
+            models.SchoolTournamentRegistration, tournament=tournament,
+            school_season_registration__school=school,
+            school_season_registration__season=tournament.season)
     competitors = models.Competitor.objects.filter(
-            registration=school_registration).order_by('name')
+            registration=school_tournament_registration).order_by('name')
     team_registrations = models.SparringTeamRegistration.order_queryset(
             models.SparringTeamRegistration.objects.filter(
                     tournament_division__tournament=tournament,
                     team__school=school))
     context = {
         'tournament': tournament,
-        'school_registration': school_registration,
+        'school_tournament_registration': school_tournament_registration,
         'competitors': competitors,
         'team_registrations': team_registrations,
     }
-    return render(request, 'tmdb/tournament_school_competitors.html', context)
+    return render(request, 'tmdb/tournament_school.html', context)
 
 @permission_required([
         "tmdb.add_competitor",

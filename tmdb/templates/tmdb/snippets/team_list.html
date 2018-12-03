@@ -1,5 +1,5 @@
-{% if school_registration %}
-<a class="btn btn-primary" href="{% url 'tmdb:team_registration_add' tournament.slug school_registration.school.slug %}">Add team</a>
+{% if school_tournament_registration %}
+<a class="btn btn-primary" href="{% url 'tmdb:team_registration_add' tournament.slug school_tournament_registration.school_season_registration.school.slug %}">Add team</a>
 {% endif %}
 <table class="table table-striped">
   <thead>
