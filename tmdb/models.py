@@ -214,15 +214,10 @@ class Tournament(models.Model):
         sex_labels = SexField.SEX_LABELS
         skill_labels = SparringDivisionLevelField.DIVISION_LEVEL_LABELS
         for sex, skill_level in product(sex_labels, skill_labels):
-            division = SparringDivision.objects.filter(sex=sex,
-                    skill_level=skill_level).first()
-            if division is None:
-                division = SparringDivision(sex=sex, skill_level=skill_level)
-                division.clean()
-                division.save()
-            td = TournamentSparringDivision(tournament=self, division=division)
-            td.clean()
-            td.save()
+            division = SparringDivision.objects.get_or_create(
+                    sex=sex, skill_level=skill_level)[0]
+            TournamentSparringDivision.objects.get_or_create(
+                    tournament=self, division=division)[0]
 
     def __str__(self):
         return "%s Tournament (%s)" %(
@@ -290,24 +285,7 @@ class School(models.Model):
 
     def save(self, *args, **kwargs):
         self.slug = self.slugify()
-        new_school = not self.id
-
         super(School, self).save(*args, **kwargs)
-
-        if new_school:
-            self.create_teams()
-
-    def create_teams(self):
-        sex_labels = SexField.SEX_LABELS
-        skill_labels = SparringDivisionLevelField.DIVISION_LEVEL_LABELS
-        for sex, skill_level in product(sex_labels, skill_labels):
-            division = SparringDivision.objects.filter(sex=sex,
-                    skill_level=skill_level).first()
-            if division is None:
-                division = SparringDivision(sex=sex, skill_level=skill_level)
-                division.clean()
-                division.save()
-            self.create_division_teams(division)
 
     def create_division_teams(self, division):
         for team_num in range(1,11):
@@ -359,7 +337,8 @@ class SchoolTournamentRegistration(models.Model):
         downloader = GoogleDocsDownloader(creds_json=creds)
         url = self.registration_doc_url
         registration_extractor = SchoolRegistrationExtractor(
-                school_name=self.school.name, registration_doc_url=url)
+                school_name=self.school_season_registration.school.name,
+                registration_doc_url=url)
         registration_extractor.extract(downloader)
         return registration_extractor
 
@@ -438,7 +417,8 @@ class SchoolTournamentRegistration(models.Model):
                 if not roster:
                     continue
                 roster = [r.strip() for r in roster]
-                team = SparringTeam.objects.get_or_create(school=self.school,
+                team = SparringTeam.objects.get_or_create(
+                        school=self.school_season_registration.school,
                         division=division, number=team_num+1)[0]
                 tournament_division = TournamentSparringDivision.objects.get(
                         tournament=self.tournament, division=division)
@@ -453,7 +433,7 @@ class SchoolTournamentRegistration(models.Model):
 
         SparringTeamRegistration.objects.filter(
                 tournament_division__tournament=self.tournament,
-                team__school=self.school).delete()
+                team__school=self.school_season_registration.school).delete()
         Competitor.objects.filter(registration=self).delete()
         self.imported = False
         self.save()
@@ -480,7 +460,9 @@ class SchoolTournamentRegistration(models.Model):
             return
         for error in errors:
             error.save()
-        raise SchoolValidationError("There are errors in %s's registration spreadsheet - correct the errors in their spreadsheet and reimport." %(self.school,))
+        raise SchoolValidationError(("There are errors in %s's registration "
+                + "spreadsheet - correct the errors in their spreadhsheet "
+                + "and reimport.") %(self.school_season_registration.school,))
 
 
 class SchoolTournamentRegistrationError(models.Model):
@@ -499,6 +481,7 @@ class SparringDivision(models.Model):
 
     def save(self, *args, **kwargs):
         self.slug = self.slugify()
+        self.full_clean()
         super(SparringDivision, self).save(*args, **kwargs)
 
     def slugify(self):
