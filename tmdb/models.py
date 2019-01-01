@@ -179,8 +179,27 @@ class Tournament(models.Model):
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
 
+    def validate_season(self):
+        if self.season.start_date < self.date < self.season.end_date:
+            return
+        return ValidationError(
+                "Tournament date [%s] must be between season dates [%s, %s]" %(
+                        self.date,
+                        self.season.start_date,
+                        self.season.end_date,))
+
+    def clean(self, *args, **kwargs):
+        errors = []
+
+        error = self.validate_season()
+        if error: errors.append(error)
+
+        if errors:
+            raise ValidationError(errors)
+
     def save(self, *args, **kwargs):
         self.slug = self.slugify()
+        self.full_clean()
         new_tournament = not self.id
 
         super(Tournament, self).save(*args, **kwargs)
