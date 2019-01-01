@@ -275,16 +275,3 @@ def tournament_schools(request, tournament_slug):
         'school_registrations': school_registrations,
     }
     return render(request, 'tmdb/tournament_schools.html', context)
-
-def rings(request, tournament_slug):
-    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    matches_by_ring = defaultdict(list)
-    for match in models.SparringTeamMatch.objects.filter(
-            ring_number__isnull=False,
-            division__tournament=tournament).order_by('-ring_assignment_time'):
-        matches_by_ring[str(match.ring_number)].append(match)
-    context = {
-        'matches_by_ring' : sorted(matches_by_ring.items()),
-        'tournament': tournament
-    }
-    return render(request, 'tmdb/rings.html', context)

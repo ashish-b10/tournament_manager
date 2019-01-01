@@ -75,9 +75,6 @@ urlpatterns = [
     # tournament dashboard
     url(tournament_base + '$', views.tournament_view.tournament_dashboard,
             name='tournament_dashboard'),
-    url(tournament_base
-            + r'/rings/*$',
-            views.tournament_view.rings, name='rings'),
 
     # tournament schools
     url(tournament_base
