@@ -125,7 +125,7 @@ class WeightField(models.DecimalField):
 class Season(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
-    slug = models.SlugField(unique=True, blank=True, null=True)
+    slug = models.SlugField(unique=True)
     schools = models.ManyToManyField('School',
             through='SchoolSeasonRegistration')
 
@@ -144,7 +144,7 @@ class Season(models.Model):
             return ValidationError("A season already exists starting in %d" %(
                     self.start_date.year))
 
-    def clean(self, *args, **kawrgs):
+    def clean(self, *args, **kwargs):
         errors = []
 
         error = self.validate_start_end_date()
@@ -158,8 +158,8 @@ class Season(models.Model):
     def save(self, *args, **kwargs):
         if self.end_date is None:
             self.end_date = self.start_date.replace(year=self.start_date.year+1)
-        self.full_clean()
         self.slug = self.slugify()
+        self.full_clean()
         return super(Season, self).save(*args, **kwargs)
 
     def slugify(self):
