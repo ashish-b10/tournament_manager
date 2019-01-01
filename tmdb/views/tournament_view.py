@@ -18,17 +18,12 @@ from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
 def tournaments(request, tournament_slug=None):
-    today = datetime.date.today()
     seasons = models.Season.objects.order_by('-start_date')
-    tournaments = models.Tournament.objects.order_by('-date')
-    seasons = OrderedDict()
-    for tournament in tournaments:
-        try:
-            seasons[tournament.season].append(tournament)
-        except KeyError:
-            seasons[tournament.season] = [tournament]
+    tournaments_by_season = {}
+    for season in seasons:
+        tournaments_by_season[season] = season.tournaments()
     context = {
-        'seasons': seasons,
+        'seasons': tournaments_by_season,
     }
     return render(request, 'tmdb/tournaments.html', context)
 
@@ -46,9 +41,11 @@ def tournament_add(request):
                     args=(add_form.instance.slug,)))
     else:
         today = datetime.date.today()
+        season = get_object_or_404(models.Season, slug=request.GET['season'])
         add_form = forms.TournamentEditForm(initial={
                 'date': today,
                 'import_field': True,
+                'season': season,
         })
     context['add_form'] = add_form
     return render(request, template_name, context)
@@ -92,7 +89,7 @@ def tournament_delete(request, tournament_slug):
 
 @permission_required([
         "tmdb.add_school",
-        "tmdb.add_schoolregistration",
+        "tmdb.add_schooltournamentregistration",
 ])
 def tournament_import(request, tournament_slug):
     if request.method != "POST":
