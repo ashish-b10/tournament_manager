@@ -105,19 +105,9 @@ def tournament_dashboard(request, tournament_slug):
             tournament=tournament).order_by(
             'division__sex', 'division__skill_level')
 
-    all_matches = []
-    matches_by_division = []
-    for division in tournament_divisions:
-        team_matches = models.SparringTeamMatch.objects.filter(
-                division=division).order_by('number')
-        matches_by_division.append((division, team_matches))
-        all_matches += team_matches
-
     context = {
         'tournament': tournament,
         'tournament_divisions': tournament_divisions,
-        'all_matches': all_matches,
-        'matches_by_division': matches_by_division,
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
 
