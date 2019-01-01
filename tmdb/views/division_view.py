@@ -36,7 +36,7 @@ def division_seedings(request, tournament_slug, division_slug):
     }
     return render(request, 'tmdb/tournament_division_seedings.html', context)
 
-@permission_required('tmdb.change_teamregistration')
+@permission_required('tmdb.change_sparringteamregistration')
 def division_seeding(request, tournament_slug, division_slug, team_slug):
     team_registration = get_object_or_404(models.SparringTeamRegistration,
             tournament_division__tournament__slug=tournament_slug,

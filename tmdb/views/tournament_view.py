@@ -249,7 +249,7 @@ def attach_school_registration_import_errors(school_registrations):
         except AttributeError:
             school_registration.import_errors = [import_error]
 
-@login_required
+@permission_required("tmdb.add_schooltournamentregistration")
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school_registrations = models.SchoolTournamentRegistration.objects.filter(
