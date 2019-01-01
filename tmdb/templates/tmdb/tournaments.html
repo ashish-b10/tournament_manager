@@ -16,7 +16,7 @@
   {% for season in seasons %}
     <h2>{{season.start_date.year}} - {{season.end_date.year}} Season</h2>
     <div class="">
-      <a class="btn btn-primary" href="{%url 'tmdb:tournament_add'%}" >Create New Tournament</a>
+      <a class="btn btn-primary" href="{%url 'tmdb:tournament_add'%}?season={{season.slug}}" >Create New Tournament</a>
       <a class="btn btn-warning" href="{%url 'tmdb:season_edit' season.slug %}" >Edit Season</a>
       <a class="btn btn-danger" href="{%url 'tmdb:season_delete' season.slug%}" >Delete Season</a>
     </div>
@@ -27,7 +27,7 @@
       <thead>
         <th>Tournament Location</th>
         <th>Date</th>
-        {% if perms.tmdb.edit_tournament %}
+        {% if perms.tmdb.change_tournament %}
         <th>Details</th>
         {% endif %}
         {% if user.is_authenticated %}
@@ -43,7 +43,7 @@
         <tr>
           <td><a href="{% url 'tmdb:tournament_dashboard' tournament.slug %}">{{tournament.location}}</a></td>
           <td>{{tournament.date}} </td>
-          {% if perms.tmdb.edit_tournament %}
+          {% if perms.tmdb.change_tournament %}
           <td><a class="btn btn-default" href="{% url 'tmdb:tournament_change' tournament.slug %}">Edit</a></td>
           {% endif %}
           {% if user.is_authenticated %}
