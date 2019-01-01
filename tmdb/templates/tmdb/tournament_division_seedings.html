@@ -6,7 +6,7 @@
 <div class="alert alert-danger">Teams for the following schools have not been imported. Do you want to <a href="{% url 'tmdb:tournament_schools' tournament.slug %}">import them</a> before proceeding?
 <ul>
 {% for unimported_school in unimported_schools %}
-  <li>{{unimported_school.school.name}}</li>
+  <li>{{unimported_school.school_season_registration.school.name}}</li>
 {% endfor %}
 </ul>
 </div>
