@@ -18,6 +18,9 @@ tournament_division_match_base = (tournament_division_base
             + r'/match/*'
             + r'/(?P<match_num>[0-9]+)/*')
 
+season_base = (r'^season/*'
+            + r'/(?P<season_slug>[a-z0-9_-]+)/*')
+
 school_base = (r'^school/*'
             + r'/(?P<school_slug>[a-z0-9_-]+)/*')
 school_season_base = (school_base
@@ -25,6 +28,17 @@ school_season_base = (school_base
             + r'/(?P<season_slug>[a-z0-9_-]+)/*')
 
 urlpatterns = [
+    # season edit
+    url(r'^seasons/*'
+            + r'/add/*$',
+            views.season_view.season_add, name='season_add'),
+    url(season_base
+            + r'/edit/*$',
+            views.season_view.season_edit, name='season_edit'),
+    url(season_base
+            + r'/delete/*$',
+            views.season_view.season_delete, name='season_delete'),
+
     # school edit
     url(r'^schools/*$', views.schools_view.schools, name='schools'),
     url(school_base + '$', views.schools_view.school, name='school'),
@@ -74,10 +88,12 @@ urlpatterns = [
             views.tournament_view.tournament_school, name='tournament_school'),
     url(tournament_school_base
             + r'/import_competitors/*$',
-            views.tournament_view.tournament_school_import, name='tournament_school_import'),
+            views.tournament_view.tournament_school_import,
+            name='tournament_school_import'),
     url(tournament_base
             + r'/import_competitors/*$',
-            views.tournament_view.tournament_school_import, name='tournament_school_import'),
+            views.tournament_view.tournament_school_import,
+            name='tournament_school_import'),
 
     # list of teams
     url(tournament_base

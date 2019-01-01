@@ -1,0 +1,12 @@
+{% extends "tmdb/base.html" %}
+
+{% block main-content %}
+<h1>Delete Season</h1>
+<p>Are you sure you want to delete the {{season.start_date.year}}-{{season.end_date.year}} Season?</p>
+<form action="{% url 'tmdb:season_delete' delete_form.instance.slug %}" method="post">
+    {% csrf_token %}
+    {{ delete_form.as_p }}
+    <input type="submit" value="Delete Season"/>
+</form>
+{% endblock %}
+

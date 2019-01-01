@@ -1,0 +1,30 @@
+{% extends "tmdb/base.html" %}
+
+{% load bootstrap %}
+
+{% block main-content %}
+
+{% if add_form %}
+<h1>Create Season</h1>
+<form action="{% url 'tmdb:season_add' %}" method="post">
+    {% csrf_token %}
+    {{add_form | bootstrap}}
+    <button type="submit" class="btn btn-default">Create Season</button>
+</form>
+{% endif %}
+
+{% if change_form %}
+<h1>Edit Season</h1>
+<form action="{% url 'tmdb:season_edit' change_form.instance.slug %}" method="post">
+    {% csrf_token %}
+    {{ change_form | bootstrap}}
+    <button type="submit" class="btn btn-default">Edit Season</button>
+</form>
+{% endif %}
+
+{% if delete_form %}
+<h1>Delete</h1>
+Click <a href="{% url 'tmdb:season_delete' delete_form.instance.slug %}">here</a> to delete this season.
+{% endif %}
+{% endblock %}
+

@@ -130,15 +130,34 @@ class Season(models.Model):
             through='SchoolSeasonRegistration')
 
     def validate_start_end_date(self):
-        if self.end_date - self.start_date > 0:
+        if self.end_date > self.start_date:
             return
-        raise IntegrityError("end_date %s is earlier than start_date %s" %(
-                str(end_date), str(start_date)))
+        return ValidationError(
+                "End date [%s] cannot be before start date [%s]" %(
+                        str(self.end_date), str(self.start_date)))
+
+    def validate_unique_start_year(self):
+        existing = Season.objects.filter(
+                start_date__year=self.start_date.year).exclude(
+                id=self.id).first()
+        if existing:
+            return ValidationError("A season already exists starting in %d" %(
+                    self.start_date.year))
 
     def clean(self, *args, **kawrgs):
-        self.validate_start_end_date()
+        errors = []
+
+        error = self.validate_start_end_date()
+        if error: errors.append(error)
+        error = self.validate_unique_start_year()
+        if error: errors.append(error)
+
+        if errors:
+            raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
+        if self.end_date is None:
+            self.end_date = self.start_date.replace(year=self.start_date.year+1)
         self.full_clean()
         self.slug = self.slugify()
         return super(Season, self).save(*args, **kwargs)
@@ -148,6 +167,9 @@ class Season(models.Model):
 
     def __str__(self):
         return "%d-%d Season" %(self.start_date.year, self.end_date.year)
+
+    def tournaments(self):
+        return Tournament.objects.filter(season=self)
 
 class Tournament(models.Model):
     slug = models.SlugField(unique=True)

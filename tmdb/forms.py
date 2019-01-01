@@ -6,6 +6,25 @@ from django.contrib.auth import models as auth_models
 
 from collections import defaultdict
 
+class SeasonAddChangeForm(forms.ModelForm):
+    class Meta:
+        model = models.Season
+        exclude = ['slug', 'schools',]
+
+    def __init__(self, *args, **kwargs):
+        super(SeasonAddChangeForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        start_date=self.cleaned_data['start_date']
+        if 'end_date' not in self.cleaned_data or not self.cleaned_data['end_date']:
+            self.cleaned_data['end_date'] = start_date.replace(
+                    year=start_date.year+1)
+
+class SeasonDeleteForm(forms.ModelForm):
+    class Meta:
+        model = models.Season
+        fields = []
+
 class TournamentEditForm(forms.ModelForm):
     import_field = forms.BooleanField(required=False, label="Import Schools?")
 
