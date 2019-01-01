@@ -257,8 +257,11 @@ class Tournament(models.Model):
             school_object = School(name=school.school_name)
             school_object.clean()
             school_object.save()
+        season_registration = SchoolSeasonRegistration.objects.get_or_create(
+                season=self.season, school=school_object,
+                defaults={'division': 3})[0]
         registration = SchoolTournamentRegistration(tournament=self,
-                school=school_object,
+                school_season_registration=season_registration,
                 registration_doc_url=school.registration_doc_url)
         registration.clean()
         registration.save()
