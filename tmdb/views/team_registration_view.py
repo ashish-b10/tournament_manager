@@ -17,7 +17,7 @@ import datetime
 from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
-@permission_required("tmdb.delete_teamregistration")
+@permission_required("tmdb.delete_sparringteamregistration")
 def team_registration_delete(request, tournament_slug, school_slug,
         division_slug, team_number):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -49,7 +49,7 @@ def team_registration_delete(request, tournament_slug, school_slug,
     context['delete_form'] = delete_form
     return render(request, 'tmdb/team_registration_delete.html', context)
 
-@permission_required("tmdb.change_teamregistration")
+@permission_required("tmdb.change_sparringteamregistration")
 def team_registration_change(request, tournament_slug, school_slug,
         division_slug, team_number):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
@@ -82,7 +82,7 @@ def team_registration_change(request, tournament_slug, school_slug,
     context['edit_form'] = edit_form
     return render(request, template_name, context)
 
-@permission_required("tmdb.add_teamregistration")
+@permission_required("tmdb.add_sparringteamregistration")
 def team_registration_add(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school_registration = models.SchoolTournamentRegistration.objects.get(
