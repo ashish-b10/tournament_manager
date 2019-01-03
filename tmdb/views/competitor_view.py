@@ -22,9 +22,12 @@ def competitor_add(request, tournament_slug, school_slug):
     template_name = 'tmdb/competitor_add_change.html'
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.SchoolTournamentRegistration,
-            tournament=tournament, school=school)
-    competitors = models.Competitor.objects.filter(registration=school_registration)
+    school_registration = get_object_or_404(
+            models.SchoolTournamentRegistration,
+            tournament=tournament,
+            school_season_registration__school=school)
+    competitors = models.Competitor.objects.filter(
+            registration=school_registration)
     context = {}
     context['tournament'] = tournament
     context['school'] = school
@@ -46,8 +49,10 @@ def competitor_add(request, tournament_slug, school_slug):
 def competitor_change(request, tournament_slug, school_slug, competitor_id):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.SchoolTournamentRegistration,
-            tournament=tournament, school=school)
+    school_registration = get_object_or_404(
+            models.SchoolTournamentRegistration,
+            tournament=tournament,
+            school_season_registration__school=school)
     instance = models.Competitor.objects.get(pk = competitor_id)
     template_name = 'tmdb/competitor_add_change.html'
     context = {}
@@ -72,8 +77,10 @@ def competitor_change(request, tournament_slug, school_slug, competitor_id):
 def competitor_delete(request, tournament_slug, school_slug, competitor_id):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.SchoolTournamentRegistration,
-            tournament=tournament, school=school)
+    school_registration = get_object_or_404(
+            models.SchoolTournamentRegistration,
+            tournament=tournament,
+            school_season_registration__school=school)
     instance = models.Competitor.objects.get(pk = competitor_id)
     template_name = 'tmdb/delete_competitor.html'
     context = {}
