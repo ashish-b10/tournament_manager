@@ -464,7 +464,6 @@ class SchoolTournamentRegistration(models.Model):
                 + "spreadsheet - correct the errors in their spreadhsheet "
                 + "and reimport.") %(self.school_season_registration.school,))
 
-
 class SchoolTournamentRegistrationError(models.Model):
     school_registration = models.ForeignKey(SchoolTournamentRegistration)
     error_text = models.TextField()
@@ -602,7 +601,9 @@ class Competitor(models.Model):
         return SexField.label(self.sex)
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.registration.school)
+        return "%s (%s)" % (
+                self.name,
+                self.registration.school_season_registration.school)
 
     class Meta:
         unique_together = (("name", "registration"),)

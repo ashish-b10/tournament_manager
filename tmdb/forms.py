@@ -68,9 +68,10 @@ class SparringTeamRegistrationForm(forms.ModelForm):
                 self.fields[key].required = False
 
         used_competitors = set()
+        school = school_registration.school_season_registration.school
         for i in models.SparringTeamRegistration.objects.filter(
-                team__school=school_registration.school,
-                tournament_division__tournament=school_registration.tournament):
+                tournament_division__tournament=school_registration.tournament,
+                team__school=school):
             used_competitors.update(i.get_competitors_ids())
 
         if 'instance' in kwargs:

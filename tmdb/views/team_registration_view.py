@@ -25,7 +25,8 @@ def team_registration_delete(request, tournament_slug, school_slug,
     division = get_object_or_404(models.SparringDivision, slug=division_slug)
     tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament=tournament, division=division)
-    team = get_object_or_404(models.SparringTeam, school=school,
+    team = get_object_or_404(models.SparringTeam,
+            school_season_registration__school=school,
             division=division, number=team_number)
     team_registration = get_object_or_404(models.SparringTeamRegistration,
             tournament_division=tournament_division, team=team)
@@ -55,7 +56,7 @@ def team_registration_change(request, tournament_slug, school_slug,
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
     school_registration = get_object_or_404(models.SchoolTournamentRegistration,
-            tournament=tournament, school=school)
+            tournament=tournament, school_season_registration__school=school)
     division = get_object_or_404(models.SparringDivision, slug=division_slug)
     tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament=tournament, division=division)
@@ -86,7 +87,8 @@ def team_registration_change(request, tournament_slug, school_slug,
 def team_registration_add(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school_registration = models.SchoolTournamentRegistration.objects.get(
-            school__slug=school_slug, tournament=tournament)
+            school_season_registration__school__slug=school_slug,
+            tournament=tournament)
     context = {}
     context['school_registration'] = school_registration
     context['tournament'] = tournament
