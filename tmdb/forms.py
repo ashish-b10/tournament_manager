@@ -1,7 +1,7 @@
 from django import forms
 import datetime
 
-from . import models
+from tmdb import models
 from django.contrib.auth import models as auth_models
 
 from collections import defaultdict
