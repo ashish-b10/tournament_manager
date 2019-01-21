@@ -90,7 +90,7 @@ def get_ringtable_permission_group():
 def create_ringtable_permission_group():
     group = auth_models.Group.objects.create(name="Ring Table")
     group.permissions.set([auth_models.Permission.objects.get(
-            name='Can change team match')])
+            name='Can change sparring team match')])
     return group
 
 def get_headtable_permission_group():
