@@ -12,20 +12,25 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+current_dir = os.path.dirname(os.path.realpath("__file__"))
+sys.path.insert(0, current_dir)
+from custom_settings import SECRET_KEY, DEBUG, DATABASES, ALLOWED_HOSTS
+sys.path.pop(0)
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '@-_2l8&w&p80)0vxiq_!*8t0q#2-i9pom%**=n3z%dhl&boag4'
+# SECRET_KEY = '@-_2l8&w&p80)0vxiq_!*8t0q#2-i9pom%**=n3z%dhl&boag4'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 
 
 # Application definition
