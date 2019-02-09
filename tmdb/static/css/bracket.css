@@ -2,12 +2,16 @@
   margin: 0px auto;
   position: relative;
   white-space: nowrap;
+  display: flex;
+  flex-direction: row;
 }
 
 .bracket_column {
   display: inline-block;
   overflow: hidden;
   margin: 0px;
+  flex-grow: 1;
+  flex-shrink: 1;
   height: 400px; /* 100px * number of rounds */
 }
 
@@ -32,6 +36,7 @@
 .upper_team_bracket_cell_data {
   position: absolute;
   bottom: 0;
+  width: 100%;
 }
 
 .upper_team_bracket_cell_text {
@@ -43,7 +48,6 @@
 }
 
 .upper_team_bracket_cell_text , .lower_team_bracket_cell_text {
-  width: 350px;
   background-image: linear-gradient(to right, rgba(200, 200, 200, 1.0), rgba(200, 200, 200, 0.0))
 }
 
