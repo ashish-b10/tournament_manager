@@ -84,7 +84,9 @@ def division_points(request, tournament_slug, division_slug, team_slug):
     }
     return render(request, 'tmdb/division_points_change.html', context)
 
-@permission_required(["tmdb.add_teammatch", "tmdb.delete_teammatch"])
+@permission_required([
+        "tmdb.add_sparringteammatch",
+        "tmdb.delete_sparringteammatch"])
 def create_tournament_division_matches(request, tournament_slug, division_slug):
     tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)

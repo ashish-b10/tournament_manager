@@ -129,7 +129,7 @@ def get_lowest_bye_seed(tournament_division):
         return max_seed
     return max(seeds)
 
-@permission_required("tmdb.add_teammatch")
+@permission_required("tmdb.add_sparringteammatch")
 def add_team_to_bracket(request, tournament_slug, division_slug):
     tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
@@ -175,7 +175,7 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
     context['form'] = form
     return render(request, 'tmdb/modify_team_registration_seed.html', context)
 
-@permission_required("tmdb.add_teammatch")
+@permission_required("tmdb.add_sparringteammatch")
 def remove_team_from_bracket(request, tournament_slug, division_slug):
     tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
