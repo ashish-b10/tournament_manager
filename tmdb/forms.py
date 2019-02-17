@@ -121,6 +121,8 @@ class SparringTeamRegistrationSeedingForm(forms.ModelForm):
         fields = ['seed']
 
     def clean_seed(self):
+        if self.cleaned_data['seed'] is None:
+            return
         existing_seeds = models.SparringTeamRegistration.objects.filter(
                 tournament_division=self.instance.tournament_division,
                 seed=self.cleaned_data['seed'])
