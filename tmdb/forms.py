@@ -120,18 +120,24 @@ class SparringTeamRegistrationSeedingForm(forms.ModelForm):
         model = models.SparringTeamRegistration
         fields = ['seed']
 
+    def clean_seed(self):
+        existing_seeds = models.SparringTeamRegistration.objects.filter(
+                tournament_division=self.instance.tournament_division,
+                seed=self.cleaned_data['seed'])
+        if existing_seeds:
+            raise forms.ValidationError("A team already has seed #%d: %s" %(
+                    self.cleaned_data['seed'], existing_seeds.first().team))
+
     def clean(self, *args, **kwargs):
-        cleaned_data = super(SparringTeamRegistrationSeedingForm, self).clean(
-                *args, **kwargs)
-        confirm_delete_matches = cleaned_data['confirm_delete_matches']
+        confirm_delete_matches = self.cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
-            return cleaned_data
+            return self.cleaned_data
         tournament_division = self.instance.tournament_division
         num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=tournament_division,
                 winning_team__isnull=False).count()
         if not num_existing_matches:
-            return cleaned_data
+            return self.cleaned_data
         self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
         raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(tournament_division), num_existing_matches))
 
