@@ -4,8 +4,6 @@ import datetime
 from tmdb import models
 from django.contrib.auth import models as auth_models
 
-from collections import defaultdict
-
 class SeasonAddChangeForm(forms.ModelForm):
     class Meta:
         model = models.Season
@@ -46,62 +44,6 @@ class TournamentImportForm(forms.ModelForm):
     class Meta:
         model = models.Tournament
         fields = []
-
-class SparringTeamRegistrationDeleteForm(forms.ModelForm):
-    class Meta:
-        model = models.SparringTeamRegistration
-        fields = []
-
-class SparringTeamRegistrationForm(forms.ModelForm):
-    tournament = forms.ModelChoiceField(
-            queryset=models.Tournament.objects.all())
-
-    def __init__(self, school_registration, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['tournament'].widget = forms.HiddenInput()
-        self.fields['tournament_division'].widget = forms.HiddenInput()
-
-        lst = ['lightweight', 'middleweight', 'heavyweight', 'alternate1',
-                'alternate2', 'tournament_division']
-        for key in self.fields:
-            if key in lst:
-                self.fields[key].required = False
-
-        used_competitors = set()
-        school = school_registration.school_season_registration.school
-        for i in models.SparringTeamRegistration.objects.filter(
-                tournament_division__tournament=school_registration.tournament,
-                team__school=school):
-            used_competitors.update(i.get_competitors_ids())
-
-        if 'instance' in kwargs:
-            self.fields['team'].widget = forms.HiddenInput()
-            used_competitors -= set(kwargs['instance'].get_competitors_ids())
-        else:
-            self.fields['team'].queryset = models.SparringTeam.objects.filter(
-                school=school_registration.school,
-                registrations=None).order_by('division', 'number')
-
-        available_competitors = models.Competitor.objects.filter(
-                registration=school_registration).exclude(
-                        pk__in=used_competitors)
-
-        self.fields['lightweight'].queryset = available_competitors
-        self.fields['middleweight'].queryset = available_competitors
-        self.fields['heavyweight'].queryset = available_competitors
-        self.fields['alternate1'].queryset = available_competitors
-        self.fields['alternate2'].queryset = available_competitors
-
-    def clean(self):
-        tournament = self.cleaned_data['tournament']
-        division = self.cleaned_data['team'].division
-        tournament_division = models.TournamentSparringDivision.objects.get(
-                tournament=tournament, division=division)
-        self.cleaned_data['tournament_division'] = tournament_division
-
-    class Meta:
-        model = models.SparringTeamRegistration
-        exclude = ['seed', 'points']
 
 class SchoolCompetitorForm(forms.ModelForm):
     class Meta:
