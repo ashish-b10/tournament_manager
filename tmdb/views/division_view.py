@@ -60,7 +60,7 @@ def division_seeding(request, tournament_slug, division_slug, team_slug):
     }
     return render(request, 'tmdb/division_seeding_change.html', context)
 
-@permission_required('tmdb.change_teamregistration')
+@permission_required('tmdb.change_sparringteamregistration')
 def division_points(request, tournament_slug, division_slug, team_slug):
     team_registration = get_object_or_404(models.SparringTeamRegistration,
             tournament_division__tournament__slug=tournament_slug,
