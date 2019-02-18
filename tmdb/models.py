@@ -651,9 +651,9 @@ class SparringTeamRegistration(models.Model):
                 ('tournament_division', 'seed'),)
 
     def get_team_composition(self):
-        lightweight = "L" if self.lightweight else ""
-        middleweight = "M" if self.middleweight else ""
-        heavyweight = "H" if self.heavyweight else ""
+        lightweight = "L" if self.lightweight_id else ""
+        middleweight = "M" if self.middleweight_id else ""
+        heavyweight = "H" if self.heavyweight_id else ""
         if not lightweight and not middleweight and not heavyweight:
             return ""
         return lightweight + middleweight + heavyweight
