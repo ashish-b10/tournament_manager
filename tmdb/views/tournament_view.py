@@ -111,63 +111,46 @@ def tournament_dashboard(request, tournament_slug):
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
 
-def model_to_json(query_set, fields):
-    obj_json = serializers.serialize('json', query_set, fields=fields)
-    return json.loads(obj_json)
+def get_tournament_data(tournament):
+    matches = models.SparringTeamMatch.objects
+    matches = matches.filter( division__tournament=tournament)
+    matches = matches.select_related('red_team')
+    matches = matches.select_related('blue_team')
+    matches = matches.select_related('red_team__team')
+    matches = matches.select_related('blue_team__team')
+    matches = matches.select_related('red_team__team__division')
+    matches = matches.select_related('blue_team__team__division')
+    matches = matches.select_related('red_team__team__school')
+    matches = matches.select_related('blue_team__team__school')
+    matches = matches.order_by('number')
+    return dict(get_sparring_team_match_data(match) for match in matches)
 
-json_fields = {
-    'tournament': ('id', 'location', 'date',),
-    'division': ('id', 'sex', 'skill_level',),
-    'school': ('id', 'name',),
-    'team': ('id', 'division', 'school', 'number',),
-    'tournament_division': ('id', 'division', 'tournament',),
-    'school_registration': ('id', 'school', 'tournament',),
-    'competitor': ('id', 'registration', 'belt_rank', 'name', 'sex',),
-    'team_registration': ('id', 'lightweight', 'middleweight', 'heavyweight',
-                    'alternate1', 'alternate2', 'team', 'tournament_division',
-                    'points', 'seed',),
-    'team_match': ('id', 'blue_team', 'red_team', 'winning_team', 'division',
-                    'in_holding', 'at_ring', 'number', 'ring_assignment_time',
-                    'ring_number', 'round_num', 'round_slot', 'competing',),
-}
+def get_sparring_team_registration_data(sparring_team_reg):
+    return {
+        'composition': sparring_team_reg.get_team_composition(),
+        'seed': sparring_team_reg.seed,
+        'school_name': sparring_team_reg.team.school.name,
+        'school_id': sparring_team_reg.team.school.id,
+        'team_number': sparring_team_reg.team.number,
+        'division_sex': sparring_team_reg.team.division.sex,
+        'division_skill_level': sparring_team_reg.team.division.skill_level,
+    }
+
+
+def get_sparring_team_match_data(match):
+    return (match.id, {
+        'match_number': match.number,
+        'round_num': match.round_num,
+        'ring_number': match.ring_number,
+        'round_slot': match.round_slot,
+        'blue_team': get_sparring_team_registration_data(match.blue_team),
+        'red_team': get_sparring_team_registration_data(match.red_team),
+        'winning_team': match.winning_team_id,
+    })
 
 def tournament_json(request, tournament_slug):
-    msg = []
     tournament = models.Tournament.objects.get(slug=tournament_slug)
-    msg.extend(model_to_json(
-            [tournament],
-            json_fields['tournament']))
-    msg.extend(model_to_json(
-            models.SparringDivision.objects.all(),
-            json_fields['division']))
-    msg.extend(model_to_json(
-            models.School.objects.all(),
-            json_fields['school']))
-    msg.extend(model_to_json(
-            models.SparringTeam.objects.all(),
-            json_fields['team']))
-    msg.extend(model_to_json(
-            models.TournamentSparringDivision.objects.filter(
-                    tournament=tournament),
-            json_fields['tournament_division']))
-    msg.extend(model_to_json(
-            models.SchoolTournamentRegistration.objects.filter(
-                    tournament=tournament),
-            json_fields['school_registration']))
-    msg.extend(model_to_json(
-            models.Competitor.objects.filter(
-                    registration__tournament=tournament),
-            json_fields['competitor']))
-    msg.extend(model_to_json(
-            models.SparringTeamRegistration.objects.filter(
-                    tournament_division__tournament=tournament),
-            json_fields['team_registration']))
-    msg.extend(model_to_json(
-            models.SparringTeamMatch.objects.filter(
-                    division__tournament=tournament),
-            json_fields['team_match']))
-
-    msg_json = json.dumps(msg)
+    msg_json = json.dumps(get_tournament_data(tournament))
     return HttpResponse(msg_json, content_type="application/json")
 
 @login_required

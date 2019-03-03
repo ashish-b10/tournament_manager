@@ -1,6 +1,5 @@
 import json
 
-from django.core import serializers
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from channels import Group
@@ -8,7 +7,6 @@ from channels.sessions import channel_session
 from channels.auth import channel_session_user_from_http, channel_session_user
 
 from . import models
-from .views.tournament_view import json_fields
 
 def match_updates_group_name(tournament_slug):
     return "match-updates-%s" %(tournament_slug,)
@@ -21,6 +19,7 @@ def create_message(message_type, message_content, dump_message_content=True):
 @receiver(post_save, sender=models.SparringTeamMatch,
         dispatch_uid="update_team_match")
 def update_team_match(sender, instance, **kwargs):
+    import pdb ; pdb.set_trace()
     team_match_json = serializers.serialize('json', [instance],
             fields = json_fields['team_match'])
     tournament_slug = instance.division.tournament.slug
@@ -31,6 +30,7 @@ def update_team_match(sender, instance, **kwargs):
 @receiver(post_delete, sender=models.SparringTeamMatch,
         dispatch_uid="delete_team_match")
 def delete_team_match(sender, instance, **kwargs):
+    import pdb ; pdb.set_trace()
     team_match_json = serializers.serialize('json', [instance], fields = [])
     tournament_slug = instance.division.tournament.slug
     group_name = match_updates_group_name(tournament_slug)
@@ -40,6 +40,7 @@ def delete_team_match(sender, instance, **kwargs):
 @receiver(post_save, sender=models.Tournament,
         dispatch_uid="update_tournament")
 def update_tournament(sender, instance, **kwargs):
+    import pdb ; pdb.set_trace()
     tournament_json = json.loads(serializers.serialize('json', [instance],
             fields=json_fields['tournament']))
     message = {"text": tournament_json}
@@ -54,6 +55,7 @@ def match_updates_connect(message, tournament_slug):
 
 def process_update_message(message):
     raw_msgs = json.loads(message['text'])
+    import pdb ; pdb.set_trace()
     parsed_msgs = serializers.deserialize('json', message['text'])
     for raw_msg, parsed_msg in zip(raw_msgs, parsed_msgs):
         model_class = type(parsed_msg.object)
