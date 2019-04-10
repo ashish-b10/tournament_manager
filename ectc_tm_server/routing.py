@@ -1,7 +1,10 @@
-from channels import include
+from channels.routing import ProtocolTypeRouter
 
-import tmdb.routing
+# import tmdb.routing
 
 channel_routing = [
-    include(tmdb.routing.channel_routing, path=r'^/tmdb/'),
+    # include(tmdb.routing.channel_routing, path=r'^/tmdb/'),
 ]
+
+application = ProtocolTypeRouter({
+})

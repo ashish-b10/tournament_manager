@@ -30,7 +30,9 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
+    'tmdb',
+    'channels',
     'bootstrapform',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,25 +40,22 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tmdb',
-    'channels',
-)
+]
 try:
     import django_extensions
     INSTALLED_APPS += ("django_extensions",)
 except ImportError:
     pass
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-)
+]
 
 ROOT_URLCONF = 'ectc_tm_server.urls'
 
@@ -93,6 +92,22 @@ WSGI_APPLICATION = 'ectc_tm_server.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 from .db_settings import DATABASES
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -166,3 +181,5 @@ CHANNEL_LAYERS = {
         "ROUTING": "ectc_tm_server.routing.channel_routing",
     },
 }
+
+ASGI_APPLICATION = 'ectc_tm_server.routing.application'

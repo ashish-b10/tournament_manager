@@ -173,7 +173,7 @@ class Season(models.Model):
 
 class Tournament(models.Model):
     slug = models.SlugField(unique=True)
-    season = models.ForeignKey(Season)
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
     location = models.CharField(max_length=127)
     date = models.DateField()
     registration_doc_url = models.URLField(unique=True)
@@ -301,8 +301,8 @@ class School(models.Model):
         return self.name
 
 class SchoolSeasonRegistration(models.Model):
-    school = models.ForeignKey(School)
-    season = models.ForeignKey(Season)
+    school = models.ForeignKey(School, on_delete=models.PROTECT)
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
     division = models.PositiveSmallIntegerField()
 
     class Meta:
@@ -313,8 +313,8 @@ class SchoolSeasonRegistration(models.Model):
                 self.division)
 
 class SchoolTournamentRegistration(models.Model):
-    tournament = models.ForeignKey(Tournament)
-    school_season_registration = models.ForeignKey(SchoolSeasonRegistration)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    school_season_registration = models.ForeignKey(SchoolSeasonRegistration, on_delete=models.PROTECT)
     registration_doc_url = models.URLField(unique=True)
     imported = models.BooleanField(default=False)
 
@@ -465,7 +465,7 @@ class SchoolTournamentRegistration(models.Model):
                 + "and reimport.") %(self.school_season_registration.school,))
 
 class SchoolTournamentRegistrationError(models.Model):
-    school_registration = models.ForeignKey(SchoolTournamentRegistration)
+    school_registration = models.ForeignKey(SchoolTournamentRegistration, on_delete=models.CASCADE)
     error_text = models.TextField()
 
 class SparringDivision(models.Model):
@@ -512,8 +512,8 @@ class TournamentSparringDivisionStatus():
                  self.num_matches_completed, self.num_matches,)
 
 class TournamentSparringDivision(models.Model):
-    tournament = models.ForeignKey(Tournament)
-    division = models.ForeignKey(SparringDivision)
+    tournament = models.ForeignKey(Tournament, on_delete=models.PROTECT) #FIXME
+    division = models.ForeignKey(SparringDivision, on_delete=models.PROTECT)
 
     class Meta:
         unique_together = (('tournament', 'division'),)
@@ -584,7 +584,7 @@ class TournamentSparringDivision(models.Model):
 
 class TournamentSparringDivisionBeltRanks(models.Model):
     belt_rank = BeltRankField()
-    tournament_division = models.ForeignKey(TournamentSparringDivision)
+    tournament_division = models.ForeignKey(TournamentSparringDivision, on_delete=models.CASCADE)
 
 class Competitor(models.Model):
     """ A person who may compete in a tournament. """
@@ -592,7 +592,7 @@ class Competitor(models.Model):
     sex = SexField()
     belt_rank = BeltRankField()
     weight = WeightField(null=True, blank=True)
-    registration = models.ForeignKey(SchoolTournamentRegistration)
+    registration = models.ForeignKey(SchoolTournamentRegistration, on_delete=models.CASCADE)
 
     def belt_rank_label(self):
         return BeltRankField.label(self.belt_rank)
@@ -609,8 +609,8 @@ class Competitor(models.Model):
         unique_together = (("name", "registration"),)
 
 class SparringTeam(models.Model):
-    school = models.ForeignKey(School)
-    division = models.ForeignKey(SparringDivision)
+    school = models.ForeignKey(School, on_delete=models.PROTECT)
+    division = models.ForeignKey(SparringDivision, on_delete=models.PROTECT)
     number = models.SmallIntegerField()
     slug = models.SlugField(unique=True)
     registrations = models.ManyToManyField(TournamentSparringDivision,
@@ -631,8 +631,8 @@ class SparringTeam(models.Model):
 
 #TODO team.division must equal tournament_division.division
 class SparringTeamRegistration(models.Model):
-    tournament_division = models.ForeignKey(TournamentSparringDivision)
-    team = models.ForeignKey(SparringTeam)
+    tournament_division = models.ForeignKey(TournamentSparringDivision, on_delete=models.PROTECT) #FIXME
+    team = models.ForeignKey(SparringTeam, on_delete=models.PROTECT)
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
     points = models.PositiveIntegerField(null=True, blank=True)
     lightweight = models.ForeignKey(Competitor, null=True, blank=True,
@@ -735,18 +735,20 @@ class SparringTeamMatch(models.Model):
                         The time at which the ring was assigned
         winning_team    The winner of the SparringTeamMatch
     """
-    division = models.ForeignKey(TournamentSparringDivision)
+    division = models.ForeignKey(TournamentSparringDivision, on_delete=models.PROTECT) #FIXME
     number = models.PositiveIntegerField()
     round_num = models.SmallIntegerField()
     round_slot = models.IntegerField()
     blue_team = models.ForeignKey(SparringTeamRegistration,
-            related_name="blue_team", blank=True, null=True)
+            related_name="blue_team", blank=True, null=True,
+            on_delete=models.SET_NULL)
     red_team = models.ForeignKey(SparringTeamRegistration,
-            related_name="red_team", blank=True, null=True)
+            related_name="red_team", blank=True, null=True,
+            on_delete=models.SET_NULL)
     ring_number = models.PositiveIntegerField(blank=True, null=True)
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
     winning_team = models.ForeignKey(SparringTeamRegistration, blank=True,
-            null=True, related_name="winning_team")
+            null=True, related_name="winning_team", on_delete=models.SET_NULL)
     in_holding = models.BooleanField(default=False)
     at_ring = models.BooleanField(default=False)
     competing = models.BooleanField(default=False)

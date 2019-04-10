@@ -3,6 +3,8 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 import tmdb.views as views
 
+app_name = 'tmdb'
+
 tournament_base = (r'^tournament/*'
             + r'/(?P<tournament_slug>[a-z0-9_-]+)/*')
 tournament_school_base = (tournament_base
