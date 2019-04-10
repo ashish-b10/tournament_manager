@@ -6,8 +6,10 @@ class SchoolRegistrationValidator:
     def __init__(self, school_registration, extracted_data):
         self.extracted_data = extracted_data
         self.school_registration = school_registration
-        self.competitors_by_name = {c['name']:c
-                for c in self.extracted_data.extracted_competitors}
+        self.competitors_by_name = {}
+        for c in self.extracted_data.extracted_competitors:
+            c['name'] = c['name'].strip()
+            self.competitors_by_name.update({c['name']:c})
 
     def validate(self):
         errors = []
