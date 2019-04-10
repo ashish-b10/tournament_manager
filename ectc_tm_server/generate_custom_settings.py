@@ -8,7 +8,7 @@ SECRET_KEY = get_random_secret_key()
 DEBUG = True
 
 # Write out the python file
-file = open("custom_settings.py","w")
-file.write("SECRET_KEY=\"" + SECRET_KEY +"\"\n")
-file.write("DEBUG=" + str(DEBUG) + "\n")
-file.write("ALLOWED_HOSTS = [\"localhost\"]\n")
+with open("custom_settings.py","w") as fh:
+    fh.write("SECRET_KEY=\"" + SECRET_KEY +"\"\n")
+    fh.write("DEBUG=" + str(DEBUG) + "\n")
+    fh.write("ALLOWED_HOSTS = [\"localhost\"]\n")
