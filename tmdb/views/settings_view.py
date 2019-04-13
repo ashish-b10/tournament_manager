@@ -101,9 +101,20 @@ def get_headtable_permission_group():
 
 def create_headtable_permission_group():
     group = auth_models.Group.objects.create(name="Head Table")
+    update_headtable_group_permissions()
+    return group
+
+def update_headtable_group_permissions():
+    """Set headtable group to add/change/delete all tmdb models.
+
+    This function is useful when adding or changing models in the database.
+    When a model is changed, this function can be calledto ensure that the
+    users in the head table group will have full permissions on it."""
+    group = auth_models.Group.objects.filter(name = "Head Table").first()
+    if not group:
+        return
     group.permissions.set(auth_models.Permission.objects.filter(
             content_type__in=auth_models.ContentType.objects.filter(
                     app_label="tmdb")))
     group.permissions.add(auth_models.Permission.objects.get(
-            name="Can add user"))
-    return group
+            codename="add_user"))
