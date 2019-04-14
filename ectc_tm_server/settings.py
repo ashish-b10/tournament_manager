@@ -215,8 +215,7 @@ LOGIN_URL = 'tmdb:login'
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "asgi_redis.RedisChannelLayer",
-        "ROUTING": "ectc_tm_server.routing.channel_routing",
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [('redis', 6379)],
         },

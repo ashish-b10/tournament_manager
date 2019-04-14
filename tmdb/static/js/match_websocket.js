@@ -228,14 +228,14 @@ function render_full_display() {
     match_queue = match_queues[i];
     match_queue.innerHTML = '';
 
-    if (tmdb_vars.tournament_data.tmdb_teammatch === undefined) {
+    if (tmdb_vars.tournament_data.tmdb_sparringteammatch === undefined) {
       var empty_match_list = createTextElem("div", "No matches have been created for this tournament.");
       empty_match_list.className += "alert alert-warning";
       match_queue.appendChild(empty_match_list);
       continue;
     }
     var team_matches = Object.values(
-        tmdb_vars.tournament_data.tmdb_teammatch);
+        tmdb_vars.tournament_data.tmdb_sparringteammatch);
 
     add_filter_options();
     var match_queue_table = document.createElement("table");
@@ -310,9 +310,9 @@ function render_team_registration(team_registration_id) {
   if (team_registration_id == null) {
     return null;
   }
-  var team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[team_registration_id];
+  var team_registration = tmdb_vars.tournament_data.tmdb_sparringteamregistration[team_registration_id];
   var team_id = team_registration.fields.team;
-  var team = tmdb_vars.tournament_data.tmdb_team[team_id];
+  var team = tmdb_vars.tournament_data.tmdb_sparringteam[team_id];
   var school_str = render_school_name(team.fields.school);
   var division_id = team.fields.division;
   var division_str = render_division_name(division_id);
@@ -335,7 +335,7 @@ function render_team_composition(team_registration) {
 }
 
 function render_division_name(division_id) {
-  var division = tmdb_vars.tournament_data.tmdb_division[division_id];
+  var division = tmdb_vars.tournament_data.tmdb_sparringdivision[division_id];
   var division_sex_str = "Unknown";
   if (division.fields.sex == "F")
     division_sex_str = "Women's";
@@ -507,17 +507,17 @@ function evaluate_status(team_match) {
 function handle_message(msg) {
   console.log(msg);
   var data = JSON.parse(msg.data);
-  if ('update' in data) {
-    var update_data = JSON.parse(data['update']);
-    update_data.map(store_tournament_datum);
+  var message_type = data.message_type;
+  var message_content = data.message_content;
+  if ('update' === message_type) {
+    message_content.map(store_tournament_datum);
   }
-  if ('delete' in data) {
+  if ('delete' === message_type) {
     var delete_data = JSON.parse(data['delete']);
     delete_data.map(delete_tourament_datum);
   }
-  if ('error' in data) {
-    var error_data = JSON.parse(data['error']);
-    alert(error_data);
+  if ('error' === message_type) {
+    alert(message_content);
     render_updated_display();
     return
   }
@@ -564,7 +564,7 @@ function start_teammatch_websocket(tournament_slug, tournament_json_url) {
   if (window.location.protocol == "http:") {
     ws_proto = "ws://"
   }
-  var ws_url = ws_proto + window.location.host + "/tmdb/tournament/" + tournament_slug + "/match_updates/";
+  var ws_url = ws_proto + window.location.host + "/tmdb/tournament/ws/tournaments/" + tournament_slug + "/sparring_team_match_updates/";
   tmdb_vars.tournament_data.tournament_slug = tournament_slug;
   tmdb_vars.initial_tournament_data_url = window.location.protocol + "//" + window.location.host + tournament_json_url;
   console.log("Opening connection to " + ws_url);
@@ -576,7 +576,7 @@ function start_teammatch_websocket(tournament_slug, tournament_json_url) {
 
 function on_report_status_changed(element, team_match_pk) {
   var team_match = {};
-  team_match.model = 'tmdb.teammatch';
+  team_match.model = 'tmdb.sparringteammatch';
   team_match.pk = team_match_pk;
   team_match.fields = {};
   team_match.fields.in_holding = (element.value >= tmdb_vars_REPORT_STATUS_HOLDING_VALUE);
@@ -587,7 +587,7 @@ function on_report_status_changed(element, team_match_pk) {
 
 function on_ring_number_changed(element, team_match_pk) {
   var team_match = {};
-  team_match.model = 'tmdb.teammatch';
+  team_match.model = 'tmdb.sparringteammatch';
   team_match.pk = team_match_pk;
   team_match.fields = {};
   if (element.value) {
@@ -600,7 +600,7 @@ function on_ring_number_changed(element, team_match_pk) {
 
 function on_winning_team_changed(element, team_match_pk) {
   var team_match = {};
-  team_match.model = 'tmdb.teammatch';
+  team_match.model = 'tmdb.sparringteammatch';
   team_match.pk = team_match_pk;
   team_match.fields = {};
   team_match.fields.winning_team = element.value;

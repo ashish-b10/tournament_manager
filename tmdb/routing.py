@@ -1,12 +1,7 @@
-from channels.routing import route
+from django.conf.urls import url
 
 from . import consumers
-from . import urls
 
-channel_routing = [
-    route("websocket.connect", consumers.match_updates_connect,
-            path=urls.tournament_base + r'/match_updates/*$'),
-    route("websocket.receive", consumers.match_updates_message,
-            path=urls.tournament_base + r'/match_updates/*$'),
-    route("websocket.disconnect", consumers.match_updates_disconnect),
+websocket_urlpatterns = [
+    url(r'ws/tournaments/(?P<tournament_slug>[a-z0-9_-]+)/sparring_team_match_updates/*', consumers.SparringTeamMatchConsumer),
 ]
