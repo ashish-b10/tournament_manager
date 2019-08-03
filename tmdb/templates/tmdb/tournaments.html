@@ -16,9 +16,15 @@
   {% for season in seasons %}
     <h2>{{season.start_date.year}} - {{season.end_date.year}} Season</h2>
     <div class="">
+      {% if perms.tmdb.add_season %}
       <a class="btn btn-primary" href="{%url 'tmdb:tournament_add'%}?season={{season.slug}}" >Create New Tournament</a>
+      {% endif %}
+      {% if perms.tmdb.change_season %}
       <a class="btn btn-warning" href="{%url 'tmdb:season_edit' season.slug %}" >Edit Season</a>
+      {% endif %}
+      {% if perms.tmdb.delete_season %}
       <a class="btn btn-danger" href="{%url 'tmdb:season_delete' season.slug%}" >Delete Season</a>
+      {% endif %}
     </div>
     {% if not season.tournaments %}
     <p>No tournaments in this season.</p>
