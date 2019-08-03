@@ -512,7 +512,7 @@ class TournamentSparringDivisionStatus():
                  self.num_matches_completed, self.num_matches,)
 
 class TournamentSparringDivision(models.Model):
-    tournament = models.ForeignKey(Tournament, on_delete=models.PROTECT) #FIXME
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     division = models.ForeignKey(SparringDivision, on_delete=models.PROTECT)
 
     class Meta:
@@ -631,7 +631,7 @@ class SparringTeam(models.Model):
 
 #TODO team.division must equal tournament_division.division
 class SparringTeamRegistration(models.Model):
-    tournament_division = models.ForeignKey(TournamentSparringDivision, on_delete=models.PROTECT) #FIXME
+    tournament_division = models.ForeignKey(TournamentSparringDivision, on_delete=models.CASCADE)
     team = models.ForeignKey(SparringTeam, on_delete=models.PROTECT)
     seed = models.PositiveSmallIntegerField(null=True, blank=True)
     points = models.PositiveIntegerField(null=True, blank=True)
@@ -735,7 +735,7 @@ class SparringTeamMatch(models.Model):
                         The time at which the ring was assigned
         winning_team    The winner of the SparringTeamMatch
     """
-    division = models.ForeignKey(TournamentSparringDivision, on_delete=models.PROTECT) #FIXME
+    division = models.ForeignKey(TournamentSparringDivision, on_delete=models.CASCADE)
     number = models.PositiveIntegerField()
     round_num = models.SmallIntegerField()
     round_slot = models.IntegerField()
@@ -748,7 +748,7 @@ class SparringTeamMatch(models.Model):
     ring_number = models.PositiveIntegerField(blank=True, null=True)
     ring_assignment_time = models.DateTimeField(blank=True, null=True)
     winning_team = models.ForeignKey(SparringTeamRegistration, blank=True,
-            null=True, related_name="winning_team", on_delete=models.SET_NULL)
+            null=True, related_name="winning_team", on_delete=models.PROTECT)
     in_holding = models.BooleanField(default=False)
     at_ring = models.BooleanField(default=False)
     competing = models.BooleanField(default=False)
