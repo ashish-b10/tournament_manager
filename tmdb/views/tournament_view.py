@@ -121,7 +121,9 @@ json_fields = {
     'school': ('id', 'name',),
     'team': ('id', 'division', 'school', 'number',),
     'tournament_division': ('id', 'division', 'tournament',),
-    'school_registration': ('id', 'school', 'tournament',),
+    'school_tournament_registration': ('id', 'school_season_registration',
+                    'tournament',),
+    'school_season_registration': ('id', 'school',),
     'competitor': ('id', 'registration', 'belt_rank', 'name', 'sex',),
     'team_registration': ('id', 'lightweight', 'middleweight', 'heavyweight',
                     'alternate1', 'alternate2', 'team', 'tournament_division',
@@ -153,7 +155,10 @@ def tournament_json(request, tournament_slug):
     msg.extend(model_to_json(
             models.SchoolTournamentRegistration.objects.filter(
                     tournament=tournament),
-            json_fields['school_registration']))
+            json_fields['school_tournament_registration']))
+    msg.extend(model_to_json(
+            models.SchoolSeasonRegistration.objects.all(),
+            json_fields['school_season_registration']))
     msg.extend(model_to_json(
             models.Competitor.objects.filter(
                     registration__tournament=tournament),

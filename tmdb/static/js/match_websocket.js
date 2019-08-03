@@ -106,7 +106,7 @@ function set_division_filter() {
   var filter_value_type = document.createElement('select');
   filter_value_div.appendChild(filter_value_type);
 
-  var division_objs = Object.values(tmdb_vars.tournament_data.tmdb_division);
+  var division_objs = Object.values(tmdb_vars.tournament_data.tmdb_sparringdivision);
   var division_names = division_objs.map(x => x.pk).map(render_division_name).sort();
 
   var option = document.createElement('option');
@@ -140,8 +140,11 @@ function set_school_filter() {
   var filter_value_type = document.createElement('select');
   filter_value_div.appendChild(filter_value_type);
 
-  var school_reg_objs = Object.values(tmdb_vars.tournament_data.tmdb_schoolregistration);
-  var school_ids = school_reg_objs.map(x => x.fields.school);
+  var school_tournament_reg_objs = Object.values(tmdb_vars.tournament_data.tmdb_schooltournamentregistration);
+  var school_season_reg_ids = school_tournament_reg_objs.map(
+      x => x.fields.school_season_registration)
+  var school_ids = school_season_reg_ids.map(
+      x => tmdb_vars.tournament_data.tmdb_schoolseasonregistration[x].fields.school);
   var school_names = school_ids.map(render_school_name).sort();
 
   var option = document.createElement('option');
@@ -279,8 +282,8 @@ function get_division(match) {
   if (match == null) {
     return null;
   }
-  var tournament_division = tmdb_vars.tournament_data.tmdb_tournamentdivision[match.fields.division];
-  var division = tmdb_vars.tournament_data.tmdb_division[tournament_division.fields.division];
+  var tournament_division = tmdb_vars.tournament_data.tmdb_tournamentsparringdivision[match.fields.division];
+  var division = tmdb_vars.tournament_data.tmdb_sparringdivision[tournament_division.fields.division];
   var tournamentdivision_id = match.fields.division;
   var division_str = render_division_name(tournament_division.fields.division);
 return division_str + "";
@@ -614,8 +617,8 @@ function get_school_name_from_team_registration(team_registration_id) {
   if (team_registration_id == null) {
     return null;
   }
-  var team_registration = tmdb_vars.tournament_data.tmdb_teamregistration[team_registration_id];
+  var team_registration = tmdb_vars.tournament_data.tmdb_sparringteamregistration[team_registration_id];
   var team_id = team_registration.fields.team;
-  var team = tmdb_vars.tournament_data.tmdb_team[team_id];
+  var team = tmdb_vars.tournament_data.tmdb_sparringteam[team_id];
   return render_school_name(team.fields.school);
 }
