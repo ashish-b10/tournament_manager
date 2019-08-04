@@ -26,5 +26,9 @@
   </table>
   {% else %}
   <p>{{school.name}} has not registered in any ECTC seasons.</p>
+  <h2>Delete School</h2>
+  {% if perms.tmdb.delete_school %}
+  <p>Click <a href="{%url 'tmdb:school_delete' school.slug%}">here</a> to delete this school</p>
   {% endif %}
+{% endif %}
 {% endblock %}

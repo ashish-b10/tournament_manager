@@ -43,10 +43,16 @@ urlpatterns = [
 
     # school edit
     url(r'^schools/*$', views.schools_view.schools, name='schools'),
+    url(r'^schools/*'
+            + r'/add/*$',
+            views.schools_view.school_add, name='school_add'),
     url(school_base + '$', views.schools_view.school, name='school'),
     url(school_base
             + r'/edit/*$',
             views.schools_view.school_change, name='school_change'),
+    url(school_base
+            + r'/delete/*$',
+            views.schools_view.school_delete, name='school_delete'),
 
     # school season registration edit
     url(school_season_base

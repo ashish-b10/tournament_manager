@@ -284,7 +284,8 @@ class School(models.Model):
             through='SchoolSeasonRegistration')
 
     def save(self, *args, **kwargs):
-        self.slug = self.slugify()
+        if not self.slug:
+            self.slug = self.slugify()
         super(School, self).save(*args, **kwargs)
 
     def create_division_teams(self, division):

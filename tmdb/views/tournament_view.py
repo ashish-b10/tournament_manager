@@ -27,7 +27,6 @@ def tournaments(request, tournament_slug=None):
     }
     return render(request, 'tmdb/tournaments.html', context)
 
-
 @permission_required("tmdb.add_tournament")
 def tournament_add(request):
     template_name = 'tmdb/tournament_add_change.html'

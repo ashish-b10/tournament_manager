@@ -58,6 +58,59 @@ def school_season_change(request, school_slug, season_slug):
     context['change_form'] = change_form
     return render(request, template_name, context)
 
+class SchoolForm(forms.ModelForm):
+    class Meta:
+        model = models.School
+        fields = ['name']
+
+@permission_required("tmdb.change_school")
+def school_add(request):
+    template_name = 'tmdb/school_add_change.html'
+    context = {}
+    if request.method == 'POST':
+        add_form = SchoolForm(request.POST)
+        if add_form.is_valid():
+            new_school = add_form.save()
+            return HttpResponseRedirect(reverse('tmdb:school',
+                    args=(new_school.slug,)))
+    else:
+        add_form = SchoolForm()
+    context['add_form'] = add_form
+    return render(request, template_name, context)
+
 @permission_required("tmdb.change_school")
 def school_change(request, school_slug):
-    raise NotImplementedError()
+    instance = get_object_or_404(models.School, slug=school_slug)
+    template_name = 'tmdb/school_add_change.html'
+    context = {}
+    if request.method == 'POST':
+        change_form = SchoolForm(request.POST, instance=instance)
+        if change_form.is_valid():
+            change_form.save()
+            return HttpResponseRedirect(reverse('tmdb:school',
+                    args=(school_slug,)))
+    else:
+        change_form = SchoolForm(instance=instance)
+    context['change_form'] = change_form
+    return render(request, template_name, context)
+
+class SchoolDeleteForm(forms.ModelForm):
+    class Meta:
+        model = models.School
+        fields = []
+
+@permission_required("tmdb.delete_school")
+def school_delete(request, school_slug):
+    instance = get_object_or_404(models.School, slug=school_slug)
+    template_name = 'tmdb/school_delete.html'
+    context = {}
+    if request.method == 'POST':
+        delete_form = SchoolDeleteForm(request.POST, instance=instance)
+        if delete_form.is_valid():
+            instance.delete()
+            return HttpResponseRedirect(reverse('tmdb:schools'))
+    else:
+        delete_form = SchoolDeleteForm(instance=instance)
+    context['delete_form'] = delete_form
+    context['school'] = instance
+    return render(request, template_name, context)
