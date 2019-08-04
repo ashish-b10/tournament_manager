@@ -45,19 +45,6 @@ class TournamentImportForm(forms.ModelForm):
         model = models.Tournament
         fields = []
 
-class SchoolCompetitorForm(forms.ModelForm):
-    class Meta:
-        model = models.Competitor
-        fields = ['name', 'sex', 'belt_rank', 'weight', 'registration']
-        widgets = {
-            'registration': forms.HiddenInput(),
-        }
-
-class SchoolCompetitorDeleteForm(forms.ModelForm):
-    class Meta:
-        model = models.Competitor
-        fields = []
-
 class MatchForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
