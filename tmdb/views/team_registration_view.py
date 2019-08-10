@@ -17,41 +17,6 @@ import datetime
 from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
-def _get_used_competitors(school, tournament, team=None):
-    used_competitors = set()
-    for sparring_team in models.SparringTeamRegistration.objects.filter(
-            tournament_division__tournament=tournament, team__school=school):
-        if sparring_team == team:
-            continue
-        used_competitors.update(sparring_team.get_competitors_ids())
-
-    return used_competitors
-
-def _get_available_competitors(
-        school_tournament_registration, sparring_team_registration=None):
-    """ Get competitors that can still be assigned to a sparring team.
-
-    Since competitors are only allowed to be on one team, we need to filter the
-    list of competitors that can be added to a new team, or modified for an
-    existing team. This function takes a SchoolTournamentRegistration and
-    (optionally) a SparringTeamRegistration, and finds all competitors for the
-    SchoolTournamentRegistration that have not yet been added to a team. If
-    sparring_team_registration is provided, competitors on that team are added
-    to the list of available competitors. (This is necessary to enable editing
-    of existing SparringTeamRegistration objects.)
-
-    I am not sure if this handles alternates appropriately. This needs to be
-    tested.
-    """
-    school = school_tournament_registration.school_season_registration.school
-    used_competitors = _get_used_competitors(school,
-            school_tournament_registration.tournament,
-            sparring_team_registration)
-    available_competitors = models.Competitor.objects.filter(
-            registration=school_tournament_registration).exclude(
-            pk__in=used_competitors)
-    return available_competitors
-
 class SparringTeamRegistrationDeleteForm(django_forms.ModelForm):
     class Meta:
         model = models.SparringTeamRegistration
@@ -62,13 +27,14 @@ class SparringTeamRegistrationForm(django_forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.school_tournament_registration = school_tournament_registration
         self.school = school_tournament_registration.school_season_registration.school
-        available_competitors = _get_available_competitors(
-                school_tournament_registration, self.instance)
-        for field_name in ('lightweight', 'middleweight', 'heavyweight',
-                'alternate1', 'alternate2'):
-            field = self.fields[field_name]
-            field.required = False
-            field.queryset = available_competitors
+        for field_name in (
+            'lightweight',
+            'middleweight',
+            'heavyweight',
+            'alternate1',
+            'alternate2',
+        ):
+            self.fields[field_name].default = False
 
     def validate_num_competitors(self, validation_errors):
         if self.cleaned_data['lightweight'] or \
@@ -78,21 +44,6 @@ class SparringTeamRegistrationForm(django_forms.ModelForm):
         validation_errors.append(django_forms.ValidationError(
                 "Team must have a lightweight, middleweight or heavyweight"
         ))
-
-    def validate_team_composition(self, validation_errors):
-        """ Validates the team composition.
-
-        Should check the following:
-            * lightweight, middleweight, heavyweight are all unique
-            * lightweight, middleweight, heavyweight have not been used in any
-              other team
-            * alternate1 != alternate2
-            * alternate1 and alternate2 are not a lightweight, middleweight, or
-              heavyweight on any other team
-            * Competitors match requirements for this team (sex, belt rank,
-              weight class)
-        """
-        raise NotImplementedError() #TODO
 
 class SparringTeamRegistrationAddForm(SparringTeamRegistrationForm):
     def __init__(self, *args, **kwargs):

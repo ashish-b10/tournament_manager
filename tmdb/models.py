@@ -442,25 +442,24 @@ class SparringTeamRegistration(models.Model):
                 ('tournament_division', 'seed'),)
 
     def get_team_composition(self):
-        lightweight = "L" if self.lightweight_id else ""
-        middleweight = "M" if self.middleweight_id else ""
-        heavyweight = "H" if self.heavyweight_id else ""
-        if not lightweight and not middleweight and not heavyweight:
-            return ""
-        return lightweight + middleweight + heavyweight
+        composition = ""
+        if self.lightweight:
+            composition += "L"
+        if self.middleweight:
+            composition += "M"
+        if self.heavyweight:
+            composition += "H"
+        alternate_str = ""
+        if self.alternate1:
+            alternate_str += "A"
+        if self.alternate2:
+            alternate_str += "A"
+        if alternate_str:
+            composition = "%s-%s" %(composition, alternate_str)
+        return composition
 
     def __get_competitors_str(self):
         return "(" + self.get_team_composition() + ")"
-
-    def get_competitors_ids(self):
-        competitors = []
-        if self.lightweight:
-            competitors.append(self.lightweight.id)
-        if self.middleweight:
-            competitors.append(self.middleweight.id)
-        if self.heavyweight:
-            competitors.append(self.heavyweight.id)
-        return competitors
 
     def __str__(self):
         competitors_str = self.__get_competitors_str()
@@ -471,6 +470,9 @@ class SparringTeamRegistration(models.Model):
     def __repr__(self):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
+
+    def team_list_str(self):
+        return str(self)
 
     def bracket_str(self):
         team_str = "%s %s%d %s" %(self.team.school,

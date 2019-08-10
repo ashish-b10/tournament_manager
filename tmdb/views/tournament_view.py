@@ -182,8 +182,6 @@ def tournament_school(request, tournament_slug, school_slug):
             models.SchoolTournamentRegistration, tournament=tournament,
             school_season_registration__school=school,
             school_season_registration__season=tournament.season)
-    competitors = models.Competitor.objects.filter(
-            registration=school_tournament_registration).order_by('name')
     team_registrations = models.SparringTeamRegistration.order_queryset(
             models.SparringTeamRegistration.objects.filter(
                     tournament_division__tournament=tournament,
@@ -191,7 +189,6 @@ def tournament_school(request, tournament_slug, school_slug):
     context = {
         'tournament': tournament,
         'school_tournament_registration': school_tournament_registration,
-        'competitors': competitors,
         'team_registrations': team_registrations,
     }
     return render(request, 'tmdb/tournament_school.html', context)
