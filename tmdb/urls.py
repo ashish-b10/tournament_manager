@@ -108,18 +108,6 @@ urlpatterns = [
             + r'/teams/*$',
             views.team_registration_view.team_list, name='team_list'),
 
-    # competitor create/edit/delete
-    url(tournament_school_base
-            + r'/competitors/*'
-            + r'/add/*$',
-            views.competitor_view.competitor_add, name='competitor_add'),
-    url(tournament_school_competitor_base
-            + r'/edit/*$',
-            views.competitor_view.competitor_change, name='competitor_change'),
-    url(tournament_school_competitor_base
-            + r'/delete/*$',
-            views.competitor_view.competitor_delete, name='delete_competitor'),
-
     # team_registration create/edit/delete
     url(tournament_school_base
             + r'/teams/*'
