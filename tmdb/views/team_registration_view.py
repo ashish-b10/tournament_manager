@@ -27,14 +27,6 @@ class SparringTeamRegistrationForm(django_forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.school_tournament_registration = school_tournament_registration
         self.school = school_tournament_registration.school_season_registration.school
-        for field_name in (
-            'lightweight',
-            'middleweight',
-            'heavyweight',
-            'alternate1',
-            'alternate2',
-        ):
-            self.fields[field_name].default = False
 
     def validate_num_competitors(self, validation_errors):
         if self.cleaned_data['lightweight'] or \
@@ -70,6 +62,8 @@ class SparringTeamRegistrationAddForm(SparringTeamRegistrationForm):
                 'alternate1',
                 'alternate2',
         ])
+        self.fields['tournament_division'].queryset = models.TournamentSparringDivision.objects.filter(
+                tournament=self.school_tournament_registration.tournament)
 
     def clean_school(self):
         return models.School.objects.get(pk=self.cleaned_data['school'])
