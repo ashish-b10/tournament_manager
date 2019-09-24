@@ -515,7 +515,7 @@ class SparringTeamRegistration(models.Model):
         return team_str
 
     def num_competitors(self):
-        return sum(map(lambda x: x is not None,
+        return sum(map(lambda x: bool(x),
                 [self.lightweight, self.middleweight, self.heavyweight]))
 
     @classmethod
