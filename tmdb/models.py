@@ -4,7 +4,7 @@ from django.db.utils import IntegrityError
 from itertools import product
 from django.template.defaultfilters import slugify
 
-from tmdb.util import BracketGenerator, SlotAssigner
+from tmdb.util import BracketGenerator, SlotAssigner, parse_team_file
 from .school_registration_validator import SchoolRegistrationValidator
 
 class SchoolValidationError(IntegrityError): pass
@@ -226,6 +226,37 @@ class Tournament(models.Model):
     def __repr__(self):
         return self.slug if self.slug else self.slugify()
 
+    def import_school_registrations(self, team_file):
+        SparringTeamRegistration.objects.filter(
+                tournament_division__tournament=self).delete()
+        teams = parse_team_file(team_file)
+        for division, teams in teams.items():
+            for team in teams:
+                self.import_team(team)
+
+    def import_team(self, team):
+        school = School.objects.get_or_create(name=team['school_name'])[0]
+        school_season_registration = SchoolSeasonRegistration.objects.get_or_create(
+                school=school, season=self.season, defaults={'division': 3})[0]
+        school_tournament_registration = SchoolTournamentRegistration.objects.get_or_create(
+                tournament=self,
+                school_season_registration=school_season_registration,
+                registration_doc_url = None,
+                imported=True)[0]
+        sparring_team = SparringTeam.objects.get_or_create(school=school,
+                division=team['sparring_division'],
+                number=team['team_num'])[0]
+        tournament_division = TournamentSparringDivision.objects.get_or_create(
+                tournament=self, division=team['sparring_division'])[0]
+        sparring_team_registration = SparringTeamRegistration(
+                tournament_division=tournament_division,
+                lightweight=team['has_lightweight'],
+                middleweight=team['has_middleweight'],
+                heavyweight=team['has_heavyweight'],
+                team=sparring_team)
+        sparring_team_registration.save()
+        return sparring_team_registration
+
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
     slug = models.SlugField(unique=True)
@@ -265,7 +296,7 @@ class SchoolSeasonRegistration(models.Model):
 class SchoolTournamentRegistration(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     school_season_registration = models.ForeignKey(SchoolSeasonRegistration, on_delete=models.PROTECT)
-    registration_doc_url = models.URLField(unique=True)
+    registration_doc_url = models.URLField(null=True, blank=True, unique=False)
     imported = models.BooleanField(default=False)
 
     class Meta:

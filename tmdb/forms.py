@@ -24,16 +24,9 @@ class SeasonDeleteForm(forms.ModelForm):
         fields = []
 
 class TournamentEditForm(forms.ModelForm):
-    import_field = forms.BooleanField(required=False, label="Import Schools?")
-
     class Meta:
         model = models.Tournament
         exclude = ['slug', 'imported']
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.cleaned_data['import_field']:
-            self.instance.import_school_registrations()
 
 class TournamentDeleteForm(forms.ModelForm):
     class Meta:
@@ -41,9 +34,11 @@ class TournamentDeleteForm(forms.ModelForm):
         fields = []
 
 class TournamentImportForm(forms.ModelForm):
+    team_file = forms.FileField()
+
     class Meta:
         model = models.Tournament
-        fields = []
+        fields = ['team_file']
 
 class MatchForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

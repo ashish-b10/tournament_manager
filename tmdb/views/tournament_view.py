@@ -64,8 +64,8 @@ def tournament_change(request, tournament_slug):
     else:
         change_form = forms.TournamentEditForm(instance=instance,
                 initial={'import': False})
-        import_form = forms.TournamentImportForm(instance=instance)
-        context['import_form'] = import_form
+        upload_teams_form = forms.TournamentImportForm(instance=instance)
+        context['upload_teams_form'] = upload_teams_form
     context['change_form'] = change_form
     return render(request, template_name, context)
 
@@ -91,11 +91,18 @@ def tournament_delete(request, tournament_slug):
         "tmdb.add_schooltournamentregistration",
 ])
 def tournament_import(request, tournament_slug):
-    if request.method != "POST":
+    instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+    context = {}
+    if request.method == 'POST':
+        upload_form = forms.TournamentImportForm(
+                request.POST, request.FILES, instance=instance)
+        if upload_form.is_valid():
+            instance.import_school_registrations(request.FILES['team_file'])
+            return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
+                    args=(tournament_slug,)))
+    else:
         return HttpResponse("Invalid operation: %s on %s" %(request.method,
                 request.get_full_path()), status=400)
-    instance = get_object_or_404(models.Tournament, slug=tournament_slug)
-    instance.import_school_registrations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
 def tournament_dashboard(request, tournament_slug):
