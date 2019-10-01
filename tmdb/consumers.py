@@ -47,7 +47,7 @@ class SparringTeamMatchConsumer(WebsocketConsumer):
                 self.sparring_team_match_group, self.channel_name)
 
     def receive(self, text_data):
-        if not self.scope['user'].has_perm('tmdb.change_teammatch'):
+        if not self.scope['user'].has_perm('tmdb.change_sparringteammatch'):
             err_msg = str(self.scope['user'])
             err_msg += " does not have permission to change this value"
             self.send(create_message('error', err_msg))
