@@ -1,22 +1,32 @@
 from django import forms
 import datetime
 
-from . import models
+from tmdb import models
 from django.contrib.auth import models as auth_models
 
-from collections import defaultdict
+class SeasonAddChangeForm(forms.ModelForm):
+    class Meta:
+        model = models.Season
+        exclude = ['slug', 'schools',]
+
+    def __init__(self, *args, **kwargs):
+        super(SeasonAddChangeForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        start_date=self.cleaned_data['start_date']
+        if 'end_date' not in self.cleaned_data or not self.cleaned_data['end_date']:
+            self.cleaned_data['end_date'] = start_date.replace(
+                    year=start_date.year+1)
+
+class SeasonDeleteForm(forms.ModelForm):
+    class Meta:
+        model = models.Season
+        fields = []
 
 class TournamentEditForm(forms.ModelForm):
-    import_field = forms.BooleanField(required=False, label="Import Schools?")
-
     class Meta:
         model = models.Tournament
         exclude = ['slug', 'imported']
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.cleaned_data['import_field']:
-            self.instance.import_school_registrations()
 
 class TournamentDeleteForm(forms.ModelForm):
     class Meta:
@@ -24,77 +34,11 @@ class TournamentDeleteForm(forms.ModelForm):
         fields = []
 
 class TournamentImportForm(forms.ModelForm):
+    team_file = forms.FileField()
+
     class Meta:
         model = models.Tournament
-        fields = []
-
-class TeamRegistrationDeleteForm(forms.ModelForm):
-    class Meta:
-        model = models.TeamRegistration
-        fields = []
-
-class TeamRegistrationForm(forms.ModelForm):
-    tournament = forms.ModelChoiceField(
-            queryset=models.Tournament.objects.all())
-
-    def __init__(self, school_registration, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['tournament'].widget = forms.HiddenInput()
-        self.fields['tournament_division'].widget = forms.HiddenInput()
-
-        lst = ['lightweight', 'middleweight', 'heavyweight', 'alternate1',
-                'alternate2', 'tournament_division']
-        for key in self.fields:
-            if key in lst:
-                self.fields[key].required = False
-
-        used_competitors = set()
-        for i in models.TeamRegistration.objects.filter(
-                team__school=school_registration.school,
-                tournament_division__tournament=school_registration.tournament):
-            used_competitors.update(i.get_competitors_ids())
-
-        if 'instance' in kwargs:
-            self.fields['team'].widget = forms.HiddenInput()
-            used_competitors -= set(kwargs['instance'].get_competitors_ids())
-        else:
-            self.fields['team'].queryset = models.Team.objects.filter(
-                school=school_registration.school,
-                registrations=None).order_by('division', 'number')
-
-        available_competitors = models.Competitor.objects.filter(
-                registration=school_registration).exclude(
-                        pk__in=used_competitors)
-
-        self.fields['lightweight'].queryset = available_competitors
-        self.fields['middleweight'].queryset = available_competitors
-        self.fields['heavyweight'].queryset = available_competitors
-        self.fields['alternate1'].queryset = available_competitors
-        self.fields['alternate2'].queryset = available_competitors
-
-    def clean(self):
-        tournament = self.cleaned_data['tournament']
-        division = self.cleaned_data['team'].division
-        tournament_division = models.TournamentDivision.objects.get(
-                tournament=tournament, division=division)
-        self.cleaned_data['tournament_division'] = tournament_division
-
-    class Meta:
-        model = models.TeamRegistration
-        exclude = ['seed', 'points']
-
-class SchoolCompetitorForm(forms.ModelForm):
-    class Meta:
-        model = models.Competitor
-        fields = ['name', 'sex', 'belt_rank', 'weight', 'registration']
-        widgets = {
-            'registration': forms.HiddenInput(),
-        }
-
-class SchoolCompetitorDeleteForm(forms.ModelForm):
-    class Meta:
-        model = models.Competitor
-        fields = []
+        fields = ['team_file']
 
 class MatchForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -107,7 +51,7 @@ class MatchForm(forms.ModelForm):
         return super(MatchForm, self).clean()
 
     class Meta:
-        model = models.TeamMatch
+        model = models.SparringTeamMatch
         fields = ['ring_number', 'ring_assignment_time', 'winning_team', 'in_holding']
 
 class ConfigurationSetting(forms.ModelForm):
@@ -122,22 +66,22 @@ class ConfigurationSetting(forms.ModelForm):
             'value': ''
         }
 
-class TeamRegistrationPointsForm(forms.ModelForm):
+class SparringTeamRegistrationPointsForm(forms.ModelForm):
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = models.TeamRegistration
+        model = models.SparringTeamRegistration
         fields = ['points']
 
     def clean(self, *args, **kwargs):
-        cleaned_data = super(TeamRegistrationPointsForm, self).clean(
+        cleaned_data = super(SparringTeamRegistrationPointsForm, self).clean(
                 *args, **kwargs)
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
             return cleaned_data
         tournament_division = self.instance.tournament_division
-        num_existing_matches = models.TeamMatch.objects.filter(
+        num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=tournament_division,
                 winning_team__isnull=False).count()
         if not num_existing_matches:
@@ -150,26 +94,34 @@ class TeamRegistrationPointsForm(forms.ModelForm):
         self.instance.tournament_division.assign_slots_to_team_registrations()
         self.instance.tournament_division.create_matches_from_slots()
 
-class TeamRegistrationSeedingForm(forms.ModelForm):
+class SparringTeamRegistrationSeedingForm(forms.ModelForm):
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = models.TeamRegistration
+        model = models.SparringTeamRegistration
         fields = ['seed']
 
+    def clean_seed(self):
+        if self.cleaned_data['seed'] is None:
+            return
+        existing_seeds = models.SparringTeamRegistration.objects.filter(
+                tournament_division=self.instance.tournament_division,
+                seed=self.cleaned_data['seed'])
+        if existing_seeds:
+            raise forms.ValidationError("A team already has seed #%d: %s" %(
+                    self.cleaned_data['seed'], existing_seeds.first().team))
+
     def clean(self, *args, **kwargs):
-        cleaned_data = super(TeamRegistrationSeedingForm, self).clean(
-                *args, **kwargs)
-        confirm_delete_matches = cleaned_data['confirm_delete_matches']
+        confirm_delete_matches = self.cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
-            return cleaned_data
+            return self.cleaned_data
         tournament_division = self.instance.tournament_division
-        num_existing_matches = models.TeamMatch.objects.filter(
+        num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=tournament_division,
                 winning_team__isnull=False).count()
         if not num_existing_matches:
-            return cleaned_data
+            return self.cleaned_data
         self.fields['confirm_delete_matches'].widget = forms.CheckboxInput()
         raise forms.ValidationError("The %s division already has %d matches with results. Performing this operation will DELETE THESE MATCH RESULTS. Are you sure you want to do this?" %(str(tournament_division), num_existing_matches))
 
@@ -177,11 +129,13 @@ class TeamRegistrationSeedingForm(forms.ModelForm):
         super().save(*args, **kwargs)
         self.instance.tournament_division.create_matches_from_slots()
 
-class TeamRegistrationBracketSeedingForm(forms.Form):
+class SparringTeamRegistrationBracketSeedingForm(forms.Form):
     seed = forms.IntegerField()
     team_registration = forms.ModelChoiceField(
-            queryset=models.TeamRegistration.objects.all())
-    existing_team = forms.ModelChoiceField(queryset=models.TeamRegistration.objects.all(), widget=forms.HiddenInput())
+            queryset=models.SparringTeamRegistration.objects.all())
+    existing_team = forms.ModelChoiceField(
+            queryset=models.SparringTeamRegistration.objects.all(),
+            widget=forms.HiddenInput())
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
     readonly_fields = ('seed',)
@@ -192,7 +146,7 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
 
     def clean(self):
         cleaned_data = super(
-                TeamRegistrationBracketSeedingForm, self).clean()
+                SparringTeamRegistrationBracketSeedingForm, self).clean()
         self.validate_schools()
         self.validate_weight_classes()
         self.validate_confirm_delete_matches()
@@ -230,7 +184,7 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
             return
         team_registration = self.cleaned_data['team_registration']
         division = team_registration.tournament_division
-        num_existing_matches = models.TeamMatch.objects.filter(
+        num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=division, winning_team__isnull=False).count()
         if not num_existing_matches:
             return
@@ -243,21 +197,21 @@ class TeamRegistrationBracketSeedingForm(forms.Form):
         team_registration.save()
         team_registration.tournament_division.create_matches_from_slots()
 
-class TournamentDivisionBracketGenerateForm(forms.ModelForm):
+class TournamentSparringDivisionBracketGenerateForm(forms.ModelForm):
     confirm_delete_matches = forms.BooleanField(
             required=False, initial=False, widget=forms.HiddenInput())
 
     class Meta:
-        model = models.TournamentDivision
+        model = models.TournamentSparringDivision
         fields = []
 
     def clean(self):
         cleaned_data = super(
-                TournamentDivisionBracketGenerateForm, self).clean()
+                TournamentSparringDivisionBracketGenerateForm, self).clean()
         confirm_delete_matches = cleaned_data['confirm_delete_matches']
         if confirm_delete_matches:
             return cleaned_data
-        num_existing_matches = models.TeamMatch.objects.filter(
+        num_existing_matches = models.SparringTeamMatch.objects.filter(
                 division=self.instance, winning_team__isnull=False).count()
         if not num_existing_matches:
             return cleaned_data

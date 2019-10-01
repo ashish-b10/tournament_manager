@@ -1,0 +1,34 @@
+{% extends "tmdb/base.html" %}
+
+{% block main-content %}
+  <div class="row page-header">
+    <h1 class="col-sm-5 col-md-5">{{school.name}}</h1>
+    {% if perms.tmdb.change_school %}
+    <a class="col-sm-offset-2 col-sm-3 col-md-offset-3 col-md-3 btn btn-primary" id="change_school_button" href="{%url 'tmdb:school_change' school.slug%}" >Edit</a>
+    {% endif %}
+  </div>
+  {% if school_season_registrations %}
+  Season participation:
+  <table class="table table-striped">
+    <tr>
+      <th>Season</th>
+      <th>Division</th>
+    </tr>
+    {% for registration in school_season_registrations %}
+    <tr>
+      <td>{{registration.season.start_date.year}} - {{registration.season.end_date.year}}</td>
+      <td>{{registration.division}}</td>
+      {% if perms.tmdb.change_schoolseasonregistration %}
+      <td><a class="btn btn-primary" href="{%url 'tmdb:school_season_change' school.slug registration.season.slug %}">Edit</a></td>
+      {% endif %}
+    <tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>{{school.name}} has not registered in any ECTC seasons.</p>
+  <h2>Delete School</h2>
+  {% if perms.tmdb.delete_school %}
+  <p>Click <a href="{%url 'tmdb:school_delete' school.slug%}">here</a> to delete this school</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

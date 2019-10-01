@@ -1,23 +1,13 @@
-{% if school_registration %}
-<a class="btn btn-primary" href="{% url 'tmdb:team_registration_add' tournament.slug school_registration.school.slug %}">Add team</a>
+{% if school_tournament_registration %}
+<a class="btn btn-primary" href="{% url 'tmdb:team_registration_add' tournament.slug school_tournament_registration.school_season_registration.school.slug %}">Add team</a>
 {% endif %}
 <table class="table table-striped">
   <thead>
   <th> Team Name </th>
-  <th> Lightweight </th>
-  <th> Middleweight </th>
-  <th> Heavyweight </th>
-  <th> Alternate #1 </th>
-  <th> Alternate #2 </th>
   </thead>
   {% for team_registration in team_registrations %}
   <tr>
-    <td> {{team_registration.team}} </td>
-    <td>{% if team_registration.lightweight%}{{team_registration.lightweight.name}}{% endif %}</td>
-    <td>{% if team_registration.middleweight%}{{team_registration.middleweight.name}}{% endif %}</td>
-    <td>{% if team_registration.heavyweight%}{{team_registration.heavyweight.name}}{% endif %}</td>
-    <td>{% if team_registration.alternate1%}{{team_registration.alternate1.name}}{% endif %}</td>
-    <td>{% if team_registration.alternate2%}{{team_registration.alternate2.name}}{% endif %}</td>
+    <td> {{team_registration.team_list_str}} </td>
     <td><a class="btn btn-primary" href="{% url 'tmdb:team_registration_change' tournament.slug team_registration.team.school.slug team_registration.team.division.slug team_registration.team.number %}">Edit</a></td>
     <td><a class="btn btn-danger" href="{% url 'tmdb:team_registration_delete' tournament.slug team_registration.team.school.slug team_registration.team.division.slug team_registration.team.number %}">Delete</a></td>
   </tr>

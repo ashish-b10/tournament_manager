@@ -3,7 +3,7 @@ import json
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import models as auth_models
 from django.contrib import messages
@@ -11,19 +11,21 @@ from django.contrib import messages
 from tmdb import forms
 from tmdb import models
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import datetime
 
 from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
 
 def tournaments(request, tournament_slug=None):
-    today = datetime.date.today()
+    seasons = models.Season.objects.order_by('-start_date')
+    tournaments_by_season = {}
+    for season in seasons:
+        tournaments_by_season[season] = season.tournaments()
     context = {
-        'tournaments': models.Tournament.objects.order_by('-date')
+        'seasons': tournaments_by_season,
     }
     return render(request, 'tmdb/tournaments.html', context)
-
 
 @permission_required("tmdb.add_tournament")
 def tournament_add(request):
@@ -38,9 +40,11 @@ def tournament_add(request):
                     args=(add_form.instance.slug,)))
     else:
         today = datetime.date.today()
+        season = get_object_or_404(models.Season, slug=request.GET['season'])
         add_form = forms.TournamentEditForm(initial={
                 'date': today,
                 'import_field': True,
+                'season': season,
         })
     context['add_form'] = add_form
     return render(request, template_name, context)
@@ -60,8 +64,8 @@ def tournament_change(request, tournament_slug):
     else:
         change_form = forms.TournamentEditForm(instance=instance,
                 initial={'import': False})
-        import_form = forms.TournamentImportForm(instance=instance)
-        context['import_form'] = import_form
+        upload_teams_form = forms.TournamentImportForm(instance=instance)
+        context['upload_teams_form'] = upload_teams_form
     context['change_form'] = change_form
     return render(request, template_name, context)
 
@@ -84,35 +88,32 @@ def tournament_delete(request, tournament_slug):
 
 @permission_required([
         "tmdb.add_school",
-        "tmdb.add_schoolregistration",
+        "tmdb.add_schooltournamentregistration",
 ])
 def tournament_import(request, tournament_slug):
-    if request.method != "POST":
+    instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+    context = {}
+    if request.method == 'POST':
+        upload_form = forms.TournamentImportForm(
+                request.POST, request.FILES, instance=instance)
+        if upload_form.is_valid():
+            instance.import_school_registrations(request.FILES['team_file'])
+            return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
+                    args=(tournament_slug,)))
+    else:
         return HttpResponse("Invalid operation: %s on %s" %(request.method,
                 request.get_full_path()), status=400)
-    instance = get_object_or_404(models.Tournament, slug=tournament_slug)
-    instance.import_school_registrations()
     return HttpResponseRedirect(reverse('tmdb:index'))
 
 def tournament_dashboard(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    tournament_divisions = models.TournamentDivision.objects.filter(
+    tournament_divisions = models.TournamentSparringDivision.objects.filter(
             tournament=tournament).order_by(
             'division__sex', 'division__skill_level')
-
-    all_matches = []
-    matches_by_division = []
-    for division in tournament_divisions:
-        team_matches = models.TeamMatch.objects.filter(
-                division=division).order_by('number')
-        matches_by_division.append((division, team_matches))
-        all_matches += team_matches
 
     context = {
         'tournament': tournament,
         'tournament_divisions': tournament_divisions,
-        'all_matches': all_matches,
-        'matches_by_division': matches_by_division,
     }
     return render(request, 'tmdb/tournament_dashboard.html', context)
 
@@ -126,8 +127,9 @@ json_fields = {
     'school': ('id', 'name',),
     'team': ('id', 'division', 'school', 'number',),
     'tournament_division': ('id', 'division', 'tournament',),
-    'school_registration': ('id', 'school', 'tournament',),
-    'competitor': ('id', 'registration', 'belt_rank', 'name', 'sex',),
+    'school_tournament_registration': ('id', 'school_season_registration',
+                    'tournament',),
+    'school_season_registration': ('id', 'school',),
     'team_registration': ('id', 'lightweight', 'middleweight', 'heavyweight',
                     'alternate1', 'alternate2', 'team', 'tournament_division',
                     'points', 'seed',),
@@ -143,30 +145,32 @@ def tournament_json(request, tournament_slug):
             [tournament],
             json_fields['tournament']))
     msg.extend(model_to_json(
-            models.Division.objects.all(),
+            models.SparringDivision.objects.all(),
             json_fields['division']))
     msg.extend(model_to_json(
             models.School.objects.all(),
             json_fields['school']))
     msg.extend(model_to_json(
-            models.Team.objects.all(),
+            models.SparringTeam.objects.all(),
             json_fields['team']))
     msg.extend(model_to_json(
-            models.TournamentDivision.objects.filter(tournament=tournament),
+            models.TournamentSparringDivision.objects.filter(
+                    tournament=tournament),
             json_fields['tournament_division']))
     msg.extend(model_to_json(
-            models.SchoolRegistration.objects.filter(tournament=tournament),
-            json_fields['school_registration']))
+            models.SchoolTournamentRegistration.objects.filter(
+                    tournament=tournament),
+            json_fields['school_tournament_registration']))
     msg.extend(model_to_json(
-            models.Competitor.objects.filter(
-                    registration__tournament=tournament),
-            json_fields['competitor']))
+            models.SchoolSeasonRegistration.objects.all(),
+            json_fields['school_season_registration']))
     msg.extend(model_to_json(
-            models.TeamRegistration.objects.filter(
+            models.SparringTeamRegistration.objects.filter(
                     tournament_division__tournament=tournament),
             json_fields['team_registration']))
     msg.extend(model_to_json(
-            models.TeamMatch.objects.filter(division__tournament=tournament),
+            models.SparringTeamMatch.objects.filter(
+                    division__tournament=tournament),
             json_fields['team_match']))
 
     msg_json = json.dumps(msg)
@@ -176,41 +180,41 @@ def tournament_json(request, tournament_slug):
 def tournament_school(request, tournament_slug, school_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
     school = get_object_or_404(models.School, slug=school_slug)
-    school_registration = get_object_or_404(models.SchoolRegistration,
-            tournament=tournament, school=school)
-    competitors = models.Competitor.objects.filter(
-            registration=school_registration).order_by('name')
-    team_registrations = models.TeamRegistration.order_queryset(
-            models.TeamRegistration.objects.filter(
+    school_tournament_registration = get_object_or_404(
+            models.SchoolTournamentRegistration, tournament=tournament,
+            school_season_registration__school=school,
+            school_season_registration__season=tournament.season)
+    team_registrations = models.SparringTeamRegistration.order_queryset(
+            models.SparringTeamRegistration.objects.filter(
                     tournament_division__tournament=tournament,
                     team__school=school))
     context = {
         'tournament': tournament,
-        'school_registration': school_registration,
-        'competitors': competitors,
+        'school_tournament_registration': school_tournament_registration,
         'team_registrations': team_registrations,
     }
-    return render(request, 'tmdb/tournament_school_competitors.html', context)
+    return render(request, 'tmdb/tournament_school.html', context)
 
 @permission_required([
         "tmdb.add_competitor",
-        "tmdb.add_teamregistration",
+        "tmdb.add_sparringteamregistration",
         "tmdb.change_competitor",
-        "tmdb.change_schoolregistration",
-        "tmdb.change_teamregistration",
+        "tmdb.change_schooltournamentregistration",
+        "tmdb.change_sparringteamregistration",
         "tmdb.delete_competitor",
-        "tmdb.delete_teamregistration",
+        "tmdb.delete_sparringteamregistration",
 ])
 def tournament_school_import(request, tournament_slug, school_slug=None):
     if request.method != "POST":
         return HttpResponse("Invalid operation: %s on %s" %(request.method,
-                request.get_full_path()), status=400)
+                request.get_full_path()), status=405)
     if school_slug is None:
-        school_regs = models.SchoolRegistration.objects.filter(
+        school_regs = models.SchoolTournamentRegistration.objects.filter(
                 tournament__slug=tournament_slug)
     else:
-        school_reg = get_object_or_404(models.SchoolRegistration,
-                tournament__slug = tournament_slug, school__slug=school_slug)
+        school_reg = get_object_or_404(models.SchoolTournamentRegistration,
+                tournament__slug=tournament_slug,
+                school_season_registration__school__slug=school_slug)
         school_regs = [school_reg]
     reimport = False
     if request.POST.get('reimport') == "true":
@@ -219,12 +223,14 @@ def tournament_school_import(request, tournament_slug, school_slug=None):
     already_imported_schools = []
     for school_reg in school_regs:
         if school_reg.imported and not reimport:
-            already_imported_schools.append(school_reg.school.name)
+            already_imported_schools.append(
+                    school_reg.school_season_registration.school.name)
             continue
         try:
             school_reg.import_competitors_and_teams(reimport=reimport)
         except models.SchoolValidationError as e:
-            err_msg = "Error importing %s: %s" %(school_reg.school.name,
+            err_msg = "Error importing %s: %s" %(
+                    school_reg.school_season_registration.school.name,
                     str(e))
             err_msgs.append(err_msg)
     for err_msg in err_msgs:
@@ -238,7 +244,7 @@ def tournament_school_import(request, tournament_slug, school_slug=None):
 
 def attach_school_registration_import_errors(school_registrations):
     school_registrations_by_id = {sr.pk:sr for sr in school_registrations}
-    import_errors = models.SchoolRegistrationError.objects.filter(
+    import_errors = models.SchoolTournamentRegistrationError.objects.filter(
         school_registration__in=[sr.pk for sr in school_registrations]
     )
     for import_error in import_errors:
@@ -249,11 +255,12 @@ def attach_school_registration_import_errors(school_registrations):
         except AttributeError:
             school_registration.import_errors = [import_error]
 
-@login_required
+@permission_required("tmdb.add_schooltournamentregistration")
 def tournament_schools(request, tournament_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    school_registrations = models.SchoolRegistration.objects.filter(
-        tournament=tournament).order_by('school__name')
+    school_registrations = models.SchoolTournamentRegistration.objects.filter(
+            tournament=tournament).order_by(
+                    'school_season_registration__school__name')
     attach_school_registration_import_errors(school_registrations)
     context = {
         'tournament': tournament,
@@ -261,15 +268,3 @@ def tournament_schools(request, tournament_slug):
         'school_registrations': school_registrations,
     }
     return render(request, 'tmdb/tournament_schools.html', context)
-
-def rings(request, tournament_slug):
-    tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    matches_by_ring = defaultdict(list)
-    for match in models.TeamMatch.objects.filter(ring_number__isnull=False,
-            division__tournament=tournament).order_by('-ring_assignment_time'):
-        matches_by_ring[str(match.ring_number)].append(match)
-    context = {
-        'matches_by_ring' : sorted(matches_by_ring.items()),
-        'tournament': tournament
-    }
-    return render(request, 'tmdb/rings.html', context)

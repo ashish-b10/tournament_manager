@@ -3,7 +3,7 @@ import json
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import models as auth_models
 from django.contrib import messages
@@ -90,7 +90,7 @@ def get_ringtable_permission_group():
 def create_ringtable_permission_group():
     group = auth_models.Group.objects.create(name="Ring Table")
     group.permissions.set([auth_models.Permission.objects.get(
-            name='Can change team match')])
+            name='Can change sparring team match')])
     return group
 
 def get_headtable_permission_group():
@@ -101,9 +101,20 @@ def get_headtable_permission_group():
 
 def create_headtable_permission_group():
     group = auth_models.Group.objects.create(name="Head Table")
+    update_headtable_group_permissions()
+    return group
+
+def update_headtable_group_permissions():
+    """Set headtable group to add/change/delete all tmdb models.
+
+    This function is useful when adding or changing models in the database.
+    When a model is changed, this function can be calledto ensure that the
+    users in the head table group will have full permissions on it."""
+    group = auth_models.Group.objects.filter(name = "Head Table").first()
+    if not group:
+        return
     group.permissions.set(auth_models.Permission.objects.filter(
             content_type__in=auth_models.ContentType.objects.filter(
                     app_label="tmdb")))
     group.permissions.add(auth_models.Permission.objects.get(
-            name="Can add user"))
-    return group
+            codename="add_user"))

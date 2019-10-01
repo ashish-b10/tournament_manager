@@ -72,7 +72,8 @@ match_sheet_dir = '/dev/shm/match_sheets'
 
 def create_match_sheets():
     tournament = models.Tournament.objects.get(location="Princeton")
-    matches = models.TeamMatch.objects.filter(division__tournament = tournament)
+    matches = models.SparringTeamMatch.objects.filter(
+            division__tournament=tournament)
     match_sheets = []
     if not os.path.exists(match_sheet_dir):
         os.mkdir(match_sheet_dir)

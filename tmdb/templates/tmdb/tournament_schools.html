@@ -25,7 +25,7 @@
     </thead>
   {% for school_reg in school_registrations %}
     <tr>
-      <td><a href="{% url 'tmdb:tournament_school' tournament.slug school_reg.school.slug %}">{{school_reg.school.name}}</a></td>
+      <td><a href="{% url 'tmdb:tournament_school' tournament.slug school_reg.school_season_registration.school.slug %}">{{school_reg.school_season_registration.school.name}}</a></td>
       <td><a href="{{school_reg.registration_doc_url}}">Google Docs Registration spreadsheet</a></td>
       <td>
           {% if school_reg.import_errors %}
@@ -37,7 +37,7 @@
           {% endif %}
       </td>
       <td>
-        <form action="{% url 'tmdb:tournament_school_import' tournament.slug school_reg.school.slug %}" method="post">
+        <form action="{% url 'tmdb:tournament_school_import' tournament.slug school_reg.school_season_registration.school.slug %}" method="post">
           {% csrf_token %}
           {% if school_reg.imported %}
           <input type="hidden" name="reimport" value="true"/>

@@ -3,6 +3,8 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 import tmdb.views as views
 
+app_name = 'tmdb'
+
 tournament_base = (r'^tournament/*'
             + r'/(?P<tournament_slug>[a-z0-9_-]+)/*')
 tournament_school_base = (tournament_base
@@ -18,7 +20,46 @@ tournament_division_match_base = (tournament_division_base
             + r'/match/*'
             + r'/(?P<match_num>[0-9]+)/*')
 
+season_base = (r'^season/*'
+            + r'/(?P<season_slug>[a-z0-9_-]+)/*')
+
+school_base = (r'^school/*'
+            + r'/(?P<school_slug>[a-z0-9_-]+)/*')
+school_season_base = (school_base
+            + r'/season/*'
+            + r'/(?P<season_slug>[a-z0-9_-]+)/*')
+
 urlpatterns = [
+    # season edit
+    url(r'^seasons/*'
+            + r'/add/*$',
+            views.season_view.season_add, name='season_add'),
+    url(season_base
+            + r'/edit/*$',
+            views.season_view.season_edit, name='season_edit'),
+    url(season_base
+            + r'/delete/*$',
+            views.season_view.season_delete, name='season_delete'),
+
+    # school edit
+    url(r'^schools/*$', views.schools_view.schools, name='schools'),
+    url(r'^schools/*'
+            + r'/add/*$',
+            views.schools_view.school_add, name='school_add'),
+    url(school_base + '$', views.schools_view.school, name='school'),
+    url(school_base
+            + r'/edit/*$',
+            views.schools_view.school_change, name='school_change'),
+    url(school_base
+            + r'/delete/*$',
+            views.schools_view.school_delete, name='school_delete'),
+
+    # school season registration edit
+    url(school_season_base
+            + r'/edit/*$',
+            views.schools_view.school_season_change,
+            name='school_season_change'),
+
     # tournament create/edit/delete
     url(r'^tournaments/*$', views.tournament_view.tournaments, name='tournaments'),
     url(r'^tournaments/*'
@@ -40,12 +81,8 @@ urlpatterns = [
             views.tournament_view.tournament_import, name='tournament_import'),
 
     # tournament dashboard
-    url(tournament_base
-            + r'/dashboard/*$',
-            views.tournament_view.tournament_dashboard, name='tournament_dashboard'),
-    url(tournament_base
-            + r'/rings/*$',
-            views.tournament_view.rings, name='rings'),
+    url(tournament_base + '$', views.tournament_view.tournament_dashboard,
+            name='tournament_dashboard'),
 
     # tournament schools
     url(tournament_base
@@ -56,10 +93,12 @@ urlpatterns = [
             views.tournament_view.tournament_school, name='tournament_school'),
     url(tournament_school_base
             + r'/import_competitors/*$',
-            views.tournament_view.tournament_school_import, name='tournament_school_import'),
+            views.tournament_view.tournament_school_import,
+            name='tournament_school_import'),
     url(tournament_base
             + r'/import_competitors/*$',
-            views.tournament_view.tournament_school_import, name='tournament_school_import'),
+            views.tournament_view.tournament_school_import,
+            name='tournament_school_import'),
 
     # list of teams
     url(tournament_base
@@ -68,18 +107,6 @@ urlpatterns = [
     url(tournament_division_base
             + r'/teams/*$',
             views.team_registration_view.team_list, name='team_list'),
-
-    # competitor create/edit/delete
-    url(tournament_school_base
-            + r'/competitors/*'
-            + r'/add/*$',
-            views.competitor_view.competitor_add, name='competitor_add'),
-    url(tournament_school_competitor_base
-            + r'/edit/*$',
-            views.competitor_view.competitor_change, name='competitor_change'),
-    url(tournament_school_competitor_base
-            + r'/delete/*$',
-            views.competitor_view.competitor_delete, name='delete_competitor'),
 
     # team_registration create/edit/delete
     url(tournament_school_base

@@ -39,17 +39,17 @@ def _draw_match_sheet(match, female=False, a_team=False, b_team=False, c_team=Fa
                 2.4*inch + xoffset, 9.1*inch + yoffset)
     yoffset = -.3 * inch
     skill_level = match.division.division.skill_level
-    if skill_level == models.DivisionLevelField.C_TEAM_VAL:
+    if skill_level == models.SparringDivisionLevelField.C_TEAM_VAL:
         drawing_canvas.ellipse(
                 3.2*inch + xoffset, 9.5*inch + yoffset,
                 2.4*inch + xoffset, 9.1*inch + yoffset)
     xoffset = 0
-    if skill_level == models.DivisionLevelField.A_TEAM_VAL:
+    if skill_level == models.SparringDivisionLevelField.A_TEAM_VAL:
         drawing_canvas.ellipse(
                 3.2*inch + xoffset, 9.5*inch + yoffset,
                 2.4*inch + xoffset, 9.1*inch + yoffset)
     xoffset = 4.23/ 2 * inch
-    if skill_level == models.DivisionLevelField.B_TEAM_VAL:
+    if skill_level == models.SparringDivisionLevelField.B_TEAM_VAL:
         drawing_canvas.ellipse(
                 3.2*inch + xoffset, 9.5*inch + yoffset,
                 2.4*inch + xoffset, 9.1*inch + yoffset)

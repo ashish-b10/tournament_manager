@@ -3,7 +3,7 @@ import json
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import models as auth_models
 from django.contrib import messages
@@ -30,9 +30,9 @@ def red_team_text(team_match):
 
 def bracket_printable(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament=tournament, division__slug=division_slug)
-    matches, num_rounds = models.TeamMatch.get_matches_by_round(
+    matches, num_rounds = models.SparringTeamMatch.get_matches_by_round(
             tournament_division)
     bracket_columns = []
     for round_num in reversed(range(num_rounds + 1)):
@@ -51,9 +51,10 @@ def bracket_printable(request, tournament_slug, division_slug):
     return HttpResponse(response, content_type="image/svg+xml")
 
 def bracket_printable_pdf(request, tournament_slug, division_slug):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
-    matches = models.TeamMatch.objects.filter(division=tournament_division)
+    matches = models.SparringTeamMatch.objects.filter(
+            division=tournament_division)
     filename = "%s %s.pdf" %(str(tournament_division.tournament),
             str(tournament_division))
     filename = filename.lower().replace(' ', '_')
@@ -65,10 +66,10 @@ def bracket_printable_pdf(request, tournament_slug, division_slug):
 
 def bracket(request, tournament_slug, division_slug):
     tournament = get_object_or_404(models.Tournament, slug=tournament_slug)
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament=tournament, division__slug=division_slug)
     bracket_columns = []
-    matches, num_rounds = models.TeamMatch.get_matches_by_round(
+    matches, num_rounds = models.SparringTeamMatch.get_matches_by_round(
             tournament_division)
     bracket_column_height = str(64 * 2**num_rounds) + "px"
     for round_num in reversed(range(num_rounds + 1)):
@@ -79,7 +80,7 @@ def bracket(request, tournament_slug, division_slug):
             key = (round_num, round_slot)
             cell_type = []
             if key not in matches:
-                match = models.TeamMatch()
+                match = models.SparringTeamMatch()
                 cell_type.append("bracket_cell_without_match")
             else:
                 match = matches[key]
@@ -94,7 +95,7 @@ def bracket(request, tournament_slug, division_slug):
     if (0, 0) in matches:
         matches[(0, 0)].cell_type = "bracket_cell_with_match" \
                 + " bracket_finals_cell"
-    unassigned_teams = models.TeamRegistration.get_teams_without_assigned_slot(
+    unassigned_teams = models.SparringTeamRegistration.get_teams_without_assigned_slot(
             tournament_division)
 
     context = {
@@ -108,9 +109,9 @@ def bracket(request, tournament_slug, division_slug):
     return render(request, 'tmdb/brackets.html', context)
 
 def get_lowest_bye_seed(tournament_division):
-    team_registrations = models.TeamRegistration.objects.filter(
+    team_registrations = models.SparringTeamRegistration.objects.filter(
             tournament_division=tournament_division)
-    team_matches = models.TeamMatch.objects.filter(
+    team_matches = models.SparringTeamMatch.objects.filter(
             division=tournament_division).order_by('-round_num')
     if not team_matches:
         return 1
@@ -128,14 +129,14 @@ def get_lowest_bye_seed(tournament_division):
         return max_seed
     return max(seeds)
 
-@permission_required("tmdb.add_teammatch")
+@permission_required("tmdb.add_sparringteammatch")
 def add_team_to_bracket(request, tournament_slug, division_slug):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     context = {}
 
     if request.method == 'POST':
-        form = forms.TeamRegistrationBracketSeedingForm(request.POST)
+        form = forms.SparringTeamRegistrationBracketSeedingForm(request.POST)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse("tmdb:bracket", args=(
@@ -147,9 +148,10 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
         round_number = request.GET.get('round_num')
         round_slot = request.GET.get('round_slot')
 
-        tournament_division = get_object_or_404(models.TournamentDivision,
+        tournament_division = get_object_or_404(
+                models.TournamentSparringDivision,
                 tournament__slug=tournament_slug, division__slug=division_slug)
-        existing_match = get_object_or_404(models.TeamMatch,
+        existing_match = get_object_or_404(models.SparringTeamMatch,
                 division=tournament_division, round_num=round_number,
                 round_slot=round_slot)
 
@@ -160,34 +162,35 @@ def add_team_to_bracket(request, tournament_slug, division_slug):
         else:
             raise ValueError("side was `%s`, must be `upper` or `lower`" %(side,))
         new_seed = 2**(int(round_number) + 2) - existing_team.seed + 1
-        form = forms.TeamRegistrationBracketSeedingForm(initial={'seed': new_seed, 'existing_team': existing_team.id})
+        form = forms.SparringTeamRegistrationBracketSeedingForm(
+                initial={'seed': new_seed, 'existing_team': existing_team.id})
         context['existing_team'] = existing_team
         context['seed'] = new_seed
 
     form.fields['team_registration'].queryset = \
-            models.TeamRegistration.get_teams_without_assigned_slot(
+            models.SparringTeamRegistration.get_teams_without_assigned_slot(
                     tournament_division)
     context['tournament_division'] = tournament_division
     context['tournament'] = tournament_division.tournament
     context['form'] = form
     return render(request, 'tmdb/modify_team_registration_seed.html', context)
 
-@permission_required("tmdb.add_teammatch")
+@permission_required("tmdb.add_sparringteammatch")
 def remove_team_from_bracket(request, tournament_slug, division_slug):
-    tournament_division = get_object_or_404(models.TournamentDivision,
+    tournament_division = get_object_or_404(models.TournamentSparringDivision,
             tournament__slug=tournament_slug, division__slug=division_slug)
     team_registration_pk = request.GET.get('team_registration')
-    team_registration = get_object_or_404(models.TeamRegistration,
+    team_registration = get_object_or_404(models.SparringTeamRegistration,
             pk=team_registration_pk)
     if request.method == 'POST':
-        form = forms.TeamRegistrationSeedingForm(request.POST,
+        form = forms.SparringTeamRegistrationSeedingForm(request.POST,
                 instance=team_registration)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('tmdb:bracket',
                     args=(tournament_slug, division_slug,)))
     else:
-        form = forms.TeamRegistrationSeedingForm(initial={'seed': None})
+        form = forms.SparringTeamRegistrationSeedingForm(initial={'seed': None})
         form.fields['seed'].widget = django_forms.HiddenInput()
     context = {
         'form': form,

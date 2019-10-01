@@ -1,0 +1,9 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+<h1>Registration information for {{school_tournament_registration.school_season_registration.school}} at {{school_tournament_registration.tournament.location}} on {{school_tournament_registration.tournament.date}}</h1>
+
+  <h2>Teams</h2>
+  <h1></h1>
+  {% include "tmdb/snippets/team_list.html" with team_registrations=team_registrations tournament=tournament school_tournament_registration=school_tournament_registration csrf_token=csrf_token only %}
+{% endblock %}

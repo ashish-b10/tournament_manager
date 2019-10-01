@@ -367,7 +367,7 @@ def get_match_number_position(match, match_positions, align):
     Gets the match number position.
     Averages the positions of the red and blue teams and adds an offset depending on alignment
 
-    :param match: TeamMatch object
+    :param match: SparringTeamMatch object
     :param match_positions: Dictionary of match positions
     :param align: string Alignment
     :return match_position: position tuple
