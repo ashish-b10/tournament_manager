@@ -14,7 +14,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf.urls import include, url
+from django.views.generic import RedirectView
+from django.urls import reverse_lazy
 
 urlpatterns = [
     url(r'^tmdb/', include('tmdb.urls', namespace="tmdb")),
+    url(r'', RedirectView.as_view(url=reverse_lazy('tmdb:index'), permanent=True)),
 ]
