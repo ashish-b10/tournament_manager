@@ -16,6 +16,7 @@ DIVISION_NAMES = [
     "Women's B",
     "Men's C",
     "Women's C",
+    "Poomsae"
 ]
 
 def _generate_division_re(division_name):
@@ -69,6 +70,9 @@ def _parse_num_teams(num_teams_row):
     return num_teams
 
 def _get_sparring_division(division_name):
+    if division_name.strip().startswith("Poomsae"):
+        return models.SparringDivision.objects.get(sex=models.SexField.FEMALE, skill_level="P")
+
     sex = division_name[:-1].strip()
     skill_level = division_name[-1:]
     if sex == "Men's":

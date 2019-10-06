@@ -42,10 +42,12 @@ class SparringDivisionLevelField(models.CharField):
     A_TEAM_VAL = 'A'
     B_TEAM_VAL = 'B'
     C_TEAM_VAL = 'C'
+    POOMSAE_TEAM_VAL = 'P'
     DIVISION_LEVEL_CHOICES = (
         (A_TEAM_VAL, 'A-team'),
         (B_TEAM_VAL, 'B-team'),
         (C_TEAM_VAL, 'C-team'),
+        (POOMSAE_TEAM_VAL, 'Poomsae-team'),
     )
 
     DIVISION_LEVEL_LABELS = dict(DIVISION_LEVEL_CHOICES)
