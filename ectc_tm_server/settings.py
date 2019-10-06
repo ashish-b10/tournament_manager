@@ -19,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 current_dir = os.path.dirname(os.path.realpath("__file__"))
 sys.path.insert(0, current_dir)
 try:
-    from .custom_settings import SECRET_KEY, DEBUG, ALLOWED_HOSTS
+    from .custom_settings import SECRET_KEY, DEBUG, ALLOWED_HOSTS, REDIS_HOST
 except:
     raise IOError("Unable to read configuration from custom settings")
 sys.path.pop(0)

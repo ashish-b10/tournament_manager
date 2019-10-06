@@ -12,3 +12,4 @@ with open("custom_settings.py","w") as fh:
     fh.write("SECRET_KEY=\"" + SECRET_KEY +"\"\n")
     fh.write("DEBUG=" + str(DEBUG) + "\n")
     fh.write("ALLOWED_HOSTS = [\"localhost\"]\n")
+    fh.write("REDIS_HOST = \"localhost\"\n")
