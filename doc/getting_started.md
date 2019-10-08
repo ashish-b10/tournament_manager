@@ -86,116 +86,104 @@ And then open the following link in a webbrowser: http://localhost:8000
 
 You should be greeted with a page that says "No tournaments have yet been created."
 
+There is one last task we should run. In order to perform any operations on the website, it is necessary to create a user. Cancel the development server and run:
+
+```
+python3 manage.py create_headtable_user -u USERNAME -p PASSWORD
+```
+
+Replace USERNAME and PASSWORD as desired. Now restart the server and attempt to log in. It should be possible to create new seasons, tournaments and schools in the database.
+
 ## Database Backend
 
-By default, the application is configured to use SQLite as a backend because of its ease of setup - it requires fewer additional dependencies and saves the developer from having to configure access permissions. However, it is intended that the production server will use PostgreSQL as a backend, thus it is helpful to know how to set up PostgreSQL and configure Django (and `tmdb`) to use it. While using SQLite is easier than PostgreSQL, there is a very small chance that features which work with PostgreSQL do not work with SQLite and an even smaller chance that features working with SQLite do not work with PostgreSQL.
+The tutorial thus far has assumed using SQLite - SQLite is nice for an easy development setup, but it is not usable on production (one reason being that it does not support multiple concurrent connections which is crucial for handling several requests simultaneously).
 
-As a result of the above considerations, this tutorial will provide instruction in setting up for SQLite. Setup instructions for PostgreSQL can be found in [postgresql.md](postgresql.md).
+Setting up PostgreSQL instead is not difficult from a Django configuration perspective - simply replace `db_settings.py` with the contents of `db_settings_postgresql.py`. However, setting PostgreSQL itself can be non-trivial, and is outside the scope of this guide as there are too many possible setups to document.
 
-More information on Django backends can be found here: https://docs.djangoproject.com/en/1.10/#the-model-layer
+Nevertheless, developers who are going to do a significant amount of manipulation of database models should attempt to use PostgreSQL so the development environment most closely resembles production.
 
-## Using Python 3
+## Loading Sample Data
 
-The application is written using Python 3.x. Users and developers should take care to ensure that they are using this version of Python and not 2.x.
+Django has functionality to export and reload data. To dump data from an existing database:
 
-# Installing the Requisite Software
+```
+python3 manage.py dumpdata
+```
 
-## Python (Required)
+And to load it back:
 
-Most Linux distributions provide Python by default, but not all provide Python 3, so take care to ensure that's the version you're using.
+```
+python3 manage.py loaddata /path/to/dumpfile
+```
 
-This tutorial will provide most instructions in Bash, so Cygwin is recommended for Windows developers, but not at all necessary for those who feel comfortable configuring their Python and database environment. Instructions on how to install Cygwin are not provided here, but again, all developers must take care to ensure that they are using Python 3.
+Note that the `dumpdata` command will dump some files that should not be transferred from one database to another - doing so will cause integrity errors because the contents are created when `manage.py migrate` is executed. Thus, it may be necessary to open a database shell
 
-You can run
+```
+python3 manage.py dbshell
+```
 
-    python3 --version
+And clear out the problematic tables - usually `django_content_type` and `auth_permisison`:
 
-to make sure that you are using Python 3.
+```
+sqlite> DELETE FROM django_content_type;
+```
 
-### Creating a Python Virtualenv (Recommended)
+Then the `loaddata` command should be successful.
 
-A virtualenv is recommended, but not required, as doing so keeps `tmdb` development and dependencies separate from the root Python installation. virtualenv is generally not provided with Python by default, but can be installed as follows:
+## Channels Backend
 
-    easy_install virtualenv
+### Background
 
-Root privileges may be required for this command to work.
+Django was written during a time when web services were simple: clients initiate transmissions (usually either GET or POST requests) to a server and the server would respond. For better or for worse (and in Ashish's opinion, significantly worse), novel web applications also utilize opposite operations: server-initiated transmissions for data that is updated in between client requests. An example of this feature in `tournament_manager` is in the list of sparring matches. Updates from the server are pushed to the client without any user interaction.
 
-Then to create a virtualenv, run:
+Django supports this transactional model using an extension called `channels`. `channels` is a package that implements websocket support in Django applications. Websocket connections are stateful, persistent connections where either the client or the server can initiate a request. The idea is:
 
-    virtualenv -p $(which python3) tmdb_local/
+1. The client makes a request for a webpage
 
-This will create a copy of your Python installation into a directory called `tmdb_local/` (you are free to change this to any directory you like, of course). Having a copy of your Python installation will allow you to install Python dependencies into a location that's specific to `tmdb` development. It is only required to execute this command once. Then every time you wish to start Python development, you must execute:
+2. The server responds with an HTML document with some Javascript that sets up one or more websocket connections.
 
-    source tmdb_local/bin/activate
+3. The client parses the page and initiates the websocket connections to the server. The server has special URLs for handling these types of requests.
 
-for all active terminal sessions.
+4. Once the connection is established, the server can push new information to the client. The client as well can transmit information over the websocket connection, rather than having to make a new HTTP request.
 
-## Python dependencies
+For more information, see the [channels documentation](https://channels.readthedocs.io/en/latest/).
 
-If the source code has not been cloned already, then clone it:
+### Setup
 
-    git clone https://github.com/ashish-b10/tournament_manager.git
+Before jumping in, it is worth noting that it is not necessary to set this up unless a websocket-enabled view is being modified. Currently, only the updates for the matches requires this functionality.
 
-Make sure the virtualenv is already loaded:
+For Django and the `tournament_manager` application, setting up the websocket connections is not too involved. Developers must have a working `redis` server available for their use. The easiest way to do this is to install `redis` via a package manager; alternately, it can also be downloaded and installed from [here](https://redis.io/).
 
-    source tmdb_local/bin/activate
+Once it is installed and running, take care to edit `REDIS_HOST` in `db_settings.py` if the server is not available on `localhost`. The port number is also set in `ectc_tm_server/settings.py` in the `CHANNEL_LAYERS` variable.
 
-And then install the requirements:
+## Database Model Visualization
 
-    pip3 install -r tournament_manager/requirements.txt
+It can be very helpful to visualize the database models and the relationships between them. Here is an example of the model visualization taken from commit [5ba2458d79](https://github.com/ashish-b10/tournament_manager/commit/5ba2458d7988975f9895e93a4587b72a66e6ecd8):
 
-### ectc-registration
+![database model visualization](model.png)
 
-One of the project dependencies which is also managed by the ECTC is [ectc-registration](https://github.com/ashish-b10/ectc_registration). This package requires credentials JSON file in order to work properly. This credential file should be saved ouside the code repository so it is not added by accident.
+It shows a clear definition of which columns are in which table and the types of those columns. It also shows relationships between the tables (ie. each SparringTeam has a foreign key reference to the School that it is affiliated with). This diagram makes writing database queries much easier, and it is also useful for planning new model relationships.
 
-Once the credentials have been downloaded, they can be tested by running the below command:
+To set this up for yourself, first install graphviz using your operating system's package manager. For example:
 
-    python -m ectc_registration.gdocs_downloader -c /path/to/credentials.json -u (INSERT LINK TO A GOOGLE SPREADSHEET)
+```
+sudo xbps-install graphviz
+```
 
-If the credentials are valid, this command should download a spreadsheet and report some statistics on it.
+Then install `pygraphviz` into the virtual environment:
 
-If you get an error of `SignedJwtAssertionCredentials`, you have to `pip install ouathclient=1.5.2`.
+```
+pip install pygraphviz
+```
 
-# Run the service
+Because `pygraphviz` is a C-based library, it requires the graphviz development headers to build and install. Either install the headers or alternately, install `pydot` which does not have this requirement:
 
-## Database Setup
+```
+pip install pydot
+```
 
-If this is the first time running the `tmdb`, the database must be created. The instrutions below should work regardless of which database backend is being used.
+Then generate them image like so:
 
-First, create the migrations that Django will apply to the database:
-
-    python manage.py makemigrations tmdb
-
-Then apply the migrations:
-
-    python manage.py migrate
-
-And last, import the Google Drive credentials:
-
-    python manage.py update_gdrive_creds -f /path/to/credentials.json
-
-## Running the Server
-
-To run the server locally,
-
-    python manage.py runserver
-
-This creates runs the server in development mode, which is nice for development and testing but *should never be used in production*. Using the `tmdb` in production requires setting up a real webserver like Apache or Nginx using a Python module such as mod_wsgi or uwsgi or gunicorn. This link has more information: https://www.digitalocean.com/community/tutorials/django-server-comparison-the-development-server-mod_wsgi-uwsgi-and-gunicorn
-
-## Updating the database
-
-From time to time, the models.py file gets updated with new records to store in the database. 
-
-If there are ever any changes to the models.py file, you will have to reset the database. You can do this by doing either:
-
-    rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data or simply run `bash ./reset_db.sh`.
-
-# Updating the Database
-
-Django's built in ORM is responsible for interfacing with the database. From time to time, changes on the server will require that the database be updated. Currently, the only way to do this is to delete the database and recreate it. Take care to note that ALL DATA IN THE DATABASE WILL BE LOST, though it can be backed up beforehand. Once ready, update the database as follows:
-
-    rm -r tmdb/migrations ; dropdb tmdb && createdb tmdb && python manage.py makemigrations tmdb && python manage.py migrate && python manage.py add_test_data && python manage.py graph_models -g -o /dev/shm/tmdb.svg tmdb && python manage.py runserver
-
-And don't forget to re-import your Google Drive credentials!
-
-    python manage.py update_gdrive_creds -f /path/to/credentials.json
+```
+python3 manage.py graph_models --pydot -a -g -o tmdb.png
+```
