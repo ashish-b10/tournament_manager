@@ -5,7 +5,86 @@ This document details how to set up and run an instance of the ECTC Tournament M
 ## Recommended Knowledge
 `tmdb` primarily makes use of Django, which is a Python framework for creating web applications (a database which exists on the server and HTML views to interact with the database). Users do not need to have a complete understanding of Django to use the software (though it certainly does not hurt!).
 
-For developers, it is very simple to get started with Django - the introductory tutorial is a great place to start, and very easy to understand - it can accessed here: https://docs.djangoproject.com/en/1.10/intro/tutorial01/ The tutorial teaches how the database is structured using Django's built-in Object-Relational Mapper, how changes to the database can be managed via migrations, how to use the controller interface which Django automatically creates when you develop the ORM, and how to use its built-in templating interface for dynamically generating views.
+For developers, it is very simple to get started with Django - the introductory tutorial is a great place to start, and very easy to understand - it can accessed [here](https://docs.djangoproject.com/en/2.2/intro/tutorial01/). It conveys most of the information users need to hack on the site.
+
+## Setting up your Environment
+
+Let's start by creating a directory where we can store all of our files:
+
+```
+mkdir -p ~/dev/tournament_manager && cd ~/dev/tournament_manager
+```
+
+In this directory, we will clone the project, create our virtual environments, and store our data (assuming we are using SQLite).
+
+Start by cloning the project:
+
+```
+git clone git@github.com:ashish-b10/tournament_manager.git
+```
+
+This will create a directory called `tournament_manager` where the *code* will be stored.
+
+Next, create a virtual environment:
+
+```
+python3 -m venv tmdb_venv
+```
+
+**Take care to use `python3` and NOT `python`.**
+
+Source the virtual environment:
+
+```
+source tmdb_venv/bin/activate
+```
+
+And install the dependencies into it:
+
+```
+pip3 install -r tournament_manager/requirements.txt
+```
+
+Next, the database must be set up. It is recommended that users use PostgreSQL for development, to more closely simulate the production environment, but we'll set SQLite up for now as it is much easier. The database configuration is in `tournament_manager/ectc_tm_server/db_settings.py`,
+
+```
+cd tournament_manager/ectc_tm_server
+```
+
+but since the configuration cannot be stored in version control, a few sample files (`db_settings_sqlite.py` and `db_settings_postgresql.py`) are provided. To select the SQLite setup:
+
+```
+cp db_settings_sqlite.py db_settings.py
+```
+
+The `.gitignore` file in this directory has an entry for `db_settings.py`, so it will not be added to version control.
+
+Additionally, run `generate_custom_settings.py` to generate some more variables which are sensitive and should also not be stored in production:
+
+```
+python3 generate_custom_settings.py
+```
+
+The most important value in this file is `SECRET_KEY` - the value this is set to on the production server must not be made public. The script will write them out to a file called `custom_settings.py` which, once again, is in this directory's `.gitignore` file.
+
+Now we can write the schema to the database:
+
+```
+cd ../ # cd to the root of the project repository (ie. tournament_manager/)
+python3 manage.py migrate
+```
+
+The `migrate` command scans the project for database migrations and writes them into the database. When any database model is added, changed or deleted, it is necessary to generate a migration for the change and re-run this command.
+
+At last, we are ready to view the web application! First, start the development server:
+
+```
+python3 manage.py runserver
+```
+
+And then open the following link in a webbrowser: http://localhost:8000
+
+You should be greeted with a page that says "No tournaments have yet been created."
 
 ## Database Backend
 
