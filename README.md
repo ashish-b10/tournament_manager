@@ -6,8 +6,5 @@ To start out, check out the [getting started guide](doc/getting_started.md).
 
 ## Updating dependencies
 
-Install the following packages to update dependencies:
-
-```
-pip install -U django channels django-bootstrap-form reportlab pypdf2
-```
+To update the package dependencies, see [updating
+dependencies](doc/updating_dependencies.md).
