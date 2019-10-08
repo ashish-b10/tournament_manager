@@ -160,7 +160,7 @@ Once it is installed and running, take care to edit `REDIS_HOST` in `db_settings
 
 It can be very helpful to visualize the database models and the relationships between them. Here is an example of the model visualization taken from commit [5ba2458d79](https://github.com/ashish-b10/tournament_manager/commit/5ba2458d7988975f9895e93a4587b72a66e6ecd8):
 
-![database model visualization](model.png)
+![database model visualization](models.png)
 
 It shows a clear definition of which columns are in which table and the types of those columns. It also shows relationships between the tables (ie. each SparringTeam has a foreign key reference to the School that it is affiliated with). This diagram makes writing database queries much easier, and it is also useful for planning new model relationships.
 

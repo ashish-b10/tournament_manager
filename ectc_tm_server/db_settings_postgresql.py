@@ -7,3 +7,4 @@ DATABASES = {
     }
 }
 
+REDIS_HOST = 'localhost'
