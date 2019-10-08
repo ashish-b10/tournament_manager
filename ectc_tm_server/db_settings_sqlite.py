@@ -1,7 +1,9 @@
+from pathlib import Path
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/dev/shm/ectc-tmdb',
+        'NAME': str(Path(__file__).parent.parent.parent / 'tmdb.sqlite3'),
     }
 }
 
