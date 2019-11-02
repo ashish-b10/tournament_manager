@@ -457,6 +457,13 @@ class SparringTeam(models.Model):
     def __str__(self):
         return "%s %s%d" %(str(self.school), str(self.division), self.number,)
 
+    def match_sheet_name(self):
+        if self.school.short_name:
+            school_name = self.school.short_name
+        else:
+            school_name = self.school.name
+        return "%s %s%d" %(school_name, str(self.division), self.number,)
+
 #TODO team.division must equal tournament_division.division
 class SparringTeamRegistration(models.Model):
     tournament_division = models.ForeignKey(TournamentSparringDivision, on_delete=models.CASCADE)
@@ -502,6 +509,12 @@ class SparringTeamRegistration(models.Model):
     def __repr__(self):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
+
+    def match_sheet_name(self):
+        competitors_str = self.__get_competitors_str()
+        if competitors_str:
+            competitors_str = " " + competitors_str
+        return "%s%s" %(self.team.match_sheet_name(), competitors_str)
 
     def team_list_str(self):
         return str(self)
