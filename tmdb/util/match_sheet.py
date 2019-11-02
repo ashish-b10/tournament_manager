@@ -60,11 +60,11 @@ def _draw_match_sheet(match, female=False, a_team=False, b_team=False, c_team=Fa
     drawing_canvas.setFont('Helvetica', 18)
     if match.blue_team:
         drawing_canvas.drawString(.65*inch, 6.65*inch,
-                str(match.blue_team))
+                match.blue_team.match_sheet_name())
     xoffset = 3.75*inch
     if match.red_team:
         drawing_canvas.drawString(.65*inch + xoffset, 6.65*inch,
-                str(match.red_team))
+                match.red_team.match_sheet_name())
 
     return PdfFileReader(BytesIO(drawing_canvas.getpdfdata())).getPage(0)
 

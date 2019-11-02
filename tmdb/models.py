@@ -259,6 +259,7 @@ class Tournament(models.Model):
 
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
+    short_name = models.CharField(max_length=127, unique=False, blank=True, null=True)
     slug = models.SlugField(unique=True)
     seasons = models.ManyToManyField('Season',
             through='SchoolSeasonRegistration')
@@ -456,6 +457,13 @@ class SparringTeam(models.Model):
     def __str__(self):
         return "%s %s%d" %(str(self.school), str(self.division), self.number,)
 
+    def match_sheet_name(self):
+        if self.school.short_name:
+            school_name = self.school.short_name
+        else:
+            school_name = self.school.name
+        return "%s %s%d" %(school_name, str(self.division), self.number,)
+
 #TODO team.division must equal tournament_division.division
 class SparringTeamRegistration(models.Model):
     tournament_division = models.ForeignKey(TournamentSparringDivision, on_delete=models.CASCADE)
@@ -502,14 +510,18 @@ class SparringTeamRegistration(models.Model):
         return "%s (%s)" %(str(self.team),
                 str(self.tournament_division.tournament),)
 
+    def match_sheet_name(self):
+        competitors_str = self.__get_competitors_str()
+        if competitors_str:
+            competitors_str = " " + competitors_str
+        return "%s%s" %(self.team.match_sheet_name(), competitors_str)
+
     def team_list_str(self):
         return str(self)
 
     def bracket_str(self):
-        team_str = "%s %s%d %s" %(self.team.school,
-                self.team.division.skill_level,
-                self.team.number,
-                self.__get_competitors_str())
+        school_name = self.team.match_sheet_name()
+        team_str = school_name + " %s" %(self.__get_competitors_str())
         if self.seed:
             team_str = "[%d] %s" %(self.seed, team_str)
         return team_str
