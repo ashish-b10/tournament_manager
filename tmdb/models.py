@@ -259,6 +259,7 @@ class Tournament(models.Model):
 
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
+    short_name = models.CharField(max_length=127, unique=False, blank=True, null=True)
     slug = models.SlugField(unique=True)
     seasons = models.ManyToManyField('Season',
             through='SchoolSeasonRegistration')

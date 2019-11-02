@@ -61,7 +61,7 @@ def school_season_change(request, school_slug, season_slug):
 class SchoolForm(forms.ModelForm):
     class Meta:
         model = models.School
-        fields = ['name']
+        fields = ['name', 'short_name']
 
 @permission_required("tmdb.change_school")
 def school_add(request):
