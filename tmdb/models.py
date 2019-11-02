@@ -520,10 +520,8 @@ class SparringTeamRegistration(models.Model):
         return str(self)
 
     def bracket_str(self):
-        team_str = "%s %s%d %s" %(self.team.school,
-                self.team.division.skill_level,
-                self.team.number,
-                self.__get_competitors_str())
+        school_name = self.team.match_sheet_name()
+        team_str = school_name + " %s" %(self.__get_competitors_str())
         if self.seed:
             team_str = "[%d] %s" %(self.seed, team_str)
         return team_str
