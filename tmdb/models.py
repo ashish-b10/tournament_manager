@@ -1,3 +1,5 @@
+import string
+
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
@@ -6,6 +8,12 @@ from django.template.defaultfilters import slugify
 
 from tmdb.util import BracketGenerator, SlotAssigner, parse_team_file
 from .school_registration_validator import SchoolRegistrationValidator
+
+def sanitize_school_name(school_name):
+    allowed_chars = set(string.ascii_letters)
+    allowed_chars.add(' ')
+    school_name = ''.join(c for c in school_name if c in allowed_chars)
+    return school_name.strip().upper()
 
 class SchoolValidationError(IntegrityError): pass
 
@@ -226,21 +234,37 @@ class Tournament(models.Model):
     def __repr__(self):
         return self.slug if self.slug else self.slugify()
 
+    @staticmethod
+    def create_schools(teams_by_division):
+        schools = School.objects.all()
+        schools_by_name = {s.name: s for s in schools}
+        teams = []
+        for division_teams in teams_by_division.values():
+            for team in division_teams:
+                school_name = sanitize_school_name(team['school_name'])
+                if school_name not in schools_by_name:
+                    schools_by_name[school_name] = School.objects.create(
+                            name=school_name)
+                team['school'] = schools_by_name[school_name]
+                teams.append(team)
+        return teams
+
     def import_registration_data(self, team_file):
         SparringTeamRegistration.objects.filter(
                 tournament_division__tournament=self).delete()
-        teams = parse_team_file(team_file)
-        for division, teams in teams.items():
-            for team in teams:
-                self.import_team(team)
+        teams_by_division = parse_team_file(team_file)
+        team_data = Tournament.create_schools(teams_by_division)
+        for team in team_data:
+            self.create_team(team)
 
-    def import_team(self, team):
-        school = School.objects.get_or_create(name=team['school_name'])[0]
-        school_season_registration = SchoolSeasonRegistration.objects.get_or_create(
+    def create_team(self, team):
+        # TODO optimize this function - reduce calls to get_or_create
+        school = team['school']
+        season_registration = SchoolSeasonRegistration.objects.get_or_create(
                 school=school, season=self.season, defaults={'division': 3})[0]
         school_tournament_registration = SchoolTournamentRegistration.objects.get_or_create(
                 tournament=self,
-                school_season_registration=school_season_registration,
+                school_season_registration=season_registration,
                 registration_doc_url = None,
                 imported=True)[0]
         sparring_team = SparringTeam.objects.get_or_create(school=school,
@@ -248,18 +272,18 @@ class Tournament(models.Model):
                 number=team['team_num'])[0]
         tournament_division = TournamentSparringDivision.objects.get_or_create(
                 tournament=self, division=team['sparring_division'])[0]
-        sparring_team_registration = SparringTeamRegistration(
+        sparring_team_registration = SparringTeamRegistration.objects.create(
                 tournament_division=tournament_division,
                 lightweight=team['has_lightweight'],
                 middleweight=team['has_middleweight'],
                 heavyweight=team['has_heavyweight'],
                 team=sparring_team)
-        sparring_team_registration.save()
         return sparring_team_registration
 
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
-    short_name = models.CharField(max_length=127, unique=False, blank=True, null=True)
+    short_name = models.CharField(max_length=127, unique=False, blank=True,
+            null=True)
     slug = models.SlugField(max_length=200, unique=True)
     seasons = models.ManyToManyField('Season',
             through='SchoolSeasonRegistration')
