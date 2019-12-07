@@ -36,7 +36,7 @@ def tournament_add(request):
         context['add_form'] = add_form
         if add_form.is_valid():
             add_form.save()
-            return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
+            return HttpResponseRedirect(reverse('tmdb:tournament_change',
                     args=(add_form.instance.slug,)))
     else:
         today = datetime.date.today()
