@@ -172,7 +172,7 @@ class Season(models.Model):
         return Tournament.objects.filter(season=self)
 
 class Tournament(models.Model):
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=200, unique=True)
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
     location = models.CharField(max_length=127)
     date = models.DateField()
@@ -260,7 +260,7 @@ class Tournament(models.Model):
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
     short_name = models.CharField(max_length=127, unique=False, blank=True, null=True)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=200, unique=True)
     seasons = models.ManyToManyField('Season',
             through='SchoolSeasonRegistration')
 
@@ -440,7 +440,7 @@ class SparringTeam(models.Model):
     school = models.ForeignKey(School, on_delete=models.PROTECT)
     division = models.ForeignKey(SparringDivision, on_delete=models.PROTECT)
     number = models.SmallIntegerField()
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=200, unique=True)
     registrations = models.ManyToManyField(TournamentSparringDivision,
             through="SparringTeamRegistration")
 
