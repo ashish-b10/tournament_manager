@@ -97,7 +97,7 @@ def tournament_import(request, tournament_slug):
         upload_form = forms.TournamentImportForm(
                 request.POST, request.FILES, instance=instance)
         if upload_form.is_valid():
-            instance.import_school_registrations(request.FILES['team_file'])
+            instance.import_registration_data(request.FILES['team_file'])
             return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
                     args=(tournament_slug,)))
     else:

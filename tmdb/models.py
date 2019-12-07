@@ -226,7 +226,7 @@ class Tournament(models.Model):
     def __repr__(self):
         return self.slug if self.slug else self.slugify()
 
-    def import_school_registrations(self, team_file):
+    def import_registration_data(self, team_file):
         SparringTeamRegistration.objects.filter(
                 tournament_division__tournament=self).delete()
         teams = parse_team_file(team_file)
