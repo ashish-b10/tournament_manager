@@ -26,7 +26,9 @@ def _generate_division_re(division_name):
             + '\)$')
 
 def parse_team_file(team_file):
-    team_file_data = team_file.read().decode('utf-8')
+    team_file_data = team_file.read()
+    if type(team_file_data) is not str:
+        team_file_data = team_file_data.decode('utf-8')
     teams_fh = StringIO(team_file_data)
     teams_csv = csv.DictReader(teams_fh)
     # ignore first two rows of the file (they are empty)
