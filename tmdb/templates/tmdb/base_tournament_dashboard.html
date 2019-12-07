@@ -10,9 +10,9 @@
                 <span class="nav-link-text">Home</span>
               </a></li>
             <li class="nav-item">
-              <a href="">
+              <a href="{% url 'tmdb:team_list' tournament.slug %}">
                 <i class="glyphicon glyphicon-th-list"></i>
-                <span class="nav-link-text">Divisions</span>
+                <span class="nav-link-text">Teams</span>
               </a></li>
             <li class="nav-item">
               <a href="{% url 'tmdb:match_list' tournament.slug %}">
