@@ -4,16 +4,15 @@ from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from itertools import product
-from django.template.defaultfilters import slugify
+from django.utils.text import slugify
 
 from tmdb.util import BracketGenerator, SlotAssigner, parse_team_file
 from .school_registration_validator import SchoolRegistrationValidator
 
 def sanitize_school_name(school_name):
-    allowed_chars = set(string.ascii_letters)
-    allowed_chars.add(' ')
-    school_name = ''.join(c for c in school_name if c in allowed_chars)
-    return school_name.strip().upper()
+    school_name = slugify(school_name).replace('_', '-')
+    school_name = ' '.join(s.upper() for s in school_name.split('-'))
+    return school_name
 
 class SchoolValidationError(IntegrityError): pass
 
