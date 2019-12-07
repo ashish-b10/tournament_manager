@@ -1,10 +1,13 @@
 from pathlib import Path
 from datetime import date
 import os
+import logging
 
 from django.test import TestCase
 
 from tmdb import models
+
+LOGGER = logging.getLogger()
 
 class TournamentImportTestCase(TestCase):
     @staticmethod
@@ -30,8 +33,14 @@ class TournamentImportTestCase(TestCase):
         return tournament
 
     def test_import_all_tournaments(self):
+        TournamentImportTestCase.import_all_tournaments()
+
+    @staticmethod
+    def import_all_tournaments(verbose=False):
         filenames = TournamentImportTestCase.registration_data_filenames()
         for filename, year, tournament_num in filenames:
+            if verbose:
+                LOGGER.info("Importing %s", filename)
             season, created = models.Season.objects.get_or_create(
                 start_date=date(year=year, month=9, day=1),
                 end_date=date(year=year+1, month=9, day=1))
