@@ -248,7 +248,20 @@ class Tournament(models.Model):
                 teams.append(team)
         return teams
 
+    def drop_registration_data(self):
+        SparringTeamMatch.objects.filter(division__tournament=self).delete()
+        SparringTeamRegistration.objects.filter(
+            tournament_division__tournament=self).delete()
+        TournamentSparringDivision.objects.filter(tournament=self).delete()
+        self.imported = False
+        self.save()
+
     def import_registration_data(self, team_file):
+        if self.imported:
+            raise IntegrityError("%s has already been imported" %(self))
+        self.imported = True
+        self.save()
+
         SparringTeamRegistration.objects.filter(
                 tournament_division__tournament=self).delete()
         teams_by_division = parse_team_file(team_file)
