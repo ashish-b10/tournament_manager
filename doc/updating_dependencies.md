@@ -2,7 +2,7 @@
 
 To update the python dependencies, the bare minimum packages required is:
 
-    pip install --upgrade pip django channels asgiref pillow reportlab django-bootstrap-form pypdf2
+    pip install --upgrade pip django\<3.0.0 channels asgiref pillow reportlab django-bootstrap-form pypdf2 aioredis channels-redis
 
 To update postgresql dependencies, add:
 
