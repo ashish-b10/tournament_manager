@@ -248,6 +248,89 @@ class Tournament(models.Model):
                 teams.append(team)
         return teams
 
+    def add_season_registrations(self, teams_data):
+        school_season_registrations = {}
+        for team in teams_data:
+            school = team['school']
+            season_registration = school_season_registrations.get(school.name)
+            if season_registration is None:
+                object_model = SchoolSeasonRegistration.objects
+                season_registration = object_model.get_or_create(
+                    school=team['school'], season=self.season,
+                    defaults={'division': 3})[0]
+                school_season_registrations[school.name] = season_registration
+            team['school_season_registration'] = season_registration
+
+    def add_tournament_registrations(self, teams_data):
+        existing_registrations = {}
+        # cache existing registrations in memory
+        for registration in SchoolTournamentRegistration.objects.filter(
+                tournament=self):
+            existing_registrations[registration.school_season_registration] = registration
+        for team in teams_data:
+            registration = existing_registrations.get(team['school_season_registration'])
+            if not registration:
+                registration = SchoolTournamentRegistration(
+                    school_season_registration=team['school_season_registration'],
+                    tournament=self,
+                    imported=True)
+                registration.clean()
+                registration.save()
+                existing_registrations[team['school_season_registration']] = registration
+            team['school_tournament_registration'] = registration
+
+    @staticmethod
+    def add_sparring_teams(teams_data):
+        existing_teams = {}
+        # cache existing teams in memory
+        for team_data in SparringTeam.objects.all():
+            team_key = (
+                team_data.school.name,
+                team_data.division,
+                # team_data.division.sex,
+                # team_data.division.skill_level,
+                team_data.number,
+            )
+            existing_teams[team_key] = team_data
+        # iterate over new teams, creating as needed
+        for team_data in teams_data:
+            team_key = (
+                team_data['school'].name,
+                team_data['sparring_division'],
+                team_data['team_num'],
+            )
+            team = existing_teams.get(team_key)
+            if not team:
+                team = SparringTeam(school=team_data['school'],
+                    division=team_data['sparring_division'],
+                    number=team_data['team_num'])
+                team.clean()
+                team.save()
+            team_data['sparring_team'] = team
+
+    def add_sparring_team_registrations(self, teams_data):
+        tournament_divisions = {}
+        for tournament_division in TournamentSparringDivision.objects.filter(tournament=self):
+            tournament_divisions[tournament_division.division] = tournament_division
+        for team_data in teams_data:
+            tournament_division = tournament_divisions.get(team_data['sparring_division'])
+            if not tournament_division:
+                tournament_division = TournamentSparringDivision(
+                    division=team_data['sparring_division'],
+                    tournament=self)
+                tournament_division.clean()
+                tournament_division.save()
+                tournament_divisions[team_data['sparring_division']] = tournament_division
+            sparring_team_registration = SparringTeamRegistration.objects.create(
+                tournament_division=tournament_division,
+                lightweight=team_data['has_lightweight'],
+                middleweight=team_data['has_middleweight'],
+                heavyweight=team_data['has_heavyweight'],
+                team=team_data['sparring_team']
+            )
+            team_data['sparring_team_registration'] = sparring_team_registration
+
+
     def drop_registration_data(self):
         SparringTeamMatch.objects.filter(division__tournament=self).delete()
         SparringTeamRegistration.objects.filter(
@@ -259,38 +342,18 @@ class Tournament(models.Model):
     def import_registration_data(self, team_file):
         if self.imported:
             raise IntegrityError("%s has already been imported" %(self))
-        self.imported = True
-        self.save()
 
         SparringTeamRegistration.objects.filter(
                 tournament_division__tournament=self).delete()
         teams_by_division = parse_team_file(team_file)
-        team_data = Tournament.create_schools(teams_by_division)
-        for team in team_data:
-            self.create_team(team)
-
-    def create_team(self, team):
-        # TODO optimize this function - reduce calls to get_or_create
-        school = team['school']
-        season_registration = SchoolSeasonRegistration.objects.get_or_create(
-                school=school, season=self.season, defaults={'division': 3})[0]
-        school_tournament_registration = SchoolTournamentRegistration.objects.get_or_create(
-                tournament=self,
-                school_season_registration=season_registration,
-                registration_doc_url = None,
-                imported=True)[0]
-        sparring_team = SparringTeam.objects.get_or_create(school=school,
-                division=team['sparring_division'],
-                number=team['team_num'])[0]
-        tournament_division = TournamentSparringDivision.objects.get_or_create(
-                tournament=self, division=team['sparring_division'])[0]
-        sparring_team_registration = SparringTeamRegistration.objects.create(
-                tournament_division=tournament_division,
-                lightweight=team['has_lightweight'],
-                middleweight=team['has_middleweight'],
-                heavyweight=team['has_heavyweight'],
-                team=sparring_team)
-        return sparring_team_registration
+        teams_data = Tournament.create_schools(teams_by_division)
+        self.add_season_registrations(teams_data)
+        self.add_tournament_registrations(teams_data)
+        Tournament.add_sparring_teams(teams_data)
+        self.add_sparring_team_registrations(teams_data)
+        self.imported = True
+        self.save()
+        return teams_data
 
 class School(models.Model):
     name = models.CharField(max_length=127, unique=True)
