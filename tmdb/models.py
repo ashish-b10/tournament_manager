@@ -312,6 +312,7 @@ class Tournament(models.Model):
         tournament_divisions = {}
         for tournament_division in TournamentSparringDivision.objects.filter(tournament=self):
             tournament_divisions[tournament_division.division] = tournament_division
+        registrations = []
         for team_data in teams_data:
             tournament_division = tournament_divisions.get(team_data['sparring_division'])
             if not tournament_division:
@@ -321,15 +322,16 @@ class Tournament(models.Model):
                 tournament_division.clean()
                 tournament_division.save()
                 tournament_divisions[team_data['sparring_division']] = tournament_division
-            sparring_team_registration = SparringTeamRegistration.objects.create(
+            sparring_team_registration = SparringTeamRegistration(
                 tournament_division=tournament_division,
                 lightweight=team_data['has_lightweight'],
                 middleweight=team_data['has_middleweight'],
                 heavyweight=team_data['has_heavyweight'],
                 team=team_data['sparring_team']
             )
+            registrations.append(sparring_team_registration)
             team_data['sparring_team_registration'] = sparring_team_registration
-
+        SparringTeamRegistration.objects.bulk_create(registrations)
 
     def drop_registration_data(self):
         SparringTeamMatch.objects.filter(division__tournament=self).delete()
