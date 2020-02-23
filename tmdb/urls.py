@@ -72,6 +72,10 @@ urlpatterns = [
             + r'/delete/*$',
             views.tournament_view.tournament_delete, name='tournament_delete'),
     url(tournament_base
+            + r'/delete_teams/*$',
+            views.tournament_view.tournament_delete_teams,
+            name='tournament_delete_teams'),
+    url(tournament_base
             + r'/json_data/*$',
             views.tournament_view.tournament_json, name='tournament_json'),
 

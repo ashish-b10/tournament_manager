@@ -23,23 +23,6 @@ class SeasonDeleteForm(forms.ModelForm):
         model = models.Season
         fields = []
 
-class TournamentEditForm(forms.ModelForm):
-    class Meta:
-        model = models.Tournament
-        exclude = ['slug', 'imported']
-
-class TournamentDeleteForm(forms.ModelForm):
-    class Meta:
-        model = models.Tournament
-        fields = []
-
-class TournamentImportForm(forms.ModelForm):
-    team_file = forms.FileField()
-
-    class Meta:
-        model = models.Tournament
-        fields = ['team_file']
-
 class MatchForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

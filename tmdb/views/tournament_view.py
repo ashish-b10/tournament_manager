@@ -7,8 +7,8 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import models as auth_models
 from django.contrib import messages
+from django import forms
 
-from tmdb import forms
 from tmdb import models
 
 from collections import defaultdict, OrderedDict
@@ -16,6 +16,32 @@ import datetime
 
 from tmdb.util.match_sheet import create_match_sheets
 from tmdb.util.bracket_svg import SvgBracket
+
+class TournamentEditForm(forms.ModelForm):
+    class Meta:
+        model = models.Tournament
+        exclude = ['slug', 'imported']
+
+class TournamentDeleteForm(forms.ModelForm):
+    class Meta:
+        model = models.Tournament
+        fields = []
+
+class TournamentDeleteTeamsForm(forms.ModelForm):
+    class Meta:
+        model = models.Tournament
+        fields = []
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.instance.drop_registration_data()
+
+class TournamentImportForm(forms.ModelForm):
+    team_file = forms.FileField()
+
+    class Meta:
+        model = models.Tournament
+        fields = ['team_file']
 
 def tournaments(request, tournament_slug=None):
     seasons = models.Season.objects.order_by('-start_date')
@@ -32,7 +58,7 @@ def tournament_add(request):
     template_name = 'tmdb/tournament_add_change.html'
     context = {}
     if request.method == 'POST':
-        add_form = forms.TournamentEditForm(request.POST)
+        add_form = TournamentEditForm(request.POST)
         context['add_form'] = add_form
         if add_form.is_valid():
             add_form.save()
@@ -41,7 +67,7 @@ def tournament_add(request):
     else:
         today = datetime.date.today()
         season = get_object_or_404(models.Season, slug=request.GET['season'])
-        add_form = forms.TournamentEditForm(initial={
+        add_form = TournamentEditForm(initial={
                 'date': today,
                 'import_field': True,
                 'season': season,
@@ -53,20 +79,43 @@ def tournament_add(request):
 def tournament_change(request, tournament_slug):
     instance = get_object_or_404(models.Tournament, slug=tournament_slug)
     template_name = 'tmdb/tournament_add_change.html'
-    context = {}
+    context = {'tournament': instance}
     if request.method == 'POST':
-        change_form = forms.TournamentEditForm(request.POST, instance=instance)
+        change_form = TournamentEditForm(request.POST, instance=instance)
         context['change_form'] = change_form
         if change_form.is_valid():
             change_form.save()
             return HttpResponseRedirect(reverse('tmdb:tournament_dashboard',
                     args=(change_form.instance.slug,)))
     else:
-        change_form = forms.TournamentEditForm(instance=instance,
+        change_form = TournamentEditForm(instance=instance,
                 initial={'import': False})
-        upload_teams_form = forms.TournamentImportForm(instance=instance)
-        context['upload_teams_form'] = upload_teams_form
+        if not instance.imported:
+            upload_teams_form = TournamentImportForm(instance=instance)
+            context['upload_teams_form'] = upload_teams_form
     context['change_form'] = change_form
+    return render(request, template_name, context)
+
+@permission_required([
+        "tmdb.add_sparringteamregistration",
+        "tmdb.change_sparringteamregistration",
+        "tmdb.delete_sparringteamregistration",
+])
+def tournament_delete_teams(request, tournament_slug):
+    instance = get_object_or_404(models.Tournament, slug=tournament_slug)
+    template_name = 'tmdb/tournament_delete_teams.html'
+    context = {'tournament': instance}
+    if request.method == 'POST':
+        delete_teams_form = TournamentDeleteTeamsForm(request.POST,
+            instance=instance)
+        context['delete_teams_form'] = delete_teams_form
+        if delete_teams_form.is_valid():
+            delete_teams_form.save()
+            return HttpResponseRedirect(reverse('tmdb:tournament_change',
+                    args=(instance.slug,)))
+    else:
+        delete_teams_form = TournamentDeleteTeamsForm(instance=instance)
+        context['delete_teams_form'] = delete_teams_form
     return render(request, template_name, context)
 
 @permission_required("tmdb.delete_tournament")
@@ -75,16 +124,16 @@ def tournament_delete(request, tournament_slug):
     template_name = 'tmdb/tournament_delete.html'
     context = {'tournament': instance}
     if request.method == 'POST':
-        delete_form = forms.TournamentDeleteForm(request.POST,
+        delete_form = TournamentDeleteForm(request.POST,
                 instance=instance)
         context['delete_form'] = delete_form
         if delete_form.is_valid():
             instance.delete()
             return HttpResponseRedirect(reverse('tmdb:index'))
     else:
-        delete_form = forms.TournamentDeleteForm(instance=instance)
+        delete_form = TournamentDeleteForm(instance=instance)
     context['delete_form'] = delete_form
-    return render(request, 'tmdb/tournament_delete.html', context)
+    return render(request, template_name, context)
 
 @permission_required([
         "tmdb.add_school",
@@ -94,7 +143,7 @@ def tournament_import(request, tournament_slug):
     instance = get_object_or_404(models.Tournament, slug=tournament_slug)
     context = {}
     if request.method == 'POST':
-        upload_form = forms.TournamentImportForm(
+        upload_form = TournamentImportForm(
                 request.POST, request.FILES, instance=instance)
         if upload_form.is_valid():
             instance.import_registration_data(request.FILES['team_file'])
@@ -195,6 +244,7 @@ def tournament_school(request, tournament_slug, school_slug):
     }
     return render(request, 'tmdb/tournament_school.html', context)
 
+# TODO this view shouldn't be used anymore, so delete it
 @permission_required([
         "tmdb.add_competitor",
         "tmdb.add_sparringteamregistration",

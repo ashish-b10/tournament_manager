@@ -1,0 +1,13 @@
+{% extends "tmdb/base_tournament_dashboard.html" %}
+
+{% block content %}
+<h2>Delete Teams</h2>
+<p>Are you sure you want to delete the sparring teams for {{ tournament }}?</p>
+<p class="errorlist">WARNING: This means that ALL SEEDINGS and ALL MATCH RESULTS will be DELETED PERMANENTLY. Make sure you want to do this before you proceed.</p>
+<form action="{% url 'tmdb:tournament_delete_teams' tournament.slug %}" method="post">
+		{% csrf_token %}
+		{{ delete_teams_form }}
+		<button type="submit" class="btn btn-default">Delete Teams</button>
+</form>
+{% endblock %}
+
