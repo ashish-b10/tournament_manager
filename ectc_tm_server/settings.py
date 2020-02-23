@@ -22,6 +22,10 @@ try:
     from .custom_settings import SECRET_KEY, DEBUG, ALLOWED_HOSTS
 except:
     raise IOError("Unable to read configuration from custom settings")
+try:
+		from .custom_settings import SESSION_ENGINE, SESSION_FILE_PATH
+except ImportError:
+		pass
 sys.path.pop(0)
 
 
