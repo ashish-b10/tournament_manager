@@ -29,11 +29,14 @@
                 <i class="glyphicon glyphicon-equalizer"></i>
                 <span class="nav-link-text">Bracket</span>
               </a></li>
+						{% if perms.tmdb.change_tournament %}
             <li class="nav-item">
-              <a href="">
+              <a href="{% url 'tmdb:tournament_change' tournament.slug %}">
                 <i class="glyphicon glyphicon-stats"></i>
-                <span class="nav-link-text">Standings</span>
-              </a></li>
+                <span class="nav-link-text">Edit Tournament</span>
+              </a>
+						</li>
+						{% endif %}
           </ul>
 
           <br>
