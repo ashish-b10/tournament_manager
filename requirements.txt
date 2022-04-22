@@ -23,7 +23,7 @@ pyasn1-modules==0.2.8
 pycparser==2.19
 PyHamcrest==2.0.0
 pyOpenSSL==19.1.0
-PyPDF2==1.26.0
+PyPDF2==1.27.5
 pytz==2019.3
 reportlab==3.5.34
 service-identity==18.1.0
